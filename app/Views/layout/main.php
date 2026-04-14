@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/icon-ly.css') ?>">
 </head>
 <body>
+    
     <div id="app">
         <?= $this->include('layout/sidebar') ?>
         
