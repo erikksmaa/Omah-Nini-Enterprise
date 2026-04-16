@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'role'          => \App\Filters\RoleFilter::class,
+        'auth'          => \App\Filters\AuthGuard::class,  
     ];
 
     /**
@@ -107,5 +108,13 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'auth' => [ 
+            'before' => [
+                'admin/*',      // Proteksi semua route di admin
+                'dashboard',    // Proteksi dashboard
+                'logout',       // Proteksi logout (opsional)
+            ],
+        ],
+    ];
 }

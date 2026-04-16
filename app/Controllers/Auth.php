@@ -28,7 +28,7 @@ class Auth extends BaseController
             // Evaluasi password menggunakan algoritma bcrypt
             if (password_verify($password, $dataUser['password'])) {
                 session()->set([
-                    'user_id' => $dataUser['user_id'], // Pastikan menggunakan user_id 
+                    'user_id' => $dataUser['user_id'],
                     'username' => $dataUser['username'],
                     'role' => $dataUser['role'],
                     'logged_in' => true
