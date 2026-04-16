@@ -123,23 +123,57 @@
                 <!-- ========== LAPORAN & AUDIT (HANYA ADMIN) ========== -->
                 <?php if ($role === 'admin'): ?>
                     <li class="sidebar-title">Laporan & Audit</li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/keuangan') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/keuangan') ?>" class='sidebar-link'>
-                            <i class="bi bi-graph-up"></i>
-                            <span>Laporan Keuangan</span>
+                    <li class="sidebar-item has-sub <?= (in_array(uri_string(), [
+                        'admin/laporan/keuangan', 
+                        'admin/laporan/penjualan', 
+                        'admin/laporan/pembelian', 
+                        'admin/laporan/laba-rugi', 
+                        'admin/laporan/log-stok', 
+                        'admin/laporan/produk'
+                    ])) ? 'active' : '' ?>">
+                        <a href="#" class='sidebar-link'>
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>Laporan</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/laba-rugi') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/laba-rugi') ?>" class='sidebar-link'>
-                            <i class="bi bi-pie-chart"></i>
-                            <span>Laporan Laba/Rugi</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/log-stok') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/log-stok') ?>" class='sidebar-link'>
-                            <i class="bi bi-journal-text"></i>
-                            <span>Audit Log Stok</span>
-                        </a>
+                        <ul class="submenu <?= (in_array(uri_string(), [
+                            'admin/laporan/keuangan', 
+                            'admin/laporan/penjualan', 
+                            'admin/laporan/pembelian', 
+                            'admin/laporan/laba-rugi', 
+                            'admin/laporan/log-stok', 
+                            'admin/laporan/produk'
+                        ])) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/keuangan') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/keuangan') ?>" class="submenu-link">
+                                    <i class="bi bi-graph-up"></i> Laporan Keuangan
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/penjualan') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/penjualan') ?>" class="submenu-link">
+                                    <i class="bi bi-receipt"></i> Laporan Penjualan
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/pembelian') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/pembelian') ?>" class="submenu-link">
+                                    <i class="bi bi-truck"></i> Laporan Pembelian
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/laba-rugi') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/laba-rugi') ?>" class="submenu-link">
+                                    <i class="bi bi-pie-chart"></i> Laba/Rugi
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/log-stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/log-stok') ?>" class="submenu-link">
+                                    <i class="bi bi-journal-text"></i> Audit Log Stok
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/laporan/produk') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/laporan/produk') ?>" class="submenu-link">
+                                    <i class="bi bi-box"></i> Laporan Produk
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 <?php endif; ?>
 

@@ -2,38 +2,51 @@
 namespace App\Controllers\Kasir;
 
 use App\Controllers\BaseController;
+use App\Models\ProdukModel;
 use App\Models\TransaksiModel;
 use App\Models\DetailTransaksiModel;
-use App\Models\ProdukModel;
 use App\Models\LogStokModel;
 use App\Models\KeuanganModel;
 
 class Penjualan extends BaseController
 {
+    protected $produkModel;
     protected $transaksiModel;
     protected $detailTransaksiModel;
-    protected $produkModel;
     protected $logStokModel;
     protected $keuanganModel;
+    protected $db;
 
     public function __construct()
     {
+        if (!session()->get('logged_in')) {
+            redirect()->to('/login');
+        }
+
+        $role = session()->get('role');
+        if ($role != 'kasir' && $role != 'admin') {
+            redirect()->to('/dashboard')->with('error', 'Akses ditolak');
+        }
+
+        $this->db = \Config\Database::connect();
+        $this->produkModel = new ProdukModel();
         $this->transaksiModel = new TransaksiModel();
         $this->detailTransaksiModel = new DetailTransaksiModel();
-        $this->produkModel = new ProdukModel();
         $this->logStokModel = new LogStokModel();
         $this->keuanganModel = new KeuanganModel();
     }
 
+    // Halaman utama kasir
     public function index()
     {
         $data = [
-            'title' => 'Penjualan / Kasir',
-            'transaksi' => $this->transaksiModel->orderBy('id', 'DESC')->findAll()
+            'title' => 'Kasir / Penjualan',
+            'transaksi' => $this->transaksiModel->orderBy('id', 'DESC')->limit(50)->findAll()
         ];
-        return view('admin/penjualan/index', $data);
+        return view('kasir/penjualan/index', $data);
     }
 
+    // Halaman transaksi baru
     public function create()
     {
         $data = [
@@ -41,9 +54,10 @@ class Penjualan extends BaseController
             'no_invoice' => $this->generateNoInvoice(),
             'produk' => $this->produkModel->where('stok >', 0)->findAll()
         ];
-        return view('admin/penjualan/create', $data);
+        return view('kasir/penjualan/create', $data);
     }
 
+    // Search produk (AJAX)
     public function searchProduk()
     {
         $keyword = $this->request->getGet('q');
@@ -53,49 +67,69 @@ class Penjualan extends BaseController
             ->groupEnd()
             ->where('stok >', 0)
             ->findAll();
-        
+
         return $this->response->setJSON($produk);
     }
 
+    // Proses simpan transaksi
     public function store()
     {
-        $rules = [
-            'items' => 'required',
-            'total_bayar' => 'required|numeric|greater_than[0]',
-            'tipe_pembayaran' => 'required|in_list[tunai,transfer,debit]'
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
+        // Ambil data
         $items = json_decode($this->request->getPost('items'), true);
-        $total_bayar = $this->request->getPost('total_bayar');
         $total_belanja = $this->request->getPost('total_belanja');
+        $bayar = $this->request->getPost('bayar');
+        $tipe_pembayaran = $this->request->getPost('tipe_pembayaran');
 
-        if ($total_bayar < $total_belanja) {
-            return redirect()->back()->with('error', 'Pembayaran kurang dari total belanja');
+        // Validasi
+        $errors = [];
+
+        if (empty($items)) {
+            $errors[] = 'Keranjang belanja kosong';
         }
 
-        $db = \Config\Database::connect();
-        $db->transStart();
+        if (empty($total_belanja) || $total_belanja <= 0) {
+            $errors[] = 'Total belanja tidak valid';
+        }
+
+        if (empty($bayar) || $bayar <= 0) {
+            $errors[] = 'Jumlah pembayaran harus diisi';
+        }
+
+        if ($bayar < $total_belanja) {
+            $errors[] = 'Pembayaran kurang dari total belanja (Kurang Rp ' . number_format($total_belanja - $bayar, 0, ',', '.') . ')';
+        }
+
+        if (!in_array($tipe_pembayaran, ['tunai', 'transfer', 'qris'])) {
+            $errors[] = 'Tipe pembayaran tidak valid';
+        }
+
+        if (!empty($errors)) {
+            return redirect()->back()->withInput()->with('errors', $errors);
+        }
+
+        $kembalian = $bayar - $total_belanja;
+        $now = date('Y-m-d H:i:s');
+        $no_invoice = $this->generateNoInvoice();
+
+        // Mulai transaksi database
+        $this->db->transStart();
 
         try {
-            // 1. Simpan transaksi
-            $transaksiData = [
-                'no_invoice' => $this->generateNoInvoice(),
+            // 1. Insert ke tabel transaksi
+            $this->transaksiModel->insert([
+                'no_invoice' => $no_invoice,
                 'id_user' => session()->get('user_id'),
-                'total_bayar' => $total_bayar,
-                'tipe_pembayaran' => $this->request->getPost('tipe_pembayaran'),
+                'tanggal_transaksi' => $now,
+                'total_bayar' => $bayar,
+                'tipe_pembayaran' => $tipe_pembayaran,
                 'status' => 'selesai',
-                'catatan' => $this->request->getPost('catatan')
-            ];
-            $this->transaksiModel->insert($transaksiData);
+                'catatan' => $this->request->getPost('catatan'),
+                'created_at' => $now
+            ]);
             $transaksi_id = $this->transaksiModel->getInsertID();
 
-            // 2. Simpan detail & update stok
+            // 2. Insert detail & update stok
             foreach ($items as $item) {
-                // Detail transaksi
                 $this->detailTransaksiModel->insert([
                     'id_transaksi' => $transaksi_id,
                     'id_produk' => $item['id_produk'],
@@ -107,10 +141,8 @@ class Penjualan extends BaseController
 
                 // Update stok
                 $produk = $this->produkModel->find($item['id_produk']);
-                $stok_sebelum = $produk['stok'];
-                $stok_sesudah = $stok_sebelum - $item['jumlah'];
-                
-                $this->produkModel->update($item['id_produk'], ['stok' => $stok_sesudah]);
+                $stok_baru = $produk['stok'] - $item['jumlah'];
+                $this->produkModel->update($item['id_produk'], ['stok' => $stok_baru]);
 
                 // Log stok
                 $this->logStokModel->insert([
@@ -118,14 +150,15 @@ class Penjualan extends BaseController
                     'id_user' => session()->get('user_id'),
                     'tipe_ref' => 'penjualan',
                     'id_ref' => $transaksi_id,
-                    'jumlah_sebelum' => $stok_sebelum,
+                    'jumlah_sebelum' => $produk['stok'],
                     'jumlah_perubahan' => -$item['jumlah'],
-                    'jumlah_sesudah' => $stok_sesudah,
-                    'aktivitas' => 'Penjualan ke customer'
+                    'jumlah_sesudah' => $stok_baru,
+                    'aktivitas' => 'Penjualan ke customer',
+                    'created_at' => $now
                 ]);
             }
 
-            // 3. Catat keuangan (pemasukan)
+            // 3. Insert keuangan
             $this->keuanganModel->insert([
                 'id_user' => session()->get('user_id'),
                 'tipe' => 'pemasukan',
@@ -133,46 +166,169 @@ class Penjualan extends BaseController
                 'tipe_ref' => 'penjualan',
                 'id_ref' => $transaksi_id,
                 'jumlah' => $total_belanja,
-                'tanggal_transaksi' => date('Y-m-d')
+                'tanggal_transaksi' => date('Y-m-d'),
+                'created_at' => $now
             ]);
 
-            $db->transComplete();
+            $this->db->transComplete();
 
-            if ($db->transStatus() === false) {
+            if ($this->db->transStatus() === false) {
                 throw new \Exception('Transaksi gagal');
             }
 
-            return redirect()->to('/admin/penjualan/struk/' . $transaksi_id)->with('success', 'Transaksi berhasil!');
+            // Ambil data transaksi untuk struk
+            $transaksi = $this->transaksiModel->find($transaksi_id);
+            $detail = $this->detailTransaksiModel->where('id_transaksi', $transaksi_id)->findAll();
+
+            $total_belanja_detail = 0;
+            foreach ($detail as $item) {
+                $total_belanja_detail += $item['subtotal'];
+            }
+
+            // Simpan data struk ke flashdata
+            session()->setFlashdata('show_struk', true);
+            session()->setFlashdata('struk_data', [
+                'transaksi' => $transaksi,
+                'detail' => $detail,
+                'total_belanja' => $total_belanja_detail,
+                'kembalian' => $transaksi['total_bayar'] - $total_belanja_detail,
+                'kasir' => session()->get('username')
+            ]);
+
+            // Redirect ke halaman index dengan modal struk
+            return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil!');
 
         } catch (\Exception $e) {
-            $db->transRollback();
-            return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
+            $this->db->transRollback();
+            log_message('error', 'Penjualan error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
+    // Halaman struk pembayaran
     public function struk($id)
     {
         $transaksi = $this->transaksiModel->find($id);
         if (!$transaksi) {
-            return redirect()->to('/admin/penjualan')->with('error', 'Transaksi tidak ditemukan');
+            return redirect()->to('/kasir/penjualan')->with('error', 'Transaksi tidak ditemukan');
         }
-        
+
         $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
+
+        // Hitung total belanja dari detail
+        $total_belanja = 0;
+        foreach ($detail as $item) {
+            $total_belanja += $item['subtotal'];
+        }
+
+        $kembalian = $transaksi['total_bayar'] - $total_belanja;
 
         $data = [
             'title' => 'Struk Pembayaran',
             'transaksi' => $transaksi,
             'detail' => $detail,
-            'kembalian' => $transaksi['total_bayar'] - array_sum(array_column($detail, 'subtotal'))
+            'total_belanja' => $total_belanja,
+            'kembalian' => $kembalian,
+            'kasir' => session()->get('username')
         ];
-        return view('admin/penjualan/struk', $data);
+
+        return view('kasir/penjualan/struk', $data);
     }
 
+    // Generate nomor invoice
     private function generateNoInvoice()
     {
         $last = $this->transaksiModel->orderBy('id', 'DESC')->first();
-        $lastNumber = $last ? intval(substr($last['no_invoice'], -4)) : 0;
-        $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        if ($last && isset($last['no_invoice'])) {
+            $lastNumber = (int) substr($last['no_invoice'], -4);
+            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $newNumber = '0001';
+        }
         return 'INV-' . date('ymd') . '-' . $newNumber;
+    }
+    // Batalkan transaksi
+    public function batal($id)
+    {
+        $transaksi = $this->transaksiModel->find($id);
+        if (!$transaksi) {
+            return redirect()->back()->with('error', 'Transaksi tidak ditemukan');
+        }
+
+        if ($transaksi['status'] == 'batal') {
+            return redirect()->back()->with('error', 'Transaksi sudah dibatalkan');
+        }
+
+        $this->db->transStart();
+
+        try {
+            // Ambil detail transaksi
+            $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
+
+            foreach ($detail as $item) {
+                // Kembalikan stok
+                $produk = $this->produkModel->find($item['id_produk']);
+                $stok_sebelum = $produk['stok'];
+                $stok_sesudah = $stok_sebelum + $item['jumlah'];
+
+                $this->produkModel->update($item['id_produk'], ['stok' => $stok_sesudah]);
+
+                // Log stok pembatalan
+                $this->logStokModel->insert([
+                    'id_produk' => $item['id_produk'],
+                    'id_user' => session()->get('user_id'),
+                    'tipe_ref' => 'penjualan_batal',
+                    'id_ref' => $id,
+                    'jumlah_sebelum' => $stok_sebelum,
+                    'jumlah_perubahan' => $item['jumlah'],
+                    'jumlah_sesudah' => $stok_sesudah,
+                    'aktivitas' => 'Pembatalan transaksi penjualan',
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+
+            // Update status transaksi
+            $this->transaksiModel->update($id, ['status' => 'batal']);
+
+            // Hapus catatan keuangan
+            $this->keuanganModel->where('tipe_ref', 'penjualan')->where('id_ref', $id)->delete();
+
+            $this->db->transComplete();
+
+            return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil dibatalkan');
+
+        } catch (\Exception $e) {
+            $this->db->transRollback();
+            return redirect()->back()->with('error', 'Gagal membatalkan: ' . $e->getMessage());
+        }
+    }
+
+    // Get data struk untuk AJAX
+    public function getStrukData($id)
+    {
+        $transaksi = $this->transaksiModel->find($id);
+        if (!$transaksi) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Transaksi tidak ditemukan']);
+        }
+
+        $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
+
+        $total_belanja = 0;
+        foreach ($detail as $item) {
+            $total_belanja += $item['subtotal'];
+        }
+
+        $data = [
+            'success' => true,
+            'data' => [
+                'transaksi' => $transaksi,
+                'detail' => $detail,
+                'total_belanja' => $total_belanja,
+                'kembalian' => $transaksi['total_bayar'] - $total_belanja,
+                'kasir' => session()->get('username')
+            ]
+        ];
+
+        return $this->response->setJSON($data);
     }
 }

@@ -51,6 +51,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('stok/opname/(:num)', 'Stok::opname/$1');
         $routes->post('stok/update-opname/(:num)', 'Stok::updateOpname/$1');
         $routes->get('stok/history', 'Stok::history');
+
+
     });
 
     // ========== ADMIN ROUTES ==========
@@ -76,31 +78,41 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('user/update/(:num)', 'User::update/$1');
         $routes->get('user/delete/(:num)', 'User::delete/$1');
 
+        // Laporan Routes
+        $routes->get('laporan', 'Laporan::index');
         $routes->get('laporan/keuangan', 'Laporan::keuangan');
-        $routes->get('laporan/log-stok', 'Laporan::logStok');
+        $routes->get('laporan/penjualan', 'Laporan::penjualan');
+        $routes->get('laporan/pembelian', 'Laporan::pembelian');
         $routes->get('laporan/laba-rugi', 'Laporan::labaRugi');
+        $routes->get('laporan/log-stok', 'Laporan::logStok');
+        $routes->get('laporan/produk', 'Laporan::produk');
+        $routes->get('laporan/export-penjualan', 'Laporan::exportPenjualan');
+
+        // Pembelian
+        $routes->get('pembelian', 'Pembelian::index');
+        $routes->get('pembelian/create', 'Pembelian::create');
+        $routes->post('pembelian/store', 'Pembelian::store');
+        $routes->get('pembelian/detail/(:num)', 'Pembelian::detail/$1');
+
+        // Stok Management
+        $routes->get('stok', 'Stok::index');
+        $routes->get('stok/detail/(:num)', 'Stok::detail/$1');
+        $routes->get('stok/opname/(:num)', 'Stok::opname/$1');
+        $routes->post('stok/update-opname/(:num)', 'Stok::updateOpname/$1');
+        $routes->get('stok/history', 'Stok::history');
     });
 
-    // ========== KASIR ROUTES ==========
-    $routes->group('kasir', ['namespace' => 'App\Controllers\Kasir'], function ($routes) {
+    // Kasir
+    $routes->group('kasir', ['namespace' => 'App\Controllers\Kasir', 'filter' => 'auth'], function ($routes) {
         $routes->get('dashboard', 'Dashboard::index');
         $routes->get('penjualan', 'Penjualan::index');
         $routes->get('penjualan/create', 'Penjualan::create');
         $routes->post('penjualan/store', 'Penjualan::store');
         $routes->get('penjualan/struk/(:num)', 'Penjualan::struk/$1');
+        $routes->get('penjualan/batal/(:num)', 'Penjualan::batal/$1');
         $routes->get('penjualan/search-produk', 'Penjualan::searchProduk');
+        $routes->get('penjualan/get-struk-data/(:num)', 'Penjualan::getStrukData/$1'); // Tambah ini
     });
 
-    // Pembelian
-    $routes->get('pembelian', 'Pembelian::index');
-    $routes->get('pembelian/create', 'Pembelian::create');
-    $routes->post('pembelian/store', 'Pembelian::store');
-    $routes->get('pembelian/detail/(:num)', 'Pembelian::detail/$1');
 
-    // Stok Management
-    $routes->get('stok', 'Stok::index');
-    $routes->get('stok/detail/(:num)', 'Stok::detail/$1');
-    $routes->get('stok/opname/(:num)', 'Stok::opname/$1');
-    $routes->post('stok/update-opname/(:num)', 'Stok::updateOpname/$1');
-    $routes->get('stok/history', 'Stok::history');
 });
