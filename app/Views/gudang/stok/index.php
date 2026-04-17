@@ -6,11 +6,11 @@
     <div class="row">
         <div class="col-md-3">
             <div class="card text-white bg-primary mb-3">
-                <div class="card-body m-1">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Total Produk</h6>
-                            <h3 class="mb-0"><?= number_format($total_produk) ?></h3>
+                            <h2 class="mb-0"><?= number_format($total_produk) ?></h2>
                         </div>
                         <i class="bi bi-box fs-1 opacity-50"></i>
                     </div>
@@ -19,11 +19,11 @@
         </div>
         <div class="col-md-3">
             <div class="card text-white bg-warning mb-3">
-                <div class="card-body m-1">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Stok Menipis</h6>
-                            <h3 class="mb-0"><?= number_format($stok_menipis) ?></h3>
+                            <h2 class="mb-0"><?= number_format($stok_menipis) ?></h2>
                         </div>
                         <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
                     </div>
@@ -32,11 +32,11 @@
         </div>
         <div class="col-md-3">
             <div class="card text-white bg-danger mb-3">
-                <div class="card-body m-1">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Stok Habis</h6>
-                            <h3 class="mb-0"><?= number_format($stok_habis) ?></h3>
+                            <h2 class="mb-0"><?= number_format($stok_habis) ?></h2>
                         </div>
                         <i class="bi bi-x-circle fs-1 opacity-50"></i>
                     </div>
@@ -45,11 +45,11 @@
         </div>
         <div class="col-md-3">
             <div class="card text-white bg-success mb-3">
-                <div class="card-body m-1">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-0">Nilai Stok</h6>
-                            <h3 class="mb-0">Rp <?= number_format($total_nilai_stok, 0, ',', '.') ?></h3>
+                            <h4 class="mb-0">Rp <?= number_format($total_nilai_stok, 0, ',', '.') ?></h4>
                         </div>
                         <i class="bi bi-currency-dollar fs-1 opacity-50"></i>
                     </div>
@@ -60,10 +60,10 @@
 
     <!-- Filter dan Tabel -->
     <div class="card">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-box-seam"></i> Manajemen Stok</h5>
         </div>
-        <div class="card-body m-1 p-3">
+        <div class="card-body p-3">
             <!-- Filter Form -->
             <form method="GET" class="row mb-3">
                 <div class="col-md-4">
@@ -95,7 +95,7 @@
             </form>
 
             <div class="table-responsive">
-                <table class="table table-striped table-hover" id="tableStok">
+                <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
                             <th>SKU</th>
@@ -137,7 +137,7 @@
                                 <td><?= number_format($item['min_stok']) ?></td>
                                 <td><span class="badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                                 <td>
-                                    <a href="<?= base_url('gudang/stok/detail/' . $item['id']) ?>" class="btn btn-sm btn-info">
+                                    <a href="<?= base_url('gudang/stok/detail/' . $item['id']) ?>" class="btn btn-sm btn-secondary">
                                         <i class="bi bi-eye"></i> Detail
                                     </a>
                                     <a href="<?= base_url('gudang/stok/opname/' . $item['id']) ?>" class="btn btn-sm btn-warning">
@@ -154,17 +154,19 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <div class="mt-4">
+                <?= $pager->links('default', 'bootstrap_pagination') ?>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     $(document).ready(function() {
-        $('#tableStok').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json' },
-            order: [[1, 'asc']],
-            pageLength: 25
-        });
+        // Nonaktifkan DataTable karena pakai CI4 pagination
+        // DataTable hanya untuk styling
     });
 </script>
 <?= $this->endSection() ?>

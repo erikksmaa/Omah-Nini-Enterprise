@@ -71,139 +71,144 @@ class Penjualan extends BaseController
         return $this->response->setJSON($produk);
     }
 
-    // Proses simpan transaksi
-    public function store()
-    {
-        // Ambil data
-        $items = json_decode($this->request->getPost('items'), true);
-        $total_belanja = $this->request->getPost('total_belanja');
-        $bayar = $this->request->getPost('bayar');
-        $tipe_pembayaran = $this->request->getPost('tipe_pembayaran');
+  // Proses simpan transaksi
+public function store()
+{
+    // Ambil data
+    $items = json_decode($this->request->getPost('items'), true);
+    $total_belanja = $this->request->getPost('total_belanja');
+    $bayar = $this->request->getPost('bayar');
+    $tipe_pembayaran = $this->request->getPost('tipe_pembayaran');
 
-        // Validasi
-        $errors = [];
+    // Validasi
+    $errors = [];
 
-        if (empty($items)) {
-            $errors[] = 'Keranjang belanja kosong';
-        }
+    if (empty($items)) {
+        $errors[] = 'Keranjang belanja kosong';
+    }
 
-        if (empty($total_belanja) || $total_belanja <= 0) {
-            $errors[] = 'Total belanja tidak valid';
-        }
+    if (empty($total_belanja) || $total_belanja <= 0) {
+        $errors[] = 'Total belanja tidak valid';
+    }
 
-        if (empty($bayar) || $bayar <= 0) {
-            $errors[] = 'Jumlah pembayaran harus diisi';
-        }
+    if (empty($bayar) || $bayar <= 0) {
+        $errors[] = 'Jumlah pembayaran harus diisi';
+    }
 
-        if ($bayar < $total_belanja) {
-            $errors[] = 'Pembayaran kurang dari total belanja (Kurang Rp ' . number_format($total_belanja - $bayar, 0, ',', '.') . ')';
-        }
+    if ($bayar < $total_belanja) {
+        $errors[] = 'Pembayaran kurang dari total belanja (Kurang Rp ' . number_format($total_belanja - $bayar, 0, ',', '.') . ')';
+    }
 
-        if (!in_array($tipe_pembayaran, ['tunai', 'transfer', 'qris'])) {
-            $errors[] = 'Tipe pembayaran tidak valid';
-        }
+    if (!in_array($tipe_pembayaran, ['tunai', 'transfer', 'qris'])) {
+        $errors[] = 'Tipe pembayaran tidak valid';
+    }
 
-        if (!empty($errors)) {
-            return redirect()->back()->withInput()->with('errors', $errors);
-        }
+    if (!empty($errors)) {
+        return redirect()->back()->withInput()->with('errors', $errors);
+    }
 
-        $kembalian = $bayar - $total_belanja;
-        $now = date('Y-m-d H:i:s');
-        $no_invoice = $this->generateNoInvoice();
+    $kembalian = $bayar - $total_belanja;
+    $now = date('Y-m-d H:i:s');  // Format: 2026-04-17 14:30:00
+    $no_invoice = $this->generateNoInvoice();
 
-        // Mulai transaksi database
-        $this->db->transStart();
+    // Mulai transaksi database
+    $this->db->transStart();
 
-        try {
-            // 1. Insert ke tabel transaksi
-            $this->transaksiModel->insert([
-                'no_invoice' => $no_invoice,
-                'id_user' => session()->get('user_id'),
-                'tanggal_transaksi' => $now,
-                'total_bayar' => $bayar,
-                'tipe_pembayaran' => $tipe_pembayaran,
-                'status' => 'selesai',
-                'catatan' => $this->request->getPost('catatan'),
-                'created_at' => $now
+    try {
+        // PERBAIKAN: 1. Insert ke tabel transaksi
+        $transaksiData = [
+            'no_invoice' => $no_invoice,
+            'id_user' => session()->get('user_id'),
+            'tanggal_transaksi' => $now,  // ← PASTIKAN INI TERISI
+            'total_bayar' => $bayar,
+            'tipe_pembayaran' => $tipe_pembayaran,
+            'status' => 'selesai',
+            'catatan' => $this->request->getPost('catatan'),
+            'created_at' => $now  // ← PASTIKAN INI TERISI
+        ];
+        
+        $this->transaksiModel->insert($transaksiData);
+        $transaksi_id = $this->transaksiModel->getInsertID();
+
+        // Debug: Cek apakah insert berhasil
+        log_message('debug', 'Transaksi ID: ' . $transaksi_id);
+        log_message('debug', 'Tanggal transaksi: ' . $now);
+
+        // 2. Insert detail & update stok
+        foreach ($items as $item) {
+            $this->detailTransaksiModel->insert([
+                'id_transaksi' => $transaksi_id,
+                'id_produk' => $item['id_produk'],
+                'nama_produk' => $item['nama_produk'],
+                'jumlah' => $item['jumlah'],
+                'harga_satuan' => $item['harga_jual'],
+                'subtotal' => $item['subtotal']
             ]);
-            $transaksi_id = $this->transaksiModel->getInsertID();
 
-            // 2. Insert detail & update stok
-            foreach ($items as $item) {
-                $this->detailTransaksiModel->insert([
-                    'id_transaksi' => $transaksi_id,
-                    'id_produk' => $item['id_produk'],
-                    'nama_produk' => $item['nama_produk'],
-                    'jumlah' => $item['jumlah'],
-                    'harga_satuan' => $item['harga_jual'],
-                    'subtotal' => $item['subtotal']
-                ]);
+            // Update stok
+            $produk = $this->produkModel->find($item['id_produk']);
+            $stok_baru = $produk['stok'] - $item['jumlah'];
+            $this->produkModel->update($item['id_produk'], ['stok' => $stok_baru]);
 
-                // Update stok
-                $produk = $this->produkModel->find($item['id_produk']);
-                $stok_baru = $produk['stok'] - $item['jumlah'];
-                $this->produkModel->update($item['id_produk'], ['stok' => $stok_baru]);
-
-                // Log stok
-                $this->logStokModel->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => session()->get('user_id'),
-                    'tipe_ref' => 'penjualan',
-                    'id_ref' => $transaksi_id,
-                    'jumlah_sebelum' => $produk['stok'],
-                    'jumlah_perubahan' => -$item['jumlah'],
-                    'jumlah_sesudah' => $stok_baru,
-                    'aktivitas' => 'Penjualan ke customer',
-                    'created_at' => $now
-                ]);
-            }
-
-            // 3. Insert keuangan
-            $this->keuanganModel->insert([
+            // Log stok
+            $this->logStokModel->insert([
+                'id_produk' => $item['id_produk'],
                 'id_user' => session()->get('user_id'),
-                'tipe' => 'pemasukan',
-                'kategori' => 'penjualan',
                 'tipe_ref' => 'penjualan',
                 'id_ref' => $transaksi_id,
-                'jumlah' => $total_belanja,
-                'tanggal_transaksi' => date('Y-m-d'),
+                'jumlah_sebelum' => $produk['stok'],
+                'jumlah_perubahan' => -$item['jumlah'],
+                'jumlah_sesudah' => $stok_baru,
+                'aktivitas' => 'Penjualan ke customer',
                 'created_at' => $now
             ]);
-
-            $this->db->transComplete();
-
-            if ($this->db->transStatus() === false) {
-                throw new \Exception('Transaksi gagal');
-            }
-
-            // Ambil data transaksi untuk struk
-            $transaksi = $this->transaksiModel->find($transaksi_id);
-            $detail = $this->detailTransaksiModel->where('id_transaksi', $transaksi_id)->findAll();
-
-            $total_belanja_detail = 0;
-            foreach ($detail as $item) {
-                $total_belanja_detail += $item['subtotal'];
-            }
-
-            // Simpan data struk ke flashdata
-            session()->setFlashdata('show_struk', true);
-            session()->setFlashdata('struk_data', [
-                'transaksi' => $transaksi,
-                'detail' => $detail,
-                'total_belanja' => $total_belanja_detail,
-                'kembalian' => $transaksi['total_bayar'] - $total_belanja_detail,
-                'kasir' => session()->get('username')
-            ]);
-
-            // Redirect ke halaman index dengan modal struk
-            return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil!');
-
-        } catch (\Exception $e) {
-            $this->db->transRollback();
-            log_message('error', 'Penjualan error: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
+
+        // 3. Insert keuangan
+        $this->keuanganModel->insert([
+            'id_user' => session()->get('user_id'),
+            'tipe' => 'pemasukan',
+            'kategori' => 'penjualan',
+            'tipe_ref' => 'penjualan',
+            'id_ref' => $transaksi_id,
+            'jumlah' => $total_belanja,
+            'tanggal_transaksi' => date('Y-m-d'),
+            'created_at' => $now
+        ]);
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            throw new \Exception('Transaksi gagal');
+        }
+
+        // Ambil data transaksi untuk struk
+        $transaksi = $this->transaksiModel->find($transaksi_id);
+        $detail = $this->detailTransaksiModel->where('id_transaksi', $transaksi_id)->findAll();
+
+        $total_belanja_detail = 0;
+        foreach ($detail as $item) {
+            $total_belanja_detail += $item['subtotal'];
+        }
+
+        // Simpan data struk ke flashdata
+        session()->setFlashdata('show_struk', true);
+        session()->setFlashdata('struk_data', [
+            'transaksi' => $transaksi,
+            'detail' => $detail,
+            'total_belanja' => $total_belanja_detail,
+            'kembalian' => $transaksi['total_bayar'] - $total_belanja_detail,
+            'kasir' => session()->get('username')
+        ]);
+
+        return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil!');
+
+    } catch (\Exception $e) {
+        $this->db->transRollback();
+        log_message('error', 'Penjualan error: ' . $e->getMessage());
+        return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
     }
+}
 
     // Halaman struk pembayaran
     public function struk($id)

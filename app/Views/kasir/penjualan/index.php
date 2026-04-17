@@ -6,7 +6,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-receipt"></i> Data Transaksi Penjualan</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3">
             <div class="mb-3">
                 <a href="<?= base_url('kasir/penjualan/create') ?>" class="btn btn-success">
                     <i class="bi bi-plus"></i> Transaksi Baru
@@ -23,7 +23,7 @@
 
             <div class="table-responsive">
                 <table class="table table-striped" id="tableTransaksi">
-                    <thead class="table-dark">
+                    <thead class="table-dark text-center">
                         <tr>
                             <th>No Invoice</th>
                             <th>Tanggal</th>
@@ -33,7 +33,7 @@
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="text-center">
                         <?php foreach ($transaksi as $item): ?>
                             <tr>
                                 <td><strong><?= $item['no_invoice'] ?></strong></td>

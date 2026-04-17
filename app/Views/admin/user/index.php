@@ -122,9 +122,9 @@
                                     <td>
                                         <?php 
                                         $roleClass = [
-                                            'admin' => 'danger',
-                                            'gudang' => 'warning',
-                                            'kasir' => 'info'
+                                            'admin' => 'primary',
+                                            'gudang' => 'secondary',
+                                            'kasir' => 'success'
                                         ];
                                         $class = $roleClass[$item['role']] ?? 'secondary';
                                         ?>

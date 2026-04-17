@@ -5,7 +5,7 @@
     <div class="card-header bg-dark text-white">
         <h5 class="mb-0"><i class="bi bi-journal-text"></i> Audit Trail - Log Stok</h5>
     </div>
-    <div class="card-body">
+    <div class="card-body p-3">
         <form method="GET" class="mb-4">
             <div class="row">
                 <div class="col-md-3">

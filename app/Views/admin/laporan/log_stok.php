@@ -6,7 +6,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-journal-text"></i> Audit Log Stok</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3">
             <!-- Filter Form -->
             <form method="GET" class="row mb-4">
                 <div class="col-md-3">
@@ -49,7 +49,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <div class="card text-white bg-success">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Stok Masuk</h6>
                             <h3><?= number_format($total_masuk ?? 0) ?></h3>
                         </div>
@@ -57,7 +57,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="card text-white bg-danger">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Stok Keluar</h6>
                             <h3><?= number_format($total_keluar ?? 0) ?></h3>
                         </div>
@@ -70,7 +70,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Histori Perubahan Stok</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-striped" id="tableLog">
                             <thead class="table-dark">

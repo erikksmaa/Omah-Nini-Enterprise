@@ -10,11 +10,17 @@ class Kategori extends BaseController {
         $this->kategoriModel = new KategoriModel();
     }
 
-    public function index() {
+     public function index()
+    {
+        // Gunakan paginate(10) untuk 10 data per halaman
+        $kategori = $this->kategoriModel->orderBy('id', 'DESC')->paginate(10);
+        
         $data = [
-            'title'    => 'Kelola Kategori Barang',
-            'kategori' => $this->kategoriModel->findAll()
+            'title' => 'Kelola Kategori Barang',
+            'kategori' => $kategori,
+            'pager' => $this->kategoriModel->pager
         ];
+        
         return view('admin/kategori/index', $data);
     }
 

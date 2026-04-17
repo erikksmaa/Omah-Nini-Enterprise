@@ -6,7 +6,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-receipt"></i> Laporan Penjualan</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3">
             <!-- Filter Form -->
             <form method="GET" class="row mb-4">
                 <div class="col-md-3">
@@ -31,7 +31,7 @@
                 </div>
                 <div class="col-md-2">
                     <label>&nbsp;</label>
-                    <a href="<?= base_url('admin/laporan/export-penjualan?start_date=' . $start_date . '&end_date=' . $end_date) ?>" class="btn btn-info w-100">
+                    <a href="<?= base_url('admin/laporan/export-penjualan?start_date=' . $start_date . '&end_date=' . $end_date) ?>" class="btn btn-primary w-100">
                         <i class="bi bi-file-excel"></i> Export
                     </a>
                 </div>
@@ -41,7 +41,7 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card text-white bg-primary">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Transaksi</h6>
                             <h3><?= number_format($total_transaksi) ?></h3>
                         </div>
@@ -49,15 +49,15 @@
                 </div>
                 <div class="col-md-4">
                     <div class="card text-white bg-success">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Omset</h6>
                             <h3>Rp <?= number_format($total_omset, 0, ',', '.') ?></h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card text-white bg-info">
-                        <div class="card-body">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body p-3">
                             <h6>Total Item Terjual</h6>
                             <h3><?= number_format($total_item_terjual) ?></h3>
                         </div>
@@ -70,7 +70,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Penjualan per Hari</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -95,7 +95,7 @@
                 <div class="card-header bg-warning text-dark">
                     <h6 class="mb-0">Top 10 Produk Terlaris</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -120,7 +120,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Detail Transaksi</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-striped" id="tablePenjualan">
                             <thead class="table-dark">
@@ -142,7 +142,7 @@
                                         <td><?= strtoupper($item['tipe_pembayaran']) ?></td>
                                         <td><?= $item['username'] ?? '-' ?></td>
                                         <td>
-                                            <button class="btn btn-sm btn-info" onclick="showStruk(<?= $item['id'] ?>)">
+                                            <button class="btn btn-sm btn-primary" onclick="showStruk(<?= $item['id'] ?>)">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>

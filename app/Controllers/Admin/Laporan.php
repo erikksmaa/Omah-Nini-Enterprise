@@ -122,7 +122,11 @@ class Laporan extends BaseController
         $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
 
-        // Data penjualan
+        // Debug: Log query untuk cek
+        log_message('debug', 'Start date: ' . $start_date);
+        log_message('debug', 'End date: ' . $end_date);
+
+        // Data penjualan - cek apakah ada data
         $penjualan = $this->transaksiModel
             ->select('transaksi.*, users.username')
             ->join('users', 'users.user_id = transaksi.id_user', 'left')
@@ -131,6 +135,9 @@ class Laporan extends BaseController
             ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
             ->orderBy('transaksi.created_at', 'DESC')
             ->findAll();
+
+        // Debug: Cek jumlah data
+        log_message('debug', 'Jumlah penjualan: ' . count($penjualan));
 
         // Statistik
         $totalTransaksi = count($penjualan);
@@ -158,7 +165,7 @@ class Laporan extends BaseController
             ->get()
             ->getResultArray();
 
-        // Produk terlaris - PERBAIKAN
+        // Produk terlaris
         $produkTerlaris = $this->db->table('detail_transaksi')
             ->select('detail_transaksi.id_produk, detail_transaksi.nama_produk, SUM(detail_transaksi.jumlah) as total_terjual, SUM(detail_transaksi.subtotal) as total_omset')
             ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
@@ -356,7 +363,7 @@ class Laporan extends BaseController
     // Laporan Produk
     public function produk()
     {
-        // Produk dengan stok terbanyak
+        // Produk dengan stok terbanyak (limit 10)
         $stokTerbanyak = $this->produkModel
             ->select('produk.*, kategori.nama as kategori_nama')
             ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
@@ -364,15 +371,17 @@ class Laporan extends BaseController
             ->limit(10)
             ->findAll();
 
-        // Produk dengan stok menipis
+        // Produk dengan stok menipis (dengan pagination)
         $stokMenipis = $this->produkModel
             ->select('produk.*, kategori.nama as kategori_nama')
             ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
             ->where('stok <=', 'min_stok', false)
             ->orderBy('stok', 'ASC')
-            ->findAll();
+            ->paginate(10);
 
-        // Produk terlaris all time - PERBAIKAN
+        $pagerStokMenipis = $this->produkModel->pager;
+
+        // Produk terlaris all time (limit 10)
         $produkTerlaris = $this->db->table('detail_transaksi')
             ->select('detail_transaksi.id_produk, detail_transaksi.nama_produk, SUM(detail_transaksi.jumlah) as total_terjual, SUM(detail_transaksi.subtotal) as total_omset')
             ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
@@ -383,14 +392,27 @@ class Laporan extends BaseController
             ->get()
             ->getResultArray();
 
-        // Produk tidak pernah terjual
-        $produkNeverSold = $this->db->table('produk')
-            ->select('produk.id, produk.nama_barang, produk.sku, produk.stok')
-            ->whereNotIn('produk.id', function ($builder) {
-                $builder->select('DISTINCT id_produk')->from('detail_transaksi');
-            })
+        // PERBAIKAN: Produk tidak pernah terjual dengan pagination
+        // Ambil ID produk yang sudah terjual
+        $terjual = $this->db->table('detail_transaksi')
+            ->select('id_produk')
+            ->groupBy('id_produk')
             ->get()
             ->getResultArray();
+
+        $terjualIds = array_column($terjual, 'id_produk');
+
+        // Gunakan produkModel dengan pagination
+        $builder = $this->produkModel
+            ->select('produk.id, produk.nama_barang, produk.sku, produk.stok, produk.harga_beli')
+            ->orderBy('produk.nama_barang', 'ASC');
+
+        if (!empty($terjualIds)) {
+            $builder->whereNotIn('produk.id', $terjualIds);
+        }
+
+        $produkNeverSold = $builder->paginate(10);
+        $pagerNeverSold = $this->produkModel->pager;
 
         // Total nilai stok
         $totalNilaiStok = $this->db->table('produk')
@@ -403,8 +425,10 @@ class Laporan extends BaseController
             'title' => 'Laporan Produk',
             'stok_terbanyak' => $stokTerbanyak,
             'stok_menipis' => $stokMenipis,
+            'pager_stok_menipis' => $pagerStokMenipis,
             'produk_terlaris' => $produkTerlaris,
             'produk_never_sold' => $produkNeverSold,
+            'pager_never_sold' => $pagerNeverSold,
             'total_nilai_stok' => $totalNilaiStok,
             'total_produk' => $this->produkModel->countAll()
         ];

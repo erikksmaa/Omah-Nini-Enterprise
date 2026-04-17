@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-clock-history"></i> Histori Mutasi Stok</h5>
         </div>
         <div class="card-body p-3">

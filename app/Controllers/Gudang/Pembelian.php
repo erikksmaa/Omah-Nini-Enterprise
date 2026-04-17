@@ -39,18 +39,19 @@ class Pembelian extends BaseController
 
     public function index()
     {
-        $db = \Config\Database::connect();
-
-        $pembelian = $db->table('pembelian')
-            ->select('pembelian.*, supplier.nama as nama_supplier')  // ← alias 'nama_supplier'
+        // Gunakan paginate(10) untuk 10 data per halaman
+        $pembelian = $this->pembelianModel
+            ->select('pembelian.*, supplier.nama as supplier_nama')
             ->join('supplier', 'supplier.id = pembelian.id_supplier')
             ->orderBy('pembelian.id', 'DESC')
-            ->get()
-            ->getResultArray();
+            ->paginate(10);
+        
+        $pager = $this->pembelianModel->pager;
 
         $data = [
             'title' => 'Data Pembelian Barang',
-            'pembelian' => $pembelian
+            'pembelian' => $pembelian,
+            'pager' => $pager
         ];
 
         return view('gudang/pembelian/index', $data);
@@ -97,7 +98,6 @@ class Pembelian extends BaseController
         $no_invoice = $this->generateNoInvoice();
         $now = date('Y-m-d H:i:s');
 
-        // SIMPAN KE PEMBELIAN
         $pembelianData = [
             'no_invoice' => $no_invoice,
             'id_supplier' => $this->request->getPost('id_supplier'),
@@ -108,15 +108,12 @@ class Pembelian extends BaseController
             'created_at' => $now
         ];
 
-        // Insert manual dengan Query Builder
         $db = \Config\Database::connect();
 
         try {
-            // Insert pembelian
             $db->table('pembelian')->insert($pembelianData);
             $pembelian_id = $db->insertID();
 
-            // Insert detail
             foreach ($items as $item) {
                 $detailData = [
                     'id_pembelian' => $pembelian_id,
@@ -128,7 +125,6 @@ class Pembelian extends BaseController
                 ];
                 $db->table('detail_pembelian')->insert($detailData);
 
-                // Update stok
                 $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
                 $stok_baru = $produk['stok'] + $item['jumlah'];
                 $db->table('produk')->where('id', $item['id_produk'])->update([
@@ -136,7 +132,6 @@ class Pembelian extends BaseController
                     'harga_beli' => $item['harga_beli']
                 ]);
 
-                // Log stok
                 $db->table('log_stok')->insert([
                     'id_produk' => $item['id_produk'],
                     'id_user' => session()->get('user_id'),
@@ -150,7 +145,6 @@ class Pembelian extends BaseController
                 ]);
             }
 
-            // Insert keuangan
             $db->table('keuangan')->insert([
                 'id_user' => session()->get('user_id'),
                 'tipe' => 'pengeluaran',

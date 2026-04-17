@@ -6,7 +6,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-truck"></i> Laporan Pembelian</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3">
             <!-- Filter Form -->
             <form method="GET" class="row mb-4">
                 <div class="col-md-3">
@@ -34,8 +34,8 @@
             <!-- Statistik -->
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <div class="card text-white bg-info">
-                        <div class="card-body">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body p-3">
                             <h6>Total Transaksi Pembelian</h6>
                             <h3><?= number_format($total_transaksi ?? 0) ?></h3>
                         </div>
@@ -43,7 +43,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="card text-white bg-danger">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Pengeluaran</h6>
                             <h3>Rp <?= number_format($total_pengeluaran ?? 0, 0, ',', '.') ?></h3>
                         </div>
@@ -57,7 +57,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Pembelian per Supplier</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -87,7 +87,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Detail Transaksi Pembelian</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-striped" id="tablePembelian">
                             <thead class="table-dark">

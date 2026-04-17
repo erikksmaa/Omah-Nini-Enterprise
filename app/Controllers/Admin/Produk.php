@@ -18,17 +18,23 @@ class Produk extends BaseController
         $this->supplierModel = new SupplierModel();
     }
 
-    public function index()
+  public function index()
     {
+        // Gunakan paginate(10) untuk 10 data per halaman
+        $produk = $this->produkModel->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
+            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
+            ->join('supplier', 'supplier.id = produk.id_supplier', 'left')
+            ->orderBy('produk.id', 'DESC')
+            ->paginate(10); // 10 data per halaman
+        
         $data = [
             'title' => 'Kelola Master Produk',
-            'produk' => $this->produkModel->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
-                ->join('kategori', 'kategori.id = produk.id_kategori')
-                ->join('supplier', 'supplier.id = produk.id_supplier')
-                ->findAll(),
+            'produk' => $produk,
             'kategori' => $this->kategoriModel->findAll(),
-            'supplier' => $this->supplierModel->findAll()
+            'supplier' => $this->supplierModel->findAll(),
+            'pager' => $this->produkModel->pager
         ];
+        
         return view('admin/produk/index', $data);
     }
 

@@ -9,7 +9,7 @@
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0"><i class="bi bi-cart"></i> Keranjang Belanja</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-dark">
@@ -44,7 +44,7 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="bi bi-receipt"></i> Form Transaksi</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <?php if (session()->getFlashdata('errors')): ?>
                         <div class="alert alert-danger">
                             <?php foreach (session()->getFlashdata('errors') as $error): ?>

@@ -6,12 +6,20 @@ use CodeIgniter\Model;
 
 class TransaksiModel extends Model
 {
-    protected $table            = 'transaksi';
-    protected $allowedFields    = ['no_invoice', 'id_user', 'total_bayar', 'tipe_pembayaran', 'status', 'catatan']; // [cite: 20]
+    protected $table = 'transaksi';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+        'no_invoice',
+        'id_user',
+        'tanggal_transaksi',
+        'total_bayar',
+        'tipe_pembayaran',
+        'status',
+        'catatan',
+        'created_at'
+    ];
+
+    // Matikan auto timestamps agar kita bisa set manual
+    protected $useTimestamps = false;
 }
 
-// DetailTransaksiModel.php
-class DetailTransaksiModel extends Model {
-    protected $table            = 'detail_transaksi';
-    protected $allowedFields    = ['id_transaksi', 'id_produk', 'nama_produk', 'jumlah', 'harga_satuan', 'subtotal'];
-}

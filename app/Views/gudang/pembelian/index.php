@@ -29,42 +29,52 @@
                             <th>Supplier</th>
                             <th>Tanggal</th>
                             <th>Total</th>
-                            <th>User</th>
                             <th>Catatan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($pembelian as $item): ?>
+                        <?php if (!empty($pembelian)): ?>
+                            <?php foreach ($pembelian as $item): ?>
+                                <tr>
+                                    <td><?= $item['no_invoice'] ?></td>
+                                    <td><?= $item['supplier_nama'] ?></td>
+                                    <td><?= date('d-m-Y', strtotime($item['tanggal_pembelian'])) ?></td>
+                                    <td>Rp <?= number_format($item['total_harga'], 0, ',', '.') ?></td>
+                                    <td><?= $item['catatan'] ?? '-' ?></td>
+                                    <td>
+                                        <a href="<?= base_url('gudang/pembelian/detail/' . $item['id']) ?>" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> Detail
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
                             <tr>
-                                <td><strong><?= $item['no_invoice'] ?></strong></td>
-                                <td><?= $item['nama_supplier'] ?? '-' ?></td>
-                                <td><?= date('d-m-Y', strtotime($item['tanggal_pembelian'])) ?></td>
-                                <td>Rp <?= number_format($item['total_harga'], 0, ',', '.') ?></td>
-                                <td><?= $item['username'] ?? '-' ?></td>
-                                <td><?= $item['catatan'] ?? '-' ?></td>
-                                <td>
-                                    <a href="<?= base_url('gudang/pembelian/detail/' . $item['id']) ?>"
-                                        class="btn btn-sm btn-info">
-                                        <i class="bi bi-eye"></i> Detail
-                                    </a>
-                                </td>
+                                <td colspan="6" class="text-center">Belum ada data pembelian</td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-4">
+                <?= $pager->links('default', 'bootstrap_pagination') ?>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#tablePembelian').DataTable({
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json'
-            },
-            order: [[2, 'desc']]
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json' },
+            order: [[2, 'desc']],
+            paging: false,
+            searching: false,
+            ordering: false,
+            info: false
         });
     });
 </script>

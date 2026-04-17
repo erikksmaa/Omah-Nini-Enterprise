@@ -6,7 +6,7 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-graph-up"></i> Laporan Keuangan</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3 p-3">
             <!-- Filter Form -->
             <form method="GET" class="row mb-4">
                 <div class="col-md-3">
@@ -43,7 +43,7 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card text-white bg-success">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Pemasukan</h6>
                             <h3>Rp <?= number_format($total_pemasukan, 0, ',', '.') ?></h3>
                         </div>
@@ -51,15 +51,15 @@
                 </div>
                 <div class="col-md-4">
                     <div class="card text-white bg-danger">
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <h6>Total Pengeluaran</h6>
                             <h3>Rp <?= number_format($total_pengeluaran, 0, ',', '.') ?></h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card text-white bg-<?= $laba_rugi >= 0 ? 'info' : 'warning' ?>">
-                        <div class="card-body">
+                    <div class="card text-white bg-<?= $laba_rugi >= 0 ? 'secondary' : 'warning' ?>">
+                        <div class="card-body p-3">
                             <h6>Laba/Rugi</h6>
                             <h3>Rp <?= number_format(abs($laba_rugi), 0, ',', '.') ?></h3>
                             <small><?= $laba_rugi >= 0 ? 'Untung' : 'Rugi' ?></small>
@@ -75,7 +75,7 @@
                         <div class="card-header bg-success text-white">
                             <h6 class="mb-0">Pemasukan per Kategori</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-3 p-3">
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead>
@@ -103,7 +103,7 @@
                         <div class="card-header bg-danger text-white">
                             <h6 class="mb-0">Pengeluaran per Kategori</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead>
@@ -132,7 +132,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0">Detail Transaksi Keuangan</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-striped" id="tableKeuangan">
                             <thead class="table-dark">
