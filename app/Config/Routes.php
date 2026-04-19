@@ -100,6 +100,17 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('stok/opname/(:num)', 'Stok::opname/$1');
         $routes->post('stok/update-opname/(:num)', 'Stok::updateOpname/$1');
         $routes->get('stok/history', 'Stok::history');
+
+        // Retur Penjualan
+        $routes->get('retur', 'Retur::index');
+        $routes->get('retur/create', 'Retur::create');
+        $routes->post('retur/store', 'Retur::store');
+        $routes->get('retur/test-insert', 'Retur::testInsert');
+        $routes->get('retur/detail/(:num)', 'Retur::detail/$1');
+        $routes->get('retur/delete/(:num)', 'Retur::delete/$1');
+        $routes->get('retur/getDetailTransaksi/(:num)', 'Retur::getDetailTransaksi/$1');
+            $routes->get('retur/laporan', 'Retur::laporan');
+    $routes->get('retur/export-excel', 'Retur::exportExcel');
     });
 
     // Kasir
