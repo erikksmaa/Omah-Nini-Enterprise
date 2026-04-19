@@ -77,7 +77,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card text-white bg-pirmary">
+                    <div class="card text-white bg-primary">
                         <div class="card-body p-3">
                             <h6>Biaya Operasional</h6>
                             <h4>Rp <?= number_format($biaya_operasional ?? 0, 0, ',', '.') ?></h4>

@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header bg-warning text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Stok Opname</h5>
                 </div>
                 <div class="card-body p-3">
@@ -17,11 +17,11 @@
                         </div>
                     <?php endif; ?>
 
-                    <div class="alert alert-info">
+                    <div class="alert alert-primary">
                         <strong>Informasi Produk:</strong><br>
                         SKU: <?= $produk['sku'] ?><br>
                         Nama: <?= $produk['nama_barang'] ?><br>
-                        Stok Sistem: <strong class="text-primary"><?= number_format($produk['stok']) ?></strong><br>
+                        Stok Sistem: <strong class="text-white"><?= number_format($produk['stok']) ?></strong><br>
                         Minimal Stok: <?= number_format($produk['min_stok']) ?>
                     </div>
 
@@ -47,7 +47,7 @@
                                       placeholder="Contoh: Hasil stock opname tanggal <?= date('d-m-Y') ?>">Stok opname <?= date('d-m-Y') ?></textarea>
                         </div>
 
-                        <div class="alert alert-warning">
+                        <div class="alert alert-primary">
                             <i class="bi bi-exclamation-triangle"></i> <strong>Perhatian:</strong>
                             <ul class="mb-0 mt-2">
                                 <li>Stok opname akan mengubah stok sistem sesuai stok fisik</li>
@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-warning">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save"></i> Simpan Opname
                             </button>
                             <a href="<?= base_url('gudang/stok/detail/' . $produk['id']) ?>" class="btn btn-secondary">

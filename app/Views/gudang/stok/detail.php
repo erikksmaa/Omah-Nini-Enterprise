@@ -3,10 +3,10 @@
 <?= $this->section('content') ?>
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-box-seam"></i> Detail Stok Produk</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-3">
             <div class="mb-3">
                 <a href="<?= base_url('gudang/stok') ?>" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> Kembali
@@ -23,7 +23,7 @@
                         <div class="card-header bg-secondary text-white">
                             <h6 class="mb-0">Informasi Produk</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <table class="table table-sm">
                                 <tr><td width="35%">SKU</td><td>: <strong><?= $produk['sku'] ?></strong></td></tr>
                                 <tr><td>Nama Produk</td><td>: <?= $produk['nama_barang'] ?></td></tr>
@@ -40,7 +40,7 @@
                         <div class="card-header bg-secondary text-white">
                             <h6 class="mb-0">Informasi Stok</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-3">
                             <table class="table table-sm">
                                 <tr><td width="35%">Stok Saat Ini</td>
                                     <td>: 
@@ -78,7 +78,7 @@
                 <div class="card-header bg-secondary text-white">
                     <h6 class="mb-0"><i class="bi bi-clock-history"></i> Histori Perubahan Stok</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table table-striped" id="tableHistory">
                             <thead class="table-dark">

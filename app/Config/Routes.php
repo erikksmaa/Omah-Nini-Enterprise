@@ -114,5 +114,20 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('penjualan/get-struk-data/(:num)', 'Penjualan::getStrukData/$1'); // Tambah ini
     });
 
+    $routes->group('admin/dashboard', ['namespace' => 'App\Controllers\Admin', 'filter' => 'auth'], function ($routes) {
+        $routes->get('getWeeklySalesChart', 'Dashboard::getWeeklySalesChart');
+        $routes->get('getMonthlySalesChart', 'Dashboard::getMonthlySalesChart');
+        $routes->get('getProfitLossChart', 'Dashboard::getProfitLossChart');
+        $routes->get('getLowStockData', 'Dashboard::getLowStockData');
+        $routes->get('getTopProductsChart', 'Dashboard::getTopProductsChart');
+        $routes->get('getPaymentMethodChart', 'Dashboard::getPaymentMethodChart');
+        $routes->get('getDashboardData', 'Dashboard::getDashboardData');
+    });
+
+    // Kasir Dashboard API Routes
+    $routes->group('kasir/dashboard', ['namespace' => 'App\Controllers\Kasir', 'filter' => 'auth'], function ($routes) {
+        $routes->get('getWeeklySalesChart', 'Dashboard::getWeeklySalesChart');
+        $routes->get('getPaymentMethodChart', 'Dashboard::getPaymentMethodChart');
+    });
 
 });

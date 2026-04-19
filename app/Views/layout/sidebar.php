@@ -41,7 +41,7 @@
 
                 <?php $role = session()->get('role'); ?>
 
-                <!-- ========== MASTER DATA (HANYA ADMIN) ========== -->
+                <!-- Master Data (Admin only) -->
                 <?php if ($role === 'admin'): ?>
                     <li class="sidebar-title">Master Data</li>
                     <li class="sidebar-item has-sub <?= (in_array(uri_string(), ['admin/kategori', 'admin/supplier', 'admin/produk', 'admin/user'])) ? 'active' : '' ?>">
@@ -49,7 +49,7 @@
                             <i class="bi bi-database"></i>
                             <span>Data Master</span>
                         </a>
-                        <ul class="submenu <?= (in_array(uri_string(), ['admin/kategori', 'admin/supplier', 'admin/produk', 'admin/user'])) ? 'active' : '' ?>">
+                        <ul class="submenu">
                             <li class="submenu-item <?= (uri_string() == 'admin/user') ? 'active' : '' ?>">
                                 <a href="<?= base_url('admin/user') ?>" class="submenu-link">
                                     <i class="bi bi-people"></i> Manajemen User
@@ -74,7 +74,7 @@
                     </li>
                 <?php endif; ?>
 
-                <!-- ========== PENJUALAN (KASIR & ADMIN) ========== -->
+                <!-- Penjualan (Kasir & Admin) -->
                 <?php if (in_array($role, ['kasir', 'admin'])): ?>
                     <li class="sidebar-title">Transaksi</li>
                     <li class="sidebar-item <?= (uri_string() == 'kasir/penjualan') ? 'active' : '' ?>">
@@ -91,7 +91,7 @@
                     </li>
                 <?php endif; ?>
 
-                <!-- ========== LOGISTIK (GUDANG & ADMIN) ========== -->
+                <!-- Logistik (Gudang & Admin) -->
                 <?php if (in_array($role, ['gudang', 'admin'])): ?>
                     <li class="sidebar-title">Logistik</li>
                     <li class="sidebar-item <?= (uri_string() == 'gudang/pembelian') ? 'active' : '' ?>">
@@ -120,7 +120,7 @@
                     </li>
                 <?php endif; ?>
 
-                <!-- ========== LAPORAN & AUDIT (HANYA ADMIN) ========== -->
+                <!-- Laporan (Admin only) -->
                 <?php if ($role === 'admin'): ?>
                     <li class="sidebar-title">Laporan & Audit</li>
                     <li class="sidebar-item has-sub <?= (in_array(uri_string(), [
@@ -135,14 +135,7 @@
                             <i class="bi bi-file-earmark-text"></i>
                             <span>Laporan</span>
                         </a>
-                        <ul class="submenu <?= (in_array(uri_string(), [
-                            'admin/laporan/keuangan', 
-                            'admin/laporan/penjualan', 
-                            'admin/laporan/pembelian', 
-                            'admin/laporan/laba-rugi', 
-                            'admin/laporan/log-stok', 
-                            'admin/laporan/produk'
-                        ])) ? 'active' : '' ?>">
+                        <ul class="submenu">
                             <li class="submenu-item <?= (uri_string() == 'admin/laporan/keuangan') ? 'active' : '' ?>">
                                 <a href="<?= base_url('admin/laporan/keuangan') ?>" class="submenu-link">
                                     <i class="bi bi-graph-up"></i> Laporan Keuangan
@@ -177,11 +170,11 @@
                     </li>
                 <?php endif; ?>
 
-                <!-- ========== SESI ========== -->
+                <!-- Sesi -->
                 <li class="sidebar-title">Sesi</li>
                 <li class="sidebar-item">
-                    <a href="<?= base_url('logout') ?>" class='sidebar-link text-danger' onclick="return confirm('Yakin ingin logout?')">
-                        <i class="bi bi-door-open-fill text-danger"></i>
+                    <a href="<?= base_url('logout') ?>" class='sidebar-link' onclick="return confirm('Yakin ingin logout?')">
+                        <i class="bi bi-door-open-fill"></i>
                         <span>Keluar</span>
                     </a>
                 </li>
@@ -189,6 +182,77 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Sidebar Styles */
+    .sidebar-wrapper {
+        background: var(--sidebar-bg) !important;
+        border-right: 1px solid var(--card-border) !important;
+    }
+    
+    .logo a {
+        color: var(--sidebar-text) !important;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    
+    .sidebar-link {
+        color: var(--sidebar-text) !important;
+        border-radius: 10px;
+        margin: 4px 12px;
+        padding: 10px 16px;
+    }
+    
+    .sidebar-link:hover {
+        background: rgba(79, 70, 229, 0.08);
+        color: var(--primary) !important;
+    }
+    
+    .sidebar-item.active .sidebar-link {
+        background: var(--primary) !important;
+        color: white !important;
+    }
+    
+    .submenu {
+        background: var(--sidebar-bg) !important;
+    }
+    
+    .submenu-link {
+        color: var(--sidebar-text) !important;
+        padding: 8px 16px 8px 48px;
+    }
+    
+    .submenu-link:hover {
+        background: rgba(79, 70, 229, 0.08);
+        color: var(--primary) !important;
+    }
+    
+    .submenu-item.active .submenu-link {
+        color: var(--primary) !important;
+        font-weight: 500;
+    }
+    
+    .sidebar-title {
+        color: var(--gray-400) !important;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+    
+    .theme-toggle svg {
+        color: var(--sidebar-text);
+    }
+    
+    /* Dark mode toggle switch */
+    .form-switch .form-check-input {
+        background-color: var(--gray-300);
+        border-color: var(--gray-400);
+    }
+    
+    .form-switch .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+</style>
 
 <script>
     // Dark mode toggle
@@ -204,7 +268,6 @@
             }
         });
         
-        // Cek saved theme
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark');
             toggleDark.checked = true;
