@@ -1,24 +1,33 @@
 <?php
 namespace App\Controllers\Admin;
+
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 
-class User extends BaseController {
+class User extends BaseController
+{
     protected $userModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->userModel = new UserModel();
     }
 
-    public function index() {
+    public function index()
+    {
+        $users = $this->userModel->getAllPaginated(10);
+        
         $data = [
             'title' => 'Kelola Data User',
-            'users' => $this->userModel->findAll()
+            'users' => $users,
+            'pager' => $this->userModel->pager
         ];
+        
         return view('admin/user/index', $data);
     }
 
-    public function store() {
+    public function store()
+    {
         $rules = [
             'username' => [
                 'rules' => 'required|min_length[3]|max_length[50]|is_unique[users.username]|alpha_numeric',
@@ -54,20 +63,26 @@ class User extends BaseController {
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
-        $this->userModel->save([
-            'username' => $this->request->getPost('username'),
-            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'role' => $this->request->getPost('role')
-        ]);
+        try {
+            $this->userModel->save([
+                'username' => $this->request->getPost('username'),
+                'password' => $this->request->getPost('password'), // Akan di-hash otomatis oleh model
+                'role' => $this->request->getPost('role')
+            ]);
 
-        return redirect()->to('/admin/user')->with('success', 'User berhasil ditambahkan.');
+            return redirect()->to('/admin/user')->with('success', 'User berhasil ditambahkan.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan user: ' . $e->getMessage());
+        }
     }
 
-    public function update($id) {
-        $user = $this->userModel->find($id);
+    public function update($id)
+    {
+        $user = $this->userModel->getById($id);
         if (!$user) {
             return redirect()->to('/admin/user')->with('error', 'User tidak ditemukan.');
         }
@@ -105,7 +120,7 @@ class User extends BaseController {
         }
 
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
         $dataUpdate = [
@@ -114,31 +129,41 @@ class User extends BaseController {
         ];
 
         if (!empty($password)) {
-            $dataUpdate['password'] = password_hash($password, PASSWORD_DEFAULT);
+            $dataUpdate['password'] = $password; // Akan di-hash otomatis oleh model
         }
 
-        $this->userModel->update($id, $dataUpdate);
-        return redirect()->to('/admin/user')->with('success', 'User berhasil diperbarui.');
+        try {
+            $this->userModel->update($id, $dataUpdate);
+            return redirect()->to('/admin/user')->with('success', 'User berhasil diperbarui.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui user: ' . $e->getMessage());
+        }
     }
 
-    public function delete($id) {
-        $user = $this->userModel->find($id);
+    public function delete($id)
+    {
+        $user = $this->userModel->getById($id);
         if (!$user) {
             return redirect()->back()->with('error', 'User tidak ditemukan.');
         }
 
+        // Cek apakah menghapus akun sendiri
         if (session()->get('user_id') == $id) {
             return redirect()->back()->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
-        if ($user['role'] == 'admin') {
-            $adminCount = $this->userModel->where('role', 'admin')->countAllResults();
-            if ($adminCount <= 1) {
-                return redirect()->back()->with('error', 'Minimal harus ada 1 admin.');
-            }
+        // Cek apakah admin terakhir
+        if ($this->userModel->isLastAdmin($id)) {
+            return redirect()->back()->with('error', 'Minimal harus ada 1 admin.');
         }
 
-        $this->userModel->delete($id);
-        return redirect()->back()->with('success', 'User berhasil dihapus.');
+        try {
+            $this->userModel->delete($id);
+            return redirect()->back()->with('success', 'User berhasil dihapus.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus user: ' . $e->getMessage());
+        }
     }
 }

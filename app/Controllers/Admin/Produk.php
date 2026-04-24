@@ -1,5 +1,6 @@
 <?php
 namespace App\Controllers\Admin;
+
 use App\Controllers\BaseController;
 use App\Models\ProdukModel;
 use App\Models\KategoriModel;
@@ -10,29 +11,69 @@ class Produk extends BaseController
     protected $produkModel;
     protected $kategoriModel;
     protected $supplierModel;
+    protected $db;
 
     public function __construct()
     {
+        $this->db = \Config\Database::connect();
         $this->produkModel = new ProdukModel();
         $this->kategoriModel = new KategoriModel();
         $this->supplierModel = new SupplierModel();
     }
 
-  public function index()
+    public function index()
     {
-        // Gunakan paginate(10) untuk 10 data per halaman
-        $produk = $this->produkModel->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
+        $keyword = $this->request->getGet('keyword');
+        $kategori_id = $this->request->getGet('kategori_id');
+        $supplier_id = $this->request->getGet('supplier_id');
+        $status_stok = $this->request->getGet('status_stok');
+        $perPage = 10;
+        
+        $builder = $this->produkModel
+            ->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
             ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
-            ->join('supplier', 'supplier.id = produk.id_supplier', 'left')
-            ->orderBy('produk.id', 'DESC')
-            ->paginate(10); // 10 data per halaman
+            ->join('supplier', 'supplier.id = produk.id_supplier', 'left');
+        
+        // Filter pencarian
+        if (!empty($keyword)) {
+            $builder->groupStart()
+                ->like('produk.nama_barang', $keyword)
+                ->orLike('produk.sku', $keyword)
+                ->groupEnd();
+        }
+        
+        // Filter kategori
+        if (!empty($kategori_id)) {
+            $builder->where('produk.id_kategori', $kategori_id);
+        }
+        
+        // Filter supplier
+        if (!empty($supplier_id)) {
+            $builder->where('produk.id_supplier', $supplier_id);
+        }
+        
+        // Filter status stok
+        if ($status_stok == 'menipis') {
+            $builder->where('produk.stok <=', 'produk.min_stok', false);
+        } elseif ($status_stok == 'habis') {
+            $builder->where('produk.stok', 0);
+        } elseif ($status_stok == 'aman') {
+            $builder->where('produk.stok >', 'produk.min_stok', false);
+        }
+        
+        $produk = $builder->orderBy('produk.id', 'DESC')->paginate($perPage);
+        $pager = $this->produkModel->pager;
         
         $data = [
             'title' => 'Kelola Master Produk',
             'produk' => $produk,
             'kategori' => $this->kategoriModel->findAll(),
             'supplier' => $this->supplierModel->findAll(),
-            'pager' => $this->produkModel->pager
+            'pager' => $pager,
+            'keyword' => $keyword,
+            'kategori_id' => $kategori_id,
+            'supplier_id' => $supplier_id,
+            'status_stok' => $status_stok
         ];
         
         return view('admin/produk/index', $data);
@@ -50,7 +91,7 @@ class Produk extends BaseController
 
     public function store()
     {
-        // VALIDASI LENGKAP
+        // Validasi
         $rules = [
             'sku' => [
                 'rules' => 'required|is_unique[produk.sku]|min_length[4]|max_length[50]|alpha_numeric_punct',
@@ -95,11 +136,11 @@ class Produk extends BaseController
                 ]
             ],
             'harga_jual' => [
-                'rules' => 'required|numeric|greater_than[harga_beli]',
+                'rules' => 'required|numeric|greater_than[0]',
                 'errors' => [
                     'required' => 'Harga jual wajib diisi.',
                     'numeric' => 'Harga jual harus berupa angka.',
-                    'greater_than' => 'Harga jual harus lebih besar dari harga beli.'
+                    'greater_than' => 'Harga jual harus lebih dari 0.'
                 ]
             ],
             'stok' => [
@@ -111,11 +152,10 @@ class Produk extends BaseController
                 ]
             ],
             'min_stok' => [
-                'rules' => 'permit_empty|numeric|greater_than_equal_to[0]|less_than_equal_to[stok]',
+                'rules' => 'permit_empty|numeric|greater_than_equal_to[0]',
                 'errors' => [
                     'numeric' => 'Minimal stok harus berupa angka.',
-                    'greater_than_equal_to' => 'Minimal stok tidak boleh negatif.',
-                    'less_than_equal_to' => 'Minimal stok tidak boleh melebihi stok saat ini.'
+                    'greater_than_equal_to' => 'Minimal stok tidak boleh negatif.'
                 ]
             ],
             'keterangan' => [
@@ -130,40 +170,51 @@ class Produk extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        try {
-            // Generate barcode EAN-13 jika tidak diisi
-            $barcode = $this->request->getPost('barcode');
-            if (empty($barcode)) {
-                $barcode = $this->generateBarcodeEAN13();
-            }
+        // Validasi manual harga_jual > harga_beli
+        $harga_beli = (float) $this->request->getPost('harga_beli');
+        $harga_jual = (float) $this->request->getPost('harga_jual');
 
-            $this->produkModel->save([
+        if ($harga_jual <= $harga_beli) {
+            return redirect()->back()->withInput()->with('errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
+        }
+
+        try {
+            $data = [
                 'sku' => $this->request->getPost('sku'),
                 'nama_barang' => $this->request->getPost('nama_barang'),
                 'id_kategori' => $this->request->getPost('id_kategori'),
                 'id_supplier' => $this->request->getPost('id_supplier'),
-                'harga_beli' => $this->request->getPost('harga_beli'),
-                'harga_jual' => $this->request->getPost('harga_jual'),
+                'harga_beli' => $harga_beli,
+                'harga_jual' => $harga_jual,
                 'stok' => $this->request->getPost('stok'),
                 'min_stok' => $this->request->getPost('min_stok') ?? 0,
-                'barcode' => $barcode,
                 'keterangan' => $this->request->getPost('keterangan'),
-            ]);
-            return redirect()->to('/admin/produk')->with('success', 'Produk berhasil disimpan.');
+            ];
+
+            // Insert langsung tanpa transaksi kompleks
+            $insertId = $this->produkModel->insert($data);
+            
+            if ($insertId) {
+                return redirect()->to('/admin/produk')->with('success', 'Produk berhasil disimpan.');
+            } else {
+                $errors = $this->produkModel->errors();
+                log_message('error', 'Insert produk gagal: ' . json_encode($errors));
+                return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . json_encode($errors));
+            }
+            
         } catch (\Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage());
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     public function update($id)
     {
-        // Cek apakah produk ada
         $produk = $this->produkModel->find($id);
         if (!$produk) {
             return redirect()->to('/admin/produk')->with('error', 'Produk tidak ditemukan.');
         }
 
-        // VALIDASI UPDATE (dengan is_unique exception untuk current ID)
         $rules = [
             'sku' => [
                 'rules' => "required|min_length[4]|max_length[50]|alpha_numeric_punct|is_unique[produk.sku,id,{$id}]",
@@ -208,11 +259,11 @@ class Produk extends BaseController
                 ]
             ],
             'harga_jual' => [
-                'rules' => 'required|numeric|greater_than[harga_beli]',
+                'rules' => 'required|numeric|greater_than[0]',
                 'errors' => [
                     'required' => 'Harga jual wajib diisi.',
                     'numeric' => 'Harga jual harus berupa angka.',
-                    'greater_than' => 'Harga jual harus lebih besar dari harga beli.'
+                    'greater_than' => 'Harga jual harus lebih dari 0.'
                 ]
             ],
             'min_stok' => [
@@ -234,13 +285,21 @@ class Produk extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Validasi manual harga_jual > harga_beli
+        $harga_beli = (float) $this->request->getPost('harga_beli');
+        $harga_jual = (float) $this->request->getPost('harga_jual');
+
+        if ($harga_jual <= $harga_beli) {
+            return redirect()->back()->withInput()->with('errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
+        }
+
         $dataUpdate = [
             'sku' => $this->request->getPost('sku'),
             'nama_barang' => $this->request->getPost('nama_barang'),
             'id_kategori' => $this->request->getPost('id_kategori'),
             'id_supplier' => $this->request->getPost('id_supplier'),
-            'harga_beli' => $this->request->getPost('harga_beli'),
-            'harga_jual' => $this->request->getPost('harga_jual'),
+            'harga_beli' => $harga_beli,
+            'harga_jual' => $harga_jual,
             'min_stok' => $this->request->getPost('min_stok') ?? 0,
             'keterangan' => $this->request->getPost('keterangan'),
         ];
@@ -249,27 +308,21 @@ class Produk extends BaseController
             if ($this->produkModel->update($id, $dataUpdate)) {
                 return redirect()->to('/admin/produk')->with('success', 'Data produk berhasil diperbarui.');
             } else {
-                return redirect()->back()->withInput()->with('error', 'Gagal memperbarui data.');
+                $errors = $this->produkModel->errors();
+                return redirect()->back()->withInput()->with('error', 'Gagal memperbarui: ' . json_encode($errors));
             }
         } catch (\Exception $e) {
+            log_message('error', 'Exception update: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
     public function delete($id)
     {
-        // Cek apakah produk ada
         $produk = $this->produkModel->find($id);
         if (!$produk) {
             return redirect()->back()->with('error', 'Produk tidak ditemukan.');
         }
-
-        // Cek apakah produk terkait dengan transaksi (jika ada)
-        // $transaksiModel = new \App\Models\TransaksiModel();
-        // $terkait = $transaksiModel->where('id_produk', $id)->countAllResults();
-        // if ($terkait > 0) {
-        //     return redirect()->back()->with('error', "Produk tidak bisa dihapus karena sudah ada dalam transaksi.");
-        // }
 
         try {
             $this->produkModel->delete($id);
@@ -277,32 +330,5 @@ class Produk extends BaseController
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Generate barcode EAN-13 otomatis
-     */
-    private function generateBarcodeEAN13()
-    {
-        // Prefix 200 untuk internal (bisa disesuaikan)
-        $prefix = '200';
-        
-        // Cari ID terakhir
-        $lastId = $this->produkModel->selectMax('id')->get()->getRow()->id ?? 0;
-        $nextId = $lastId + 1;
-        
-        // Generate 12 digit pertama
-        $code12 = $prefix . str_pad($nextId, 9, '0', STR_PAD_LEFT);
-        $code12 = substr($code12, 0, 12);
-        
-        // Hitung check digit
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $weight = ($i % 2 == 0) ? 1 : 3;
-            $sum += (int)$code12[$i] * $weight;
-        }
-        $checkDigit = (10 - ($sum % 10)) % 10;
-        
-        return $code12 . $checkDigit;
     }
 }

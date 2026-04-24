@@ -3,20 +3,16 @@ namespace App\Controllers\Gudang;
 
 use App\Controllers\BaseController;
 use App\Models\PembelianModel;
-use App\Models\DetailPembelianModel;
-use App\Models\ProdukModel;
 use App\Models\SupplierModel;
-use App\Models\LogStokModel;
-use App\Models\KeuanganModel;
+use App\Models\ProdukModel;
+use App\Models\DetailPembelianModel;
 
 class Pembelian extends BaseController
 {
     protected $pembelianModel;
-    protected $detailPembelianModel;
-    protected $produkModel;
     protected $supplierModel;
-    protected $logStokModel;
-    protected $keuanganModel;
+    protected $produkModel;
+    protected $detailPembelianModel;
 
     public function __construct()
     {
@@ -30,28 +26,54 @@ class Pembelian extends BaseController
         }
 
         $this->pembelianModel = new PembelianModel();
-        $this->detailPembelianModel = new DetailPembelianModel();
-        $this->produkModel = new ProdukModel();
         $this->supplierModel = new SupplierModel();
-        $this->logStokModel = new LogStokModel();
-        $this->keuanganModel = new KeuanganModel();
+        $this->produkModel = new ProdukModel();
+        $this->detailPembelianModel = new DetailPembelianModel();
     }
 
     public function index()
     {
-        // Gunakan paginate(10) untuk 10 data per halaman
-        $pembelian = $this->pembelianModel
+        $keyword = $this->request->getGet('keyword');
+        $supplier_id = $this->request->getGet('supplier_id');
+        $start_date = $this->request->getGet('start_date');
+        $end_date = $this->request->getGet('end_date');
+        $perPage = 10;
+
+        $builder = $this->pembelianModel
             ->select('pembelian.*, supplier.nama as supplier_nama')
             ->join('supplier', 'supplier.id = pembelian.id_supplier')
-            ->orderBy('pembelian.id', 'DESC')
-            ->paginate(10);
-        
+            ->orderBy('pembelian.id', 'DESC');
+
+        // Filter pencarian berdasarkan no_invoice
+        if (!empty($keyword)) {
+            $builder->like('pembelian.no_invoice', $keyword);
+        }
+
+        // Filter supplier
+        if (!empty($supplier_id)) {
+            $builder->where('pembelian.id_supplier', $supplier_id);
+        }
+
+        // Filter tanggal
+        if (!empty($start_date)) {
+            $builder->where('pembelian.tanggal_pembelian >=', $start_date);
+        }
+        if (!empty($end_date)) {
+            $builder->where('pembelian.tanggal_pembelian <=', $end_date);
+        }
+
+        $pembelian = $builder->paginate($perPage);
         $pager = $this->pembelianModel->pager;
 
         $data = [
             'title' => 'Data Pembelian Barang',
             'pembelian' => $pembelian,
-            'pager' => $pager
+            'pager' => $pager,
+            'supplier_list' => $this->supplierModel->findAll(),
+            'keyword' => $keyword,
+            'supplier_id' => $supplier_id,
+            'start_date' => $start_date,
+            'end_date' => $end_date
         ];
 
         return view('gudang/pembelian/index', $data);
@@ -63,7 +85,7 @@ class Pembelian extends BaseController
             'title' => 'Form Pembelian Barang',
             'supplier' => $this->supplierModel->findAll(),
             'produk' => $this->produkModel->findAll(),
-            'no_invoice' => $this->generateNoInvoice()
+            'no_invoice' => $this->pembelianModel->generateNoInvoice()
         ];
 
         return view('gudang/pembelian/create', $data);
@@ -95,84 +117,28 @@ class Pembelian extends BaseController
             $total_harga += $item['subtotal'];
         }
 
-        $no_invoice = $this->generateNoInvoice();
-        $now = date('Y-m-d H:i:s');
-
         $pembelianData = [
-            'no_invoice' => $no_invoice,
+            'no_invoice' => $this->pembelianModel->generateNoInvoice(),
             'id_supplier' => $this->request->getPost('id_supplier'),
             'id_user' => session()->get('user_id'),
             'tanggal_pembelian' => $this->request->getPost('tanggal_pembelian'),
             'total_harga' => $total_harga,
             'catatan' => $this->request->getPost('catatan'),
-            'created_at' => $now
+            'created_at' => date('Y-m-d H:i:s')
         ];
 
-        $db = \Config\Database::connect();
+        $result = $this->pembelianModel->savePembelian($pembelianData, $items, session()->get('user_id'));
 
-        try {
-            $db->table('pembelian')->insert($pembelianData);
-            $pembelian_id = $db->insertID();
-
-            foreach ($items as $item) {
-                $detailData = [
-                    'id_pembelian' => $pembelian_id,
-                    'id_produk' => $item['id_produk'],
-                    'nama_produk' => $item['nama_produk'],
-                    'jumlah' => $item['jumlah'],
-                    'harga_beli' => $item['harga_beli'],
-                    'subtotal' => $item['subtotal']
-                ];
-                $db->table('detail_pembelian')->insert($detailData);
-
-                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
-                $stok_baru = $produk['stok'] + $item['jumlah'];
-                $db->table('produk')->where('id', $item['id_produk'])->update([
-                    'stok' => $stok_baru,
-                    'harga_beli' => $item['harga_beli']
-                ]);
-
-                $db->table('log_stok')->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => session()->get('user_id'),
-                    'tipe_ref' => 'pembelian',
-                    'id_ref' => $pembelian_id,
-                    'jumlah_sebelum' => $produk['stok'],
-                    'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah' => $stok_baru,
-                    'aktivitas' => 'Pembelian barang',
-                    'created_at' => $now
-                ]);
-            }
-
-            $db->table('keuangan')->insert([
-                'id_user' => session()->get('user_id'),
-                'tipe' => 'pengeluaran',
-                'kategori' => 'pembelian',
-                'tipe_ref' => 'pembelian',
-                'id_ref' => $pembelian_id,
-                'jumlah' => $total_harga,
-                'tanggal_transaksi' => $this->request->getPost('tanggal_pembelian'),
-                'created_at' => $now
-            ]);
-
+        if ($result['success']) {
             return redirect()->to('/gudang/pembelian')->with('success', 'Pembelian berhasil disimpan');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $result['error']);
         }
     }
 
     public function detail($id)
     {
-        $db = \Config\Database::connect();
-
-        $pembelian = $db->table('pembelian')
-            ->select('pembelian.*, supplier.nama as supplier_nama')
-            ->join('supplier', 'supplier.id = pembelian.id_supplier')
-            ->where('pembelian.id', $id)
-            ->get()
-            ->getRowArray();
+        $pembelian = $this->pembelianModel->getDetail($id);
 
         if (!$pembelian) {
             return redirect()->to('/gudang/pembelian')->with('error', 'Data tidak ditemukan');
@@ -186,17 +152,5 @@ class Pembelian extends BaseController
             'detail' => $detail
         ];
         return view('gudang/pembelian/detail', $data);
-    }
-
-    private function generateNoInvoice()
-    {
-        $last = $this->pembelianModel->orderBy('id', 'DESC')->first();
-        if ($last && isset($last['no_invoice'])) {
-            $lastNumber = (int) substr($last['no_invoice'], -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-        return 'PO-' . date('ymd') . '-' . $newNumber;
     }
 }

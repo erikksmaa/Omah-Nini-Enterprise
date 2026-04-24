@@ -192,8 +192,7 @@
                 <!-- Sesi -->
                 <li class="sidebar-title">Sesi</li>
                 <li class="sidebar-item">
-                    <a href="<?= base_url('logout') ?>" class='sidebar-link'
-                        onclick="return confirm('Yakin ingin logout?')">
+                    <a href="#" id="btnLogoutSidebar" class='sidebar-link'>
                         <i class="bi bi-door-open-fill"></i>
                         <span>Keluar</span>
                     </a>

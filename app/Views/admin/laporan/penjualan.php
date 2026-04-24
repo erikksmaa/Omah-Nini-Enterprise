@@ -30,9 +30,10 @@
                     </button>
                 </div>
                 <div class="col-md-2">
-                    <label>&nbsp;</label>
-                    <a href="<?= base_url('admin/laporan/export-penjualan?start_date=' . $start_date . '&end_date=' . $end_date) ?>" class="btn btn-primary w-100">
-                        <i class="bi bi-file-excel"></i> Export
+                    <label class="form-label">&nbsp;</label>
+                    <a href="<?= base_url('admin/laporan/export-penjualan?start_date=' . $start_date . '&end_date=' . $end_date) ?>"
+                        class="btn btn-success w-100">
+                        <i class="bi bi-file-excel"></i> Export Excel
                     </a>
                 </div>
             </form>
@@ -74,7 +75,11 @@
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
-                                <tr><th>Tanggal</th><th>Jumlah Transaksi</th><th>Total</th></tr>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jumlah Transaksi</th>
+                                    <th>Total</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($penjualan_per_hari as $item): ?>
@@ -99,7 +104,11 @@
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
-                                <tr><th>Produk</th><th>Terjual</th><th>Omset</th></tr>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Terjual</th>
+                                    <th>Omset</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($produk_terlaris as $item): ?>
@@ -158,14 +167,14 @@
 </div>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#tablePenjualan').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json' },
             order: [[1, 'desc']],
             pageLength: 25
         });
     });
-    
+
     function showStruk(id) {
         window.open(`<?= base_url('kasir/penjualan/struk/') ?>${id}`, '_blank');
     }

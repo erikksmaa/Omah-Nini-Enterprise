@@ -11,7 +11,8 @@
             <form method="GET" class="row mb-4">
                 <div class="col-md-3">
                     <label>Start Date</label>
-                    <input type="date" name="start_date" class="form-control" value="<?= $start_date ?? date('Y-m-01') ?>">
+                    <input type="date" name="start_date" class="form-control"
+                        value="<?= $start_date ?? date('Y-m-01') ?>">
                 </div>
                 <div class="col-md-3">
                     <label>End Date</label>
@@ -28,6 +29,13 @@
                     <button type="button" class="btn btn-success w-100" onclick="window.print()">
                         <i class="bi bi-printer"></i> Cetak
                     </button>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <a href="<?= base_url('admin/laporan/export-pembelian?start_date=' . $start_date . '&end_date=' . $end_date) ?>"
+                        class="btn btn-success w-100">
+                        <i class="bi bi-file-excel"></i> Export Excel
+                    </a>
                 </div>
             </form>
 
@@ -53,33 +61,33 @@
 
             <!-- Pembelian per Supplier -->
             <?php if (!empty($pembelian_per_supplier)): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h6 class="mb-0">Pembelian per Supplier</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Supplier</th>
-                                    <th class="text-end">Jumlah Transaksi</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($pembelian_per_supplier as $item): ?>
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">Pembelian per Supplier</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
                                     <tr>
-                                        <td><?= $item['supplier_nama'] ?></td>
-                                        <td class="text-end"><?= number_format($item['jumlah_transaksi']) ?>x</td>
-                                        <td class="text-end">Rp <?= number_format($item['total'], 0, ',', '.') ?></td>
+                                        <th>Supplier</th>
+                                        <th class="text-end">Jumlah Transaksi</th>
+                                        <th class="text-end">Total</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pembelian_per_supplier as $item): ?>
+                                        <tr>
+                                            <td><?= $item['supplier_nama'] ?></td>
+                                            <td class="text-end"><?= number_format($item['jumlah_transaksi']) ?>x</td>
+                                            <td class="text-end">Rp <?= number_format($item['total'], 0, ',', '.') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
             <?php endif; ?>
 
             <!-- Detail Pembelian -->
@@ -126,7 +134,7 @@
 </div>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#tablePembelian').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/id.json' },
             order: [[2, 'desc']],

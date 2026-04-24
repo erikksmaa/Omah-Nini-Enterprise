@@ -22,9 +22,42 @@ class DetailReturPenjualanModel extends Model
         'subtotal'
     ];
     
-    // Get detail by id_retur
-    public function getByRetur($id_retur)
+    // ========== GET METHODS ==========
+    
+    /**
+     * Get detail by retur ID
+     */
+    public function getByRetur($returId)
     {
-        return $this->where('id_retur', $id_retur)->findAll();
+        return $this->where('id_retur', $returId)->findAll();
+    }
+    
+    /**
+     * Get detail with product info
+     */
+    public function getByReturWithProduct($returId)
+    {
+        $db = \Config\Database::connect();
+        return $db->table('detail_retur_penjualan')
+            ->select('detail_retur_penjualan.*, produk.sku, produk.nama_barang')
+            ->join('produk', 'produk.id = detail_retur_penjualan.id_produk', 'left')
+            ->where('id_retur', $returId)
+            ->get()
+            ->getResultArray();
+    }
+    
+    /**
+     * Get detail for export
+     */
+    public function getForExport($startDate, $endDate)
+    {
+        $db = \Config\Database::connect();
+        return $db->table('detail_retur_penjualan')
+            ->select('detail_retur_penjualan.*, retur_penjualan.no_retur')
+            ->join('retur_penjualan', 'retur_penjualan.id = detail_retur_penjualan.id_retur')
+            ->where('retur_penjualan.tanggal_retur >=', $startDate)
+            ->where('retur_penjualan.tanggal_retur <=', $endDate)
+            ->get()
+            ->getResultArray();
     }
 }

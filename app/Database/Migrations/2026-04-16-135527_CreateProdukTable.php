@@ -19,11 +19,6 @@ class CreateProdukTable extends Migration
                 'type' => 'VARCHAR',
                 'constraint' => 50,
             ],
-            'barcode' => [
-                'type' => 'VARCHAR',
-                'constraint' => 50,
-                'null' => true,
-            ],
             'nama_barang' => [
                 'type' => 'VARCHAR',
                 'constraint' => 100,

@@ -7,7 +7,7 @@ use App\Models\PembelianModel;
 use App\Models\KeuanganModel;
 use App\Models\LogStokModel;
 use App\Models\ProdukModel;
-use App\Models\DetailTransaksiModel;
+use App\Models\LaporanModel;
 
 class Laporan extends BaseController
 {
@@ -16,7 +16,7 @@ class Laporan extends BaseController
     protected $keuanganModel;
     protected $logStokModel;
     protected $produkModel;
-    protected $detailTransaksiModel;
+    protected $laporanModel;
     protected $db;
 
     public function __construct()
@@ -35,7 +35,7 @@ class Laporan extends BaseController
         $this->keuanganModel = new KeuanganModel();
         $this->logStokModel = new LogStokModel();
         $this->produkModel = new ProdukModel();
-        $this->detailTransaksiModel = new DetailTransaksiModel();
+        $this->laporanModel = new LaporanModel();
     }
 
     // Dashboard Laporan
@@ -53,64 +53,21 @@ class Laporan extends BaseController
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
-        // Data pemasukan
-        $pemasukan = $this->keuanganModel
-            ->where('tipe', 'pemasukan')
-            ->where('MONTH(tanggal_transaksi)', $bulan)
-            ->where('YEAR(tanggal_transaksi)', $tahun)
-            ->selectSum('jumlah')
-            ->first();
-
-        // Data pengeluaran
-        $pengeluaran = $this->keuanganModel
-            ->where('tipe', 'pengeluaran')
-            ->where('MONTH(tanggal_transaksi)', $bulan)
-            ->where('YEAR(tanggal_transaksi)', $tahun)
-            ->selectSum('jumlah')
-            ->first();
-
-        // Data per kategori
-        $pemasukanByKategori = $this->keuanganModel
-            ->select('kategori, SUM(jumlah) as total')
-            ->where('tipe', 'pemasukan')
-            ->where('MONTH(tanggal_transaksi)', $bulan)
-            ->where('YEAR(tanggal_transaksi)', $tahun)
-            ->groupBy('kategori')
-            ->findAll();
-
-        $pengeluaranByKategori = $this->keuanganModel
-            ->select('kategori, SUM(jumlah) as total')
-            ->where('tipe', 'pengeluaran')
-            ->where('MONTH(tanggal_transaksi)', $bulan)
-            ->where('YEAR(tanggal_transaksi)', $tahun)
-            ->groupBy('kategori')
-            ->findAll();
-
-        // Detail transaksi keuangan
-        $detail = $this->keuanganModel
-            ->select('keuangan.*, users.username')
-            ->join('users', 'users.user_id = keuangan.id_user', 'left')
-            ->where('MONTH(keuangan.tanggal_transaksi)', $bulan)
-            ->where('YEAR(keuangan.tanggal_transaksi)', $tahun)
-            ->orderBy('keuangan.tanggal_transaksi', 'DESC')
-            ->findAll();
-
-        $totalPemasukan = $pemasukan['jumlah'] ?? 0;
-        $totalPengeluaran = $pengeluaran['jumlah'] ?? 0;
-        $labaRugi = $totalPemasukan - $totalPengeluaran;
-
+        $totalPemasukan = $this->laporanModel->getTotalPemasukan($bulan, $tahun);
+        $totalPengeluaran = $this->laporanModel->getTotalPengeluaran($bulan, $tahun);
+        
         $data = [
             'title' => 'Laporan Keuangan',
             'bulan' => $bulan,
             'tahun' => $tahun,
             'total_pemasukan' => $totalPemasukan,
             'total_pengeluaran' => $totalPengeluaran,
-            'laba_rugi' => $labaRugi,
-            'pemasukan_by_kategori' => $pemasukanByKategori,
-            'pengeluaran_by_kategori' => $pengeluaranByKategori,
-            'detail' => $detail,
-            'bulan_list' => $this->getBulanList(),
-            'tahun_list' => $this->getTahunList()
+            'laba_rugi' => $totalPemasukan - $totalPengeluaran,
+            'pemasukan_by_kategori' => $this->laporanModel->getPemasukanByKategori($bulan, $tahun),
+            'pengeluaran_by_kategori' => $this->laporanModel->getPengeluaranByKategori($bulan, $tahun),
+            'detail' => $this->laporanModel->getDetailKeuangan($bulan, $tahun),
+            'bulan_list' => $this->laporanModel->getBulanList(),
+            'tahun_list' => $this->laporanModel->getTahunList()
         ];
 
         return view('admin/laporan/keuangan', $data);
@@ -122,115 +79,39 @@ class Laporan extends BaseController
         $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
 
-        // Debug: Log query untuk cek
-        log_message('debug', 'Start date: ' . $start_date);
-        log_message('debug', 'End date: ' . $end_date);
-
-        // Data penjualan - cek apakah ada data
-        $penjualan = $this->transaksiModel
-            ->select('transaksi.*, users.username')
-            ->join('users', 'users.user_id = transaksi.id_user', 'left')
-            ->where('transaksi.status', 'selesai')
-            ->where('transaksi.created_at >=', $start_date . ' 00:00:00')
-            ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
-            ->orderBy('transaksi.created_at', 'DESC')
-            ->findAll();
-
-        // Debug: Cek jumlah data
-        log_message('debug', 'Jumlah penjualan: ' . count($penjualan));
-
-        // Statistik
-        $totalTransaksi = count($penjualan);
-        $totalOmset = array_sum(array_column($penjualan, 'total_bayar'));
-
-        // Total item terjual
-        $totalItemTerjual = $this->db->table('detail_transaksi')
-            ->select('SUM(detail_transaksi.jumlah) as total')
-            ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
-            ->where('transaksi.status', 'selesai')
-            ->where('transaksi.created_at >=', $start_date . ' 00:00:00')
-            ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
-            ->get()
-            ->getRow()
-            ->total ?? 0;
-
-        // Penjualan per hari
-        $penjualanPerHari = $this->db->table('transaksi')
-            ->select('DATE(created_at) as tanggal, COUNT(*) as jumlah_transaksi, SUM(total_bayar) as total')
-            ->where('status', 'selesai')
-            ->where('created_at >=', $start_date . ' 00:00:00')
-            ->where('created_at <=', $end_date . ' 23:59:59')
-            ->groupBy('DATE(created_at)')
-            ->orderBy('tanggal', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        // Produk terlaris
-        $produkTerlaris = $this->db->table('detail_transaksi')
-            ->select('detail_transaksi.id_produk, detail_transaksi.nama_produk, SUM(detail_transaksi.jumlah) as total_terjual, SUM(detail_transaksi.subtotal) as total_omset')
-            ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
-            ->where('transaksi.status', 'selesai')
-            ->where('transaksi.created_at >=', $start_date . ' 00:00:00')
-            ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
-            ->groupBy('detail_transaksi.id_produk, detail_transaksi.nama_produk')
-            ->orderBy('total_terjual', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
-
+        $penjualan = $this->laporanModel->getPenjualanByDate($start_date, $end_date);
+        
         $data = [
             'title' => 'Laporan Penjualan',
             'start_date' => $start_date,
             'end_date' => $end_date,
             'penjualan' => $penjualan,
-            'total_transaksi' => $totalTransaksi,
-            'total_omset' => $totalOmset,
-            'total_item_terjual' => $totalItemTerjual,
-            'penjualan_per_hari' => $penjualanPerHari,
-            'produk_terlaris' => $produkTerlaris
+            'total_transaksi' => count($penjualan),
+            'total_omset' => array_sum(array_column($penjualan, 'total_bayar')),
+            'total_item_terjual' => $this->laporanModel->getTotalItemTerjual($start_date, $end_date),
+            'penjualan_per_hari' => $this->laporanModel->getPenjualanPerHari($start_date, $end_date),
+            'produk_terlaris' => $this->laporanModel->getProdukTerlaris($start_date, $end_date, 10)
         ];
 
         return view('admin/laporan/penjualan', $data);
     }
+
     // Laporan Pembelian
     public function pembelian()
     {
         $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
 
-        // Data pembelian
-        $pembelian = $this->pembelianModel
-            ->select('pembelian.*, supplier.nama as supplier_nama, users.username')
-            ->join('supplier', 'supplier.id = pembelian.id_supplier')
-            ->join('users', 'users.user_id = pembelian.id_user', 'left')
-            ->where('pembelian.tanggal_pembelian >=', $start_date)
-            ->where('pembelian.tanggal_pembelian <=', $end_date)
-            ->orderBy('pembelian.tanggal_pembelian', 'DESC')
-            ->findAll();
-
-        // Statistik
-        $totalTransaksi = count($pembelian);
-        $totalPengeluaran = array_sum(array_column($pembelian, 'total_harga'));
-
-        // Pembelian per supplier
-        $pembelianPerSupplier = $this->db->table('pembelian')
-            ->select('supplier.nama as supplier_nama, COUNT(*) as jumlah_transaksi, SUM(pembelian.total_harga) as total')
-            ->join('supplier', 'supplier.id = pembelian.id_supplier')
-            ->where('pembelian.tanggal_pembelian >=', $start_date)
-            ->where('pembelian.tanggal_pembelian <=', $end_date)
-            ->groupBy('pembelian.id_supplier')
-            ->orderBy('total', 'DESC')
-            ->get()
-            ->getResultArray();
-
+        $pembelian = $this->laporanModel->getPembelianByDate($start_date, $end_date);
+        
         $data = [
             'title' => 'Laporan Pembelian',
             'start_date' => $start_date,
             'end_date' => $end_date,
             'pembelian' => $pembelian,
-            'total_transaksi' => $totalTransaksi,
-            'total_pengeluaran' => $totalPengeluaran,
-            'pembelian_per_supplier' => $pembelianPerSupplier
+            'total_transaksi' => count($pembelian),
+            'total_pengeluaran' => array_sum(array_column($pembelian, 'total_harga')),
+            'pembelian_per_supplier' => $this->laporanModel->getPembelianPerSupplier($start_date, $end_date)
         ];
 
         return view('admin/laporan/pembelian', $data);
@@ -245,41 +126,10 @@ class Laporan extends BaseController
         $start_date = $tahun . '-' . $bulan . '-01';
         $end_date = date('Y-m-t', strtotime($start_date));
 
-        // Total penjualan (omset)
-        $totalPenjualan = $this->transaksiModel
-            ->where('status', 'selesai')
-            ->where('created_at >=', $start_date . ' 00:00:00')
-            ->where('created_at <=', $end_date . ' 23:59:59')
-            ->selectSum('total_bayar')
-            ->first()['total_bayar'] ?? 0;
-
-        // HPP (Harga Pokok Penjualan) - PERBAIKAN tanpa GROUP BY
-        $hpp = $this->db->table('detail_transaksi')
-            ->select('SUM(detail_transaksi.jumlah * produk.harga_beli) as total_hpp')
-            ->join('produk', 'produk.id = detail_transaksi.id_produk')
-            ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
-            ->where('transaksi.status', 'selesai')
-            ->where('transaksi.created_at >=', $start_date . ' 00:00:00')
-            ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
-            ->get()
-            ->getRow()
-            ->total_hpp ?? 0;
-
-        // Biaya operasional (pengeluaran non-pembelian)
-        $biayaOperasional = $this->keuanganModel
-            ->where('tipe', 'pengeluaran')
-            ->where('kategori !=', 'pembelian')
-            ->where('MONTH(tanggal_transaksi)', $bulan)
-            ->where('YEAR(tanggal_transaksi)', $tahun)
-            ->selectSum('jumlah')
-            ->first()['jumlah'] ?? 0;
-
-        // Total pembelian barang
-        $totalPembelian = $this->pembelianModel
-            ->where('MONTH(tanggal_pembelian)', $bulan)
-            ->where('YEAR(tanggal_pembelian)', $tahun)
-            ->selectSum('total_harga')
-            ->first()['total_harga'] ?? 0;
+        $totalPenjualan = $this->laporanModel->getTotalPenjualanForLabaRugi($start_date, $end_date);
+        $hpp = $this->laporanModel->getHpp($start_date, $end_date);
+        $biayaOperasional = $this->laporanModel->getBiayaOperasional($bulan, $tahun);
+        $totalPembelian = $this->laporanModel->getTotalPembelianForLabaRugi($bulan, $tahun);
 
         $labaKotor = $totalPenjualan - $hpp;
         $labaBersih = $labaKotor - $biayaOperasional;
@@ -296,192 +146,329 @@ class Laporan extends BaseController
             'biaya_operasional' => $biayaOperasional,
             'laba_bersih' => $labaBersih,
             'margin_laba' => $marginLaba,
-            'bulan_list' => $this->getBulanList(),
-            'tahun_list' => $this->getTahunList()
+            'bulan_list' => $this->laporanModel->getBulanList(),
+            'tahun_list' => $this->laporanModel->getTahunList()
         ];
 
         return view('admin/laporan/laba_rugi', $data);
     }
 
     // Audit Log Stok
-    public function logStok()
-    {
-        $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
-        $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
-        $produk_id = $this->request->getGet('produk_id');
-        $tipe = $this->request->getGet('tipe');
+public function logStok()
+{
+    $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
+    $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
+    $produk_id = $this->request->getGet('produk_id');
+    $tipe = $this->request->getGet('tipe');
 
-        $builder = $this->logStokModel
-            ->select('log_stok.*, produk.nama_barang, produk.sku, users.username')
-            ->join('produk', 'produk.id = log_stok.id_produk')
-            ->join('users', 'users.user_id = log_stok.id_user', 'left')
-            ->where('log_stok.created_at >=', $start_date . ' 00:00:00')
-            ->where('log_stok.created_at <=', $end_date . ' 23:59:59');
+    // Gunakan method getFiltered dari model
+    $log = $this->logStokModel->getFiltered($start_date, $end_date, $produk_id, $tipe, 50);
+    $pager = $this->logStokModel->pager;
 
-        if ($produk_id) {
-            $builder->where('log_stok.id_produk', $produk_id);
-        }
+    // Statistik mutasi stok
+    $mutasi = $this->logStokModel->getMutasiStok($start_date, $end_date);
 
-        if ($tipe) {
-            $builder->where('log_stok.tipe_ref', $tipe);
-        }
+    $data = [
+        'title' => 'Audit Log Stok',
+        'log' => $log,
+        'pager' => $pager,
+        'start_date' => $start_date,
+        'end_date' => $end_date,
+        'produk_id' => $produk_id,
+        'tipe' => $tipe,
+        'produk_list' => $this->produkModel->findAll(),
+        'total_masuk' => $mutasi['masuk'],
+        'total_keluar' => $mutasi['keluar']
+    ];
 
-        $log = $builder->orderBy('log_stok.created_at', 'DESC')->paginate(50);
-        $pager = $this->logStokModel->pager;
+    return view('admin/laporan/log_stok', $data);
+}
 
-        // Statistik
-        $totalMasuk = $this->logStokModel
-            ->where('tipe_ref', 'pembelian')
-            ->where('created_at >=', $start_date . ' 00:00:00')
-            ->where('created_at <=', $end_date . ' 23:59:59')
-            ->selectSum('jumlah_perubahan')
-            ->first()['jumlah_perubahan'] ?? 0;
+// Laporan Produk
+public function produk()
+{
+    // Produk dengan stok terbanyak (limit 10)
+    $stokTerbanyak = $this->produkModel
+        ->select('produk.*, kategori.nama as kategori_nama')
+        ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
+        ->orderBy('stok', 'DESC')
+        ->limit(10)
+        ->findAll();
 
-        $totalKeluar = $this->logStokModel
-            ->where('tipe_ref', 'penjualan')
-            ->where('created_at >=', $start_date . ' 00:00:00')
-            ->where('created_at <=', $end_date . ' 23:59:59')
-            ->selectSum('jumlah_perubahan')
-            ->first()['jumlah_perubahan'] ?? 0;
+    // Produk dengan stok menipis (dengan pagination)
+    $stokMenipis = $this->produkModel
+        ->select('produk.*, kategori.nama as kategori_nama')
+        ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
+        ->where('stok <=', 'min_stok', false)
+        ->orderBy('stok', 'ASC')
+        ->paginate(10);
 
-        $data = [
-            'title' => 'Audit Log Stok',
-            'log' => $log,
-            'pager' => $pager,
-            'start_date' => $start_date,
-            'end_date' => $end_date,
-            'produk_id' => $produk_id,
-            'tipe' => $tipe,
-            'produk_list' => $this->produkModel->findAll(),
-            'total_masuk' => abs($totalMasuk),
-            'total_keluar' => abs($totalKeluar)
-        ];
+    $pagerStokMenipis = $this->produkModel->pager;
 
-        return view('admin/laporan/log_stok', $data);
+    // Produk terlaris all time (limit 10)
+    $produkTerlaris = $this->db->table('detail_transaksi')
+        ->select('detail_transaksi.id_produk, detail_transaksi.nama_produk, SUM(detail_transaksi.jumlah) as total_terjual, SUM(detail_transaksi.subtotal) as total_omset')
+        ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
+        ->where('transaksi.status', 'selesai')
+        ->groupBy('detail_transaksi.id_produk, detail_transaksi.nama_produk')
+        ->orderBy('total_terjual', 'DESC')
+        ->limit(10)
+        ->get()
+        ->getResultArray();
+
+    // Produk tidak pernah terjual dengan pagination
+    $terjual = $this->db->table('detail_transaksi')
+        ->select('id_produk')
+        ->groupBy('id_produk')
+        ->get()
+        ->getResultArray();
+
+    $terjualIds = array_column($terjual, 'id_produk');
+
+    $builder = $this->produkModel
+        ->select('produk.id, produk.nama_barang, produk.sku, produk.stok, produk.harga_beli')
+        ->orderBy('produk.nama_barang', 'ASC');
+
+    if (!empty($terjualIds)) {
+        $builder->whereNotIn('produk.id', $terjualIds);
     }
 
-    // Laporan Produk
-    public function produk()
-    {
-        // Produk dengan stok terbanyak (limit 10)
-        $stokTerbanyak = $this->produkModel
-            ->select('produk.*, kategori.nama as kategori_nama')
-            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
-            ->orderBy('stok', 'DESC')
-            ->limit(10)
-            ->findAll();
+    $produkNeverSold = $builder->paginate(10);
+    $pagerNeverSold = $this->produkModel->pager;
 
-        // Produk dengan stok menipis (dengan pagination)
-        $stokMenipis = $this->produkModel
-            ->select('produk.*, kategori.nama as kategori_nama')
-            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
-            ->where('stok <=', 'min_stok', false)
-            ->orderBy('stok', 'ASC')
-            ->paginate(10);
+    // Total nilai stok
+    $totalNilaiStok = $this->db->table('produk')
+        ->select('SUM(stok * harga_beli) as total')
+        ->get()
+        ->getRow()
+        ->total ?? 0;
 
-        $pagerStokMenipis = $this->produkModel->pager;
+    $data = [
+        'title' => 'Laporan Produk',
+        'stok_terbanyak' => $stokTerbanyak,
+        'stok_menipis' => $stokMenipis,
+        'pager_stok_menipis' => $pagerStokMenipis,  // ← PASTIKAN INI ADA
+        'produk_terlaris' => $produkTerlaris,
+        'produk_never_sold' => $produkNeverSold,
+        'pager_never_sold' => $pagerNeverSold,     // ← PASTIKAN INI ADA
+        'total_nilai_stok' => $totalNilaiStok,
+        'total_produk' => $this->produkModel->countAll()
+    ];
 
-        // Produk terlaris all time (limit 10)
-        $produkTerlaris = $this->db->table('detail_transaksi')
-            ->select('detail_transaksi.id_produk, detail_transaksi.nama_produk, SUM(detail_transaksi.jumlah) as total_terjual, SUM(detail_transaksi.subtotal) as total_omset')
-            ->join('transaksi', 'transaksi.id = detail_transaksi.id_transaksi')
-            ->where('transaksi.status', 'selesai')
-            ->groupBy('detail_transaksi.id_produk, detail_transaksi.nama_produk')
-            ->orderBy('total_terjual', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
+    return view('admin/laporan/produk', $data);
+}
 
-        // PERBAIKAN: Produk tidak pernah terjual dengan pagination
-        // Ambil ID produk yang sudah terjual
-        $terjual = $this->db->table('detail_transaksi')
-            ->select('id_produk')
-            ->groupBy('id_produk')
-            ->get()
-            ->getResultArray();
-
-        $terjualIds = array_column($terjual, 'id_produk');
-
-        // Gunakan produkModel dengan pagination
-        $builder = $this->produkModel
-            ->select('produk.id, produk.nama_barang, produk.sku, produk.stok, produk.harga_beli')
-            ->orderBy('produk.nama_barang', 'ASC');
-
-        if (!empty($terjualIds)) {
-            $builder->whereNotIn('produk.id', $terjualIds);
-        }
-
-        $produkNeverSold = $builder->paginate(10);
-        $pagerNeverSold = $this->produkModel->pager;
-
-        // Total nilai stok
-        $totalNilaiStok = $this->db->table('produk')
-            ->select('SUM(stok * harga_beli) as total')
-            ->get()
-            ->getRow()
-            ->total ?? 0;
-
-        $data = [
-            'title' => 'Laporan Produk',
-            'stok_terbanyak' => $stokTerbanyak,
-            'stok_menipis' => $stokMenipis,
-            'pager_stok_menipis' => $pagerStokMenipis,
-            'produk_terlaris' => $produkTerlaris,
-            'produk_never_sold' => $produkNeverSold,
-            'pager_never_sold' => $pagerNeverSold,
-            'total_nilai_stok' => $totalNilaiStok,
-            'total_produk' => $this->produkModel->countAll()
-        ];
-
-        return view('admin/laporan/produk', $data);
-    }
-
-    // Export Excel (opsional)
+    // ========== EXPORT METHODS ==========
+    
     public function exportPenjualan()
     {
         $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
 
-        $penjualan = $this->transaksiModel
-            ->select('transaksi.*, users.username')
-            ->join('users', 'users.user_id = transaksi.id_user', 'left')
-            ->where('transaksi.status', 'selesai')
-            ->where('transaksi.created_at >=', $start_date . ' 00:00:00')
-            ->where('transaksi.created_at <=', $end_date . ' 23:59:59')
-            ->orderBy('transaksi.created_at', 'DESC')
+        $penjualan = $this->laporanModel->getPenjualanByDate($start_date, $end_date);
+
+        $headers = ['No', 'No Invoice', 'Tanggal', 'Total Bayar', 'Tipe Pembayaran', 'Kasir', 'Catatan'];
+        $data = [];
+        $no = 1;
+
+        foreach ($penjualan as $item) {
+            $data[] = [
+                $no++,
+                $item['no_invoice'],
+                date('d-m-Y H:i:s', strtotime($item['created_at'])),
+                $item['total_bayar'],
+                strtoupper($item['tipe_pembayaran']),
+                $item['username'] ?? '-',
+                $item['catatan'] ?? '-'
+            ];
+        }
+
+        $additionalInfo = [
+            'Periode: ' . date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)),
+            'Total Transaksi: ' . count($penjualan) . ' transaksi',
+            'Total Omset: Rp ' . number_format(array_sum(array_column($penjualan, 'total_bayar')), 0, ',', '.'),
+            'Tanggal Export: ' . date('d/m/Y H:i:s')
+        ];
+
+        exportToExcel($data, $headers, 'LAPORAN PENJUALAN', 'Laporan_Penjualan', null, $additionalInfo);
+    }
+
+    public function exportPembelian()
+    {
+        $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
+        $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
+
+        $pembelian = $this->laporanModel->getPembelianByDate($start_date, $end_date);
+
+        $headers = ['No', 'No Invoice', 'Supplier', 'Tanggal', 'Total Harga', 'User', 'Catatan'];
+        $data = [];
+        $no = 1;
+
+        foreach ($pembelian as $item) {
+            $data[] = [
+                $no++,
+                $item['no_invoice'],
+                $item['supplier_nama'],
+                date('d-m-Y', strtotime($item['tanggal_pembelian'])),
+                $item['total_harga'],
+                $item['username'] ?? '-',
+                $item['catatan'] ?? '-'
+            ];
+        }
+
+        $additionalInfo = [
+            'Periode: ' . date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)),
+            'Total Transaksi: ' . count($pembelian) . ' transaksi',
+            'Total Pengeluaran: Rp ' . number_format(array_sum(array_column($pembelian, 'total_harga')), 0, ',', '.'),
+            'Tanggal Export: ' . date('d/m/Y H:i:s')
+        ];
+
+        exportToExcel($data, $headers, 'LAPORAN PEMBELIAN', 'Laporan_Pembelian', null, $additionalInfo);
+    }
+
+    public function exportKeuangan()
+    {
+        $bulan = $this->request->getGet('bulan') ?? date('m');
+        $tahun = $this->request->getGet('tahun') ?? date('Y');
+
+        $keuangan = $this->laporanModel->getDetailKeuangan($bulan, $tahun);
+        $totalPemasukan = $this->laporanModel->getTotalPemasukan($bulan, $tahun);
+        $totalPengeluaran = $this->laporanModel->getTotalPengeluaran($bulan, $tahun);
+
+        $headers = ['No', 'Tanggal', 'Tipe', 'Kategori', 'Referensi', 'Jumlah', 'User'];
+        $data = [];
+        $no = 1;
+
+        foreach ($keuangan as $item) {
+            $data[] = [
+                $no++,
+                date('d-m-Y', strtotime($item['tanggal_transaksi'])),
+                $item['tipe'] == 'pemasukan' ? 'PEMASUKAN' : 'PENGELUARAN',
+                ucfirst($item['kategori']),
+                $item['tipe_ref'] . ' #' . $item['id_ref'],
+                $item['jumlah'],
+                $item['username'] ?? '-'
+            ];
+        }
+
+        $bulanNames = $this->laporanModel->getBulanList();
+
+        $additionalInfo = [
+            'Periode: ' . $bulanNames[$bulan] . ' ' . $tahun,
+            'Total Pemasukan: Rp ' . number_format($totalPemasukan, 0, ',', '.'),
+            'Total Pengeluaran: Rp ' . number_format($totalPengeluaran, 0, ',', '.'),
+            'Laba/Rugi: Rp ' . number_format($totalPemasukan - $totalPengeluaran, 0, ',', '.'),
+            'Tanggal Export: ' . date('d/m/Y H:i:s')
+        ];
+
+        exportToExcel($data, $headers, 'LAPORAN KEUANGAN', 'Laporan_Keuangan', null, $additionalInfo);
+    }
+
+    public function exportLabaRugi()
+    {
+        $bulan = $this->request->getGet('bulan') ?? date('m');
+        $tahun = $this->request->getGet('tahun') ?? date('Y');
+
+        $start_date = $tahun . '-' . $bulan . '-01';
+        $end_date = date('Y-m-t', strtotime($start_date));
+
+        $totalPenjualan = $this->laporanModel->getTotalPenjualanForLabaRugi($start_date, $end_date);
+        $hpp = $this->laporanModel->getHpp($start_date, $end_date);
+        $biayaOperasional = $this->laporanModel->getBiayaOperasional($bulan, $tahun);
+
+        $labaKotor = $totalPenjualan - $hpp;
+        $labaBersih = $labaKotor - $biayaOperasional;
+        $marginLaba = $totalPenjualan > 0 ? ($labaBersih / $totalPenjualan) * 100 : 0;
+
+        $detailPenjualan = $this->laporanModel->getPenjualanByDate($start_date, $end_date);
+
+        $headers = ['No', 'No Invoice', 'Tanggal', 'Total Bayar'];
+        $data = [];
+        $no = 1;
+
+        foreach ($detailPenjualan as $item) {
+            $data[] = [
+                $no++,
+                $item['no_invoice'],
+                date('d-m-Y', strtotime($item['created_at'])),
+                $item['total_bayar']
+            ];
+        }
+
+        $bulanNames = $this->laporanModel->getBulanList();
+
+        $additionalInfo = [
+            'Periode: ' . $bulanNames[$bulan] . ' ' . $tahun,
+            '',
+            'RINGKASAN LABA/RUGI:',
+            'Total Penjualan (Omset): Rp ' . number_format($totalPenjualan, 0, ',', '.'),
+            'HPP (Harga Pokok Penjualan): Rp ' . number_format($hpp, 0, ',', '.'),
+            'Laba Kotor: Rp ' . number_format($labaKotor, 0, ',', '.'),
+            'Biaya Operasional: Rp ' . number_format($biayaOperasional, 0, ',', '.'),
+            'Laba Bersih: Rp ' . number_format($labaBersih, 0, ',', '.'),
+            'Margin Laba: ' . number_format($marginLaba, 2) . '%',
+            '',
+            'Status: ' . ($labaBersih >= 0 ? 'UNTUNG' : 'RUGI')
+        ];
+
+        exportToExcel($data, $headers, 'LAPORAN LABA/RUGI', 'Laporan_Laba_Rugi', null, $additionalInfo);
+    }
+
+    public function exportStok()
+    {
+        $produk = $this->produkModel
+            ->select('produk.*, kategori.nama as kategori_nama, supplier.nama as supplier_nama')
+            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
+            ->join('supplier', 'supplier.id = produk.id_supplier', 'left')
+            ->orderBy('produk.id', 'ASC')
             ->findAll();
 
-        // Load library Excel (pastikan sudah install)
-        // return $this->response->download('laporan_penjualan.xlsx', $data);
+        $headers = ['No', 'SKU', 'Nama Produk', 'Kategori', 'Supplier', 'Harga Beli', 'Harga Jual', 'Stok', 'Min Stok', 'Nilai Stok', 'Status'];
+        $data = [];
+        $no = 1;
+        $totalNilaiStok = 0;
 
-        return redirect()->back()->with('info', 'Fitur export sedang dalam pengembangan');
-    }
+        foreach ($produk as $item) {
+            $status = 'AMAN';
+            if ($item['stok'] <= 0) {
+                $status = 'HABIS';
+            } elseif ($item['stok'] <= $item['min_stok']) {
+                $status = 'MENIPIS';
+            }
 
-    // Helper functions
-    private function getBulanList()
-    {
-        return [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember'
-        ];
-    }
+            $nilaiStok = $item['stok'] * $item['harga_beli'];
+            $totalNilaiStok += $nilaiStok;
 
-    private function getTahunList()
-    {
-        $tahun = [];
-        for ($i = 2023; $i <= date('Y'); $i++) {
-            $tahun[$i] = $i;
+            $data[] = [
+                $no++,
+                $item['sku'],
+                $item['nama_barang'],
+                $item['kategori_nama'] ?? '-',
+                $item['supplier_nama'] ?? '-',
+                $item['harga_beli'],
+                $item['harga_jual'],
+                $item['stok'],
+                $item['min_stok'],
+                $nilaiStok,
+                $status
+            ];
         }
-        return $tahun;
+
+        $stokMenipis = $this->produkModel->where('stok <=', 'min_stok', false)->countAllResults();
+        $stokHabis = $this->produkModel->where('stok', 0)->countAllResults();
+        $stokAman = $this->produkModel->where('stok >', 'min_stok', false)->countAllResults();
+
+        $additionalInfo = [
+            'Tanggal Export: ' . date('d/m/Y H:i:s'),
+            '',
+            'RINGKASAN STOK:',
+            'Total Produk: ' . count($produk) . ' produk',
+            'Total Nilai Stok: Rp ' . number_format($totalNilaiStok, 0, ',', '.'),
+            'Stok Aman: ' . $stokAman . ' produk',
+            'Stok Menipis: ' . $stokMenipis . ' produk',
+            'Stok Habis: ' . $stokHabis . ' produk'
+        ];
+
+        exportToExcel($data, $headers, 'LAPORAN STOK PRODUK', 'Laporan_Stok', null, $additionalInfo);
     }
 }

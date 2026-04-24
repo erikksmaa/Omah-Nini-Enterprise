@@ -37,6 +37,13 @@
                         <i class="bi bi-printer"></i> Cetak
                     </button>
                 </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <a href="<?= base_url('admin/laporan/export-keuangan?bulan=' . $bulan . '&tahun=' . $tahun) ?>"
+                        class="btn btn-success w-100">
+                        <i class="bi bi-file-excel"></i> Export Excel
+                    </a>
+                </div>                
             </form>
 
             <!-- Ringkasan -->

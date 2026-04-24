@@ -22,20 +22,35 @@ class Auth extends BaseController
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
+        // Validasi input tidak boleh kosong
+        if (empty($username) || empty($password)) {
+            session()->setFlashdata('error', 'Username dan password harus diisi!');
+            return redirect()->back();
+        }
+
         $dataUser = $users->where('username', $username)->first();
 
         if ($dataUser) {
-            // Evaluasi password menggunakan algoritma bcrypt
+            // Cek status user (jika ada kolom is_active)
+            if (isset($dataUser['is_active']) && $dataUser['is_active'] == 0) {
+                session()->setFlashdata('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi admin.');
+                return redirect()->back();
+            }
+
+            // Di controller Auth
             if (password_verify($password, $dataUser['password'])) {
                 session()->set([
                     'user_id' => $dataUser['user_id'],
                     'username' => $dataUser['username'],
                     'role' => $dataUser['role'],
-                    'logged_in' => true
+                    'logged_in' => true,
+                    'login_message' => 'Selamat datang, ' . $dataUser['username'] . '!'  // ← TAMBAHKAN
                 ]);
+
                 return redirect()->to('/dashboard');
+
             } else {
-                session()->setFlashdata('error', 'Password salah.');
+                session()->setFlashdata('error', 'Password yang Anda masukkan salah.');
                 return redirect()->back();
             }
         } else {
@@ -47,6 +62,6 @@ class Auth extends BaseController
     public function logout()
     {
         session()->destroy();
-        return redirect()->to('/login');
+        return redirect()->to('/login?logout=success');
     }
 }

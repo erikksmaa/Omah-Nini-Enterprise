@@ -46,9 +46,21 @@ class Retur extends BaseController
     // Halaman utama retur
     public function index()
     {
+        $keyword = $this->request->getGet('keyword');
+        $start_date = $this->request->getGet('start_date');
+        $end_date = $this->request->getGet('end_date');
+        $perPage = 10;
+
+        $retur = $this->returModel->getWithTransaksi($perPage, $keyword, $start_date, $end_date);
+        $pager = $this->returModel->pager;
+
         $data = [
             'title' => 'Retur Penjualan',
-            'retur' => $this->returModel->getWithTransaksi()
+            'retur' => $retur,
+            'pager' => $pager,
+            'keyword' => $keyword,
+            'start_date' => $start_date,
+            'end_date' => $end_date
         ];
         return view('admin/retur/index', $data);
     }
@@ -56,31 +68,17 @@ class Retur extends BaseController
     // Form retur baru
     public function create()
     {
-        // Ambil transaksi yang sudah selesai dan belum diretur
-        $transaksi = $this->db->table('transaksi')
-            ->select('transaksi.*, users.username')
-            ->join('users', 'users.user_id = transaksi.id_user', 'left')
-            ->where('transaksi.status', 'selesai')
-            ->whereNotIn('transaksi.id', function ($builder) {
-                $builder->select('id_transaksi')->from('retur_penjualan');
-            })
-            ->orderBy('transaksi.id', 'DESC')
-            ->get()
-            ->getResultArray();
-
         $data = [
             'title' => 'Tambah Retur Penjualan',
-            'transaksi' => $transaksi,
+            'transaksi' => $this->returModel->getAvailableTransactionsForRetur(),
             'no_retur' => $this->returModel->generateNoRetur()
         ];
         return view('admin/retur/create', $data);
     }
 
     // Get detail transaksi via AJAX
-    // app/Controllers/Admin/Retur.php
     public function getDetailTransaksi($id)
     {
-        // Set header untuk JSON response
         $this->response->setHeader('Content-Type', 'application/json');
 
         $transaksi = $this->transaksiModel->find($id);
@@ -95,10 +93,6 @@ class Retur extends BaseController
             ->where('id_transaksi', $id)
             ->findAll();
 
-        // Debug: log data
-        log_message('debug', 'Transaksi ID: ' . $id);
-        log_message('debug', 'Detail ditemukan: ' . count($detail));
-
         return $this->response->setJSON([
             'success' => true,
             'transaksi' => $transaksi,
@@ -107,10 +101,8 @@ class Retur extends BaseController
     }
 
     // Proses simpan retur
-    // app/Controllers/Admin/Retur.php
     public function store()
     {
-        // Validasi
         $validation = \Config\Services::validation();
 
         $validation->setRules([
@@ -138,11 +130,10 @@ class Retur extends BaseController
         $no_retur = $this->returModel->generateNoRetur();
         $now = date('Y-m-d H:i:s');
 
-        $db = \Config\Database::connect();
-        $db->transStart();
+        $this->db->transStart();
 
         try {
-            // 1. Insert ke tabel retur_penjualan (Gunakan Query Builder langsung)
+            // 1. Insert ke tabel retur_penjualan
             $returData = [
                 'no_retur' => $no_retur,
                 'id_transaksi' => $this->request->getPost('id_transaksi'),
@@ -153,8 +144,8 @@ class Retur extends BaseController
                 'created_at' => $now
             ];
 
-            $db->table('retur_penjualan')->insert($returData);
-            $retur_id = $db->insertID();
+            $this->returModel->insert($returData);
+            $retur_id = $this->returModel->getInsertID();
 
             // 2. Insert detail retur, update stok, dan catat log
             foreach ($items as $item) {
@@ -168,15 +159,15 @@ class Retur extends BaseController
                     'harga_jual' => $item['harga_jual'],
                     'subtotal' => $item['subtotal']
                 ];
-                $db->table('detail_retur_penjualan')->insert($detailData);
+                $this->detailReturModel->insert($detailData);
 
                 // Update stok produk (kembalikan stok)
-                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
+                $produk = $this->produkModel->find($item['id_produk']);
                 $stok_baru = $produk['stok'] + $item['jumlah'];
-                $db->table('produk')->where('id', $item['id_produk'])->update(['stok' => $stok_baru]);
+                $this->produkModel->update($item['id_produk'], ['stok' => $stok_baru]);
 
                 // Catat log stok
-                $db->table('log_stok')->insert([
+                $this->logStokModel->insert([
                     'id_produk' => $item['id_produk'],
                     'id_user' => session()->get('user_id'),
                     'tipe_ref' => 'retur_penjualan',
@@ -190,7 +181,7 @@ class Retur extends BaseController
             }
 
             // 3. Catat keuangan (pengeluaran karena retur)
-            $db->table('keuangan')->insert([
+            $this->keuanganModel->insert([
                 'id_user' => session()->get('user_id'),
                 'tipe' => 'pengeluaran',
                 'kategori' => 'retur_penjualan',
@@ -201,16 +192,16 @@ class Retur extends BaseController
                 'created_at' => $now
             ]);
 
-            $db->transComplete();
+            $this->db->transComplete();
 
-            if ($db->transStatus() === false) {
+            if ($this->db->transStatus() === false) {
                 throw new \Exception('Transaksi database gagal');
             }
 
             return redirect()->to('/admin/retur')->with('success', 'Retur penjualan berhasil disimpan');
 
         } catch (\Exception $e) {
-            $db->transRollback();
+            $this->db->transRollback();
             log_message('error', 'Retur error: ' . $e->getMessage());
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
@@ -234,59 +225,6 @@ class Retur extends BaseController
         return view('admin/retur/detail', $data);
     }
 
-    // Batalkan retur (jika perlu)
-    public function delete($id)
-    {
-        $retur = $this->returModel->find($id);
-        if (!$retur) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
-        }
-
-        $this->db->transStart();
-
-        try {
-            // Ambil detail retur
-            $detail = $this->detailReturModel->getByRetur($id);
-
-            foreach ($detail as $item) {
-                // Kembalikan stok ke semula (kurangi stok yang sudah ditambahkan)
-                $produk = $this->produkModel->find($item['id_produk']);
-                $stok_sebelum = $produk['stok'];
-                $stok_sesudah = $stok_sebelum - $item['jumlah'];
-
-                $this->produkModel->update($item['id_produk'], ['stok' => $stok_sesudah]);
-
-                // Log stok pembatalan retur
-                $this->logStokModel->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => session()->get('user_id'),
-                    'tipe_ref' => 'retur_penjualan_batal',
-                    'id_ref' => $id,
-                    'jumlah_sebelum' => $stok_sebelum,
-                    'jumlah_perubahan' => -$item['jumlah'],
-                    'jumlah_sesudah' => $stok_sesudah,
-                    'aktivitas' => 'Pembatalan retur penjualan',
-                    'created_at' => date('Y-m-d H:i:s')
-                ]);
-            }
-
-            // Hapus keuangan
-            $this->keuanganModel->where('tipe_ref', 'retur_penjualan')->where('id_ref', $id)->delete();
-
-            // Hapus detail dan retur
-            $this->detailReturModel->where('id_retur', $id)->delete();
-            $this->returModel->delete($id);
-
-            $this->db->transComplete();
-
-            return redirect()->to('/admin/retur')->with('success', 'Retur berhasil dibatalkan');
-
-        } catch (\Exception $e) {
-            $this->db->transRollback();
-            return redirect()->back()->with('error', 'Gagal membatalkan: ' . $e->getMessage());
-        }
-    }
-
     // Laporan Retur Penjualan
     public function laporan()
     {
@@ -294,49 +232,8 @@ class Retur extends BaseController
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
         $status = $this->request->getGet('status');
 
-        $builder = $this->db->table('retur_penjualan')
-            ->select('retur_penjualan.*, transaksi.no_invoice, users.username')
-            ->join('transaksi', 'transaksi.id = retur_penjualan.id_transaksi')
-            ->join('users', 'users.user_id = retur_penjualan.id_user', 'left')
-            ->where('retur_penjualan.tanggal_retur >=', $start_date)
-            ->where('retur_penjualan.tanggal_retur <=', $end_date);
-
-        if ($status) {
-            $builder->where('retur_penjualan.status', $status);
-        }
-
-        $retur = $builder->orderBy('retur_penjualan.tanggal_retur', 'DESC')->get()->getResultArray();
-
-        // Statistik
-        $totalRetur = count($retur);
-        $totalNominalRetur = array_sum(array_column($retur, 'total_retur'));
-        $rataRetur = $totalRetur > 0 ? $totalNominalRetur / $totalRetur : 0;
-
-        // Top produk yang sering diretur
-        $topProdukDiretur = $this->db->table('detail_retur_penjualan')
-            ->select('detail_retur_penjualan.nama_produk, SUM(detail_retur_penjualan.jumlah) as total_jumlah, SUM(detail_retur_penjualan.subtotal) as total_nominal')
-            ->groupBy('detail_retur_penjualan.nama_produk')
-            ->orderBy('total_jumlah', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
-
-        // Retur per bulan
-        $returPerBulan = $this->db->table('retur_penjualan')
-            ->select('DATE_FORMAT(tanggal_retur, "%Y-%m") as bulan, COUNT(*) as jumlah, SUM(total_retur) as total')
-            ->groupBy('DATE_FORMAT(tanggal_retur, "%Y-%m")')
-            ->orderBy('bulan', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        // Alasan retur terbanyak
-        $alasanTerbanyak = $this->db->table('retur_penjualan')
-            ->select('alasan, COUNT(*) as jumlah, SUM(total_retur) as total')
-            ->groupBy('alasan')
-            ->orderBy('jumlah', 'DESC')
-            ->limit(5)
-            ->get()
-            ->getResultArray();
+        $retur = $this->returModel->getReturReport($start_date, $end_date, $status);
+        $statistik = $this->returModel->getReturStatistics($start_date, $end_date);
 
         $data = [
             'title' => 'Laporan Retur Penjualan',
@@ -344,12 +241,12 @@ class Retur extends BaseController
             'start_date' => $start_date,
             'end_date' => $end_date,
             'status' => $status,
-            'total_retur' => $totalRetur,
-            'total_nominal_retur' => $totalNominalRetur,
-            'rata_retur' => $rataRetur,
-            'top_produk_diretur' => $topProdukDiretur,
-            'retur_per_bulan' => $returPerBulan,
-            'alasan_terbanyak' => $alasanTerbanyak
+            'total_retur' => $statistik['total_retur'],
+            'total_nominal_retur' => $statistik['total_nominal'],
+            'rata_retur' => $statistik['rata_rata'],
+            'top_produk_diretur' => $this->returModel->getTopProductsReturned(10),
+            'retur_per_bulan' => $this->returModel->getReturPerMonth(),
+            'alasan_terbanyak' => $this->returModel->getTopReasons(5)
         ];
 
         return view('admin/retur/laporan', $data);
@@ -361,36 +258,50 @@ class Retur extends BaseController
         $start_date = $this->request->getGet('start_date') ?? date('Y-m-01');
         $end_date = $this->request->getGet('end_date') ?? date('Y-m-d');
 
-        $retur = $this->db->table('retur_penjualan')
-            ->select('retur_penjualan.*, transaksi.no_invoice, users.username')
-            ->join('transaksi', 'transaksi.id = retur_penjualan.id_transaksi')
-            ->join('users', 'users.user_id = retur_penjualan.id_user', 'left')
-            ->where('retur_penjualan.tanggal_retur >=', $start_date)
-            ->where('retur_penjualan.tanggal_retur <=', $end_date)
-            ->orderBy('retur_penjualan.tanggal_retur', 'DESC')
-            ->get()
-            ->getResultArray();
+        $retur = $this->returModel->getReturReport($start_date, $end_date);
+        $detailRetur = $this->detailReturModel->getForExport($start_date, $end_date);
 
-        // Load library Excel (pastikan sudah install phpoffice/phpspreadsheet)
-        // Untuk sementara, export ke CSV
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="laporan_retur_' . date('Y-m-d') . '.csv"');
-
-        $output = fopen('php://output', 'w');
-        fputcsv($output, ['No Retur', 'No Invoice', 'Tanggal Retur', 'Total Retur', 'Alasan', 'User']);
+        $headers = ['No', 'No Retur', 'No Invoice', 'Tanggal Retur', 'Total Retur', 'Alasan', 'User'];
+        $data = [];
+        $no = 1;
+        $totalNominal = 0;
 
         foreach ($retur as $item) {
-            fputcsv($output, [
+            $totalNominal += $item['total_retur'];
+            $data[] = [
+                $no++,
                 $item['no_retur'],
                 $item['no_invoice'],
                 date('d-m-Y', strtotime($item['tanggal_retur'])),
-                number_format($item['total_retur'], 0, ',', '.'),
+                $item['total_retur'],
                 $item['alasan'],
                 $item['username'] ?? '-'
-            ]);
+            ];
         }
 
-        fclose($output);
-        exit();
+        $detailHeaders = ['No', 'No Retur', 'Nama Produk', 'Jumlah', 'Harga Jual', 'Subtotal'];
+        $detailData = [];
+        $noDetail = 1;
+
+        foreach ($detailRetur as $item) {
+            $detailData[] = [
+                $noDetail++,
+                $item['no_retur'],
+                $item['nama_produk'],
+                $item['jumlah'],
+                $item['harga_jual'],
+                $item['subtotal']
+            ];
+        }
+
+        $additionalInfo = [
+            'Periode: ' . date('d/m/Y', strtotime($start_date)) . ' s/d ' . date('d/m/Y', strtotime($end_date)),
+            'Total Retur: ' . count($retur) . ' transaksi',
+            'Total Nominal Retur: Rp ' . number_format($totalNominal, 0, ',', '.'),
+            'Rata-rata Retur: Rp ' . number_format(count($retur) > 0 ? $totalNominal / count($retur) : 0, 0, ',', '.'),
+            'Tanggal Export: ' . date('d/m/Y H:i:s')
+        ];
+
+        exportToExcelWithMultipleSheets($data, $headers, $detailData, $detailHeaders, 'LAPORAN RETUR PENJUALAN', 'Laporan_Retur', $additionalInfo);
     }
 }

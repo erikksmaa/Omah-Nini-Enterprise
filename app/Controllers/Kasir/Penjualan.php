@@ -2,20 +2,12 @@
 namespace App\Controllers\Kasir;
 
 use App\Controllers\BaseController;
-use App\Models\ProdukModel;
-use App\Models\TransaksiModel;
-use App\Models\DetailTransaksiModel;
-use App\Models\LogStokModel;
-use App\Models\KeuanganModel;
+use App\Models\PenjualanKasirModel;
 
 class Penjualan extends BaseController
 {
-    protected $produkModel;
-    protected $transaksiModel;
-    protected $detailTransaksiModel;
-    protected $logStokModel;
-    protected $keuanganModel;
-    protected $db;
+    protected $penjualanModel;
+    protected $cancelTimeLimit = 60; // 60 menit
 
     public function __construct()
     {
@@ -28,22 +20,104 @@ class Penjualan extends BaseController
             redirect()->to('/dashboard')->with('error', 'Akses ditolak');
         }
 
-        $this->db = \Config\Database::connect();
-        $this->produkModel = new ProdukModel();
-        $this->transaksiModel = new TransaksiModel();
-        $this->detailTransaksiModel = new DetailTransaksiModel();
-        $this->logStokModel = new LogStokModel();
-        $this->keuanganModel = new KeuanganModel();
+        $this->penjualanModel = new PenjualanKasirModel();
     }
 
     // Halaman utama kasir
     public function index()
     {
+        $search = $this->request->getGet('search');
+        $tipe_pembayaran = $this->request->getGet('tipe_pembayaran');
+        $status = $this->request->getGet('status');
+        $start_date = $this->request->getGet('start_date');
+        $end_date = $this->request->getGet('end_date');
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = 10;
+        
+        $builder = $this->penjualanModel->orderBy('id', 'DESC');
+        
+        if (!empty($search)) {
+            $builder->like('no_invoice', $search);
+        }
+        
+        if (!empty($tipe_pembayaran)) {
+            $builder->where('tipe_pembayaran', $tipe_pembayaran);
+        }
+        
+        if (!empty($status)) {
+            $builder->where('status', $status);
+        }
+        
+        if (!empty($start_date)) {
+            $builder->where('DATE(created_at) >=', $start_date);
+        }
+        if (!empty($end_date)) {
+            $builder->where('DATE(created_at) <=', $end_date);
+        }
+        
+        $total = $builder->countAllResults(false);
+        $offset = ($page - 1) * $perPage;
+        $transaksi = $builder->limit($perPage, $offset)->findAll();
+        
+        // Hitung sisa waktu pembatalan untuk setiap transaksi
+        foreach ($transaksi as &$item) {
+            if ($item['status'] == 'selesai') {
+                $createdAt = strtotime($item['created_at']);
+                $now = time();
+                $timeDiff = ($now - $createdAt) / 60;
+                $remaining = max(0, $this->cancelTimeLimit - $timeDiff);
+                $item['can_cancel'] = ($timeDiff <= $this->cancelTimeLimit);
+                $item['remaining_minutes'] = round($remaining);
+                $item['remaining_text'] = $this->formatRemainingTime($remaining);
+            } else {
+                $item['can_cancel'] = false;
+                $item['remaining_minutes'] = 0;
+                $item['remaining_text'] = '-';
+            }
+        }
+        
+        $pager = \Config\Services::pager();
+        $pager->makeLinks($page, $perPage, $total, 'bootstrap_pagination');
+        
         $data = [
             'title' => 'Kasir / Penjualan',
-            'transaksi' => $this->transaksiModel->orderBy('id', 'DESC')->limit(50)->findAll()
+            'transaksi' => $transaksi,
+            'pager' => $pager,
+            'search' => $search,
+            'tipe_pembayaran' => $tipe_pembayaran,
+            'status' => $status,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'total' => $total,
+            'cancel_time_limit' => $this->cancelTimeLimit
         ];
         return view('kasir/penjualan/index', $data);
+    }
+
+    // Batalkan transaksi dengan batas waktu
+    public function batal($id)
+    {
+        $isAdmin = (session()->get('role') == 'admin');
+        $result = $this->penjualanModel->cancelPenjualanWithTimeLimit($id, session()->get('user_id'), $isAdmin);
+
+        if (!$result['success']) {
+            return redirect()->back()->with('error', $result['error']);
+        }
+
+        return redirect()->to('/kasir/penjualan')->with('success', $result['message']);
+    }
+
+    private function formatRemainingTime($minutes)
+    {
+        if ($minutes <= 0) return 'Kadaluarsa';
+        
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        
+        if ($hours > 0) {
+            return $hours . 'j ' . $mins . 'm';
+        }
+        return $mins . 'm';
     }
 
     // Halaman transaksi baru
@@ -51,8 +125,8 @@ class Penjualan extends BaseController
     {
         $data = [
             'title' => 'Transaksi Penjualan',
-            'no_invoice' => $this->generateNoInvoice(),
-            'produk' => $this->produkModel->where('stok >', 0)->findAll()
+            'no_invoice' => $this->penjualanModel->generateNoInvoice(),
+            'produk' => $this->penjualanModel->getAvailableProducts()
         ];
         return view('kasir/penjualan/create', $data);
     }
@@ -61,279 +135,99 @@ class Penjualan extends BaseController
     public function searchProduk()
     {
         $keyword = $this->request->getGet('q');
-        $produk = $this->produkModel->groupStart()
-            ->like('nama_barang', $keyword)
-            ->orLike('sku', $keyword)
-            ->groupEnd()
-            ->where('stok >', 0)
-            ->findAll();
-
+        $produk = $this->penjualanModel->searchProducts($keyword);
         return $this->response->setJSON($produk);
     }
 
-  // Proses simpan transaksi
-public function store()
-{
-    // Ambil data
-    $items = json_decode($this->request->getPost('items'), true);
-    $total_belanja = $this->request->getPost('total_belanja');
-    $bayar = $this->request->getPost('bayar');
-    $tipe_pembayaran = $this->request->getPost('tipe_pembayaran');
+    // Proses simpan transaksi
+    public function store()
+    {
+        $items = json_decode($this->request->getPost('items'), true);
+        $total_belanja = $this->request->getPost('total_belanja');
+        $bayar = $this->request->getPost('bayar');
+        $tipe_pembayaran = $this->request->getPost('tipe_pembayaran');
+        $catatan = $this->request->getPost('catatan');
 
-    // Validasi
-    $errors = [];
+        // Validasi
+        $errors = [];
 
-    if (empty($items)) {
-        $errors[] = 'Keranjang belanja kosong';
-    }
-
-    if (empty($total_belanja) || $total_belanja <= 0) {
-        $errors[] = 'Total belanja tidak valid';
-    }
-
-    if (empty($bayar) || $bayar <= 0) {
-        $errors[] = 'Jumlah pembayaran harus diisi';
-    }
-
-    if ($bayar < $total_belanja) {
-        $errors[] = 'Pembayaran kurang dari total belanja (Kurang Rp ' . number_format($total_belanja - $bayar, 0, ',', '.') . ')';
-    }
-
-    if (!in_array($tipe_pembayaran, ['tunai', 'transfer', 'qris'])) {
-        $errors[] = 'Tipe pembayaran tidak valid';
-    }
-
-    if (!empty($errors)) {
-        return redirect()->back()->withInput()->with('errors', $errors);
-    }
-
-    $kembalian = $bayar - $total_belanja;
-    $now = date('Y-m-d H:i:s');  // Format: 2026-04-17 14:30:00
-    $no_invoice = $this->generateNoInvoice();
-
-    // Mulai transaksi database
-    $this->db->transStart();
-
-    try {
-        // PERBAIKAN: 1. Insert ke tabel transaksi
-        $transaksiData = [
-            'no_invoice' => $no_invoice,
-            'id_user' => session()->get('user_id'),
-            'tanggal_transaksi' => $now,  // ← PASTIKAN INI TERISI
-            'total_bayar' => $bayar,
-            'tipe_pembayaran' => $tipe_pembayaran,
-            'status' => 'selesai',
-            'catatan' => $this->request->getPost('catatan'),
-            'created_at' => $now  // ← PASTIKAN INI TERISI
-        ];
-        
-        $this->transaksiModel->insert($transaksiData);
-        $transaksi_id = $this->transaksiModel->getInsertID();
-
-        // Debug: Cek apakah insert berhasil
-        log_message('debug', 'Transaksi ID: ' . $transaksi_id);
-        log_message('debug', 'Tanggal transaksi: ' . $now);
-
-        // 2. Insert detail & update stok
-        foreach ($items as $item) {
-            $this->detailTransaksiModel->insert([
-                'id_transaksi' => $transaksi_id,
-                'id_produk' => $item['id_produk'],
-                'nama_produk' => $item['nama_produk'],
-                'jumlah' => $item['jumlah'],
-                'harga_satuan' => $item['harga_jual'],
-                'subtotal' => $item['subtotal']
-            ]);
-
-            // Update stok
-            $produk = $this->produkModel->find($item['id_produk']);
-            $stok_baru = $produk['stok'] - $item['jumlah'];
-            $this->produkModel->update($item['id_produk'], ['stok' => $stok_baru]);
-
-            // Log stok
-            $this->logStokModel->insert([
-                'id_produk' => $item['id_produk'],
-                'id_user' => session()->get('user_id'),
-                'tipe_ref' => 'penjualan',
-                'id_ref' => $transaksi_id,
-                'jumlah_sebelum' => $produk['stok'],
-                'jumlah_perubahan' => -$item['jumlah'],
-                'jumlah_sesudah' => $stok_baru,
-                'aktivitas' => 'Penjualan ke customer',
-                'created_at' => $now
-            ]);
+        if (empty($items)) {
+            $errors[] = 'Keranjang belanja kosong';
+        }
+        if (empty($total_belanja) || $total_belanja <= 0) {
+            $errors[] = 'Total belanja tidak valid';
+        }
+        if (empty($bayar) || $bayar <= 0) {
+            $errors[] = 'Jumlah pembayaran harus diisi';
+        }
+        if ($bayar < $total_belanja) {
+            $errors[] = 'Pembayaran kurang dari total belanja (Kurang Rp ' . number_format($total_belanja - $bayar, 0, ',', '.') . ')';
+        }
+        if (!in_array($tipe_pembayaran, ['tunai', 'transfer', 'qris'])) {
+            $errors[] = 'Tipe pembayaran tidak valid';
         }
 
-        // 3. Insert keuangan
-        $this->keuanganModel->insert([
-            'id_user' => session()->get('user_id'),
-            'tipe' => 'pemasukan',
-            'kategori' => 'penjualan',
-            'tipe_ref' => 'penjualan',
-            'id_ref' => $transaksi_id,
-            'jumlah' => $total_belanja,
-            'tanggal_transaksi' => date('Y-m-d'),
-            'created_at' => $now
-        ]);
-
-        $this->db->transComplete();
-
-        if ($this->db->transStatus() === false) {
-            throw new \Exception('Transaksi gagal');
+        if (!empty($errors)) {
+            return redirect()->back()->withInput()->with('errors', $errors);
         }
 
-        // Ambil data transaksi untuk struk
-        $transaksi = $this->transaksiModel->find($transaksi_id);
-        $detail = $this->detailTransaksiModel->where('id_transaksi', $transaksi_id)->findAll();
+        $result = $this->penjualanModel->savePenjualan(
+            $items, $total_belanja, $bayar, $tipe_pembayaran, $catatan, session()->get('user_id')
+        );
+
+        if (!$result['success']) {
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $result['error']);
+        }
 
         $total_belanja_detail = 0;
-        foreach ($detail as $item) {
+        foreach ($result['detail'] as $item) {
             $total_belanja_detail += $item['subtotal'];
         }
 
-        // Simpan data struk ke flashdata
         session()->setFlashdata('show_struk', true);
         session()->setFlashdata('struk_data', [
-            'transaksi' => $transaksi,
-            'detail' => $detail,
+            'transaksi' => $result['transaksi'],
+            'detail' => $result['detail'],
             'total_belanja' => $total_belanja_detail,
-            'kembalian' => $transaksi['total_bayar'] - $total_belanja_detail,
+            'kembalian' => $result['transaksi']['total_bayar'] - $total_belanja_detail,
             'kasir' => session()->get('username')
         ]);
 
         return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil!');
-
-    } catch (\Exception $e) {
-        $this->db->transRollback();
-        log_message('error', 'Penjualan error: ' . $e->getMessage());
-        return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
     }
-}
 
     // Halaman struk pembayaran
     public function struk($id)
     {
-        $transaksi = $this->transaksiModel->find($id);
-        if (!$transaksi) {
+        $struk = $this->penjualanModel->getStrukDetail($id);
+        if (!$struk) {
             return redirect()->to('/kasir/penjualan')->with('error', 'Transaksi tidak ditemukan');
         }
 
-        $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
-
-        // Hitung total belanja dari detail
-        $total_belanja = 0;
-        foreach ($detail as $item) {
-            $total_belanja += $item['subtotal'];
-        }
-
-        $kembalian = $transaksi['total_bayar'] - $total_belanja;
-
         $data = [
             'title' => 'Struk Pembayaran',
-            'transaksi' => $transaksi,
-            'detail' => $detail,
-            'total_belanja' => $total_belanja,
-            'kembalian' => $kembalian,
+            'transaksi' => $struk['transaksi'],
+            'detail' => $struk['detail'],
+            'total_belanja' => $struk['total_belanja'],
+            'kembalian' => $struk['kembalian'],
             'kasir' => session()->get('username')
         ];
 
         return view('kasir/penjualan/struk', $data);
     }
 
-    // Generate nomor invoice
-    private function generateNoInvoice()
-    {
-        $last = $this->transaksiModel->orderBy('id', 'DESC')->first();
-        if ($last && isset($last['no_invoice'])) {
-            $lastNumber = (int) substr($last['no_invoice'], -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-        return 'INV-' . date('ymd') . '-' . $newNumber;
-    }
-    // Batalkan transaksi
-    public function batal($id)
-    {
-        $transaksi = $this->transaksiModel->find($id);
-        if (!$transaksi) {
-            return redirect()->back()->with('error', 'Transaksi tidak ditemukan');
-        }
-
-        if ($transaksi['status'] == 'batal') {
-            return redirect()->back()->with('error', 'Transaksi sudah dibatalkan');
-        }
-
-        $this->db->transStart();
-
-        try {
-            // Ambil detail transaksi
-            $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
-
-            foreach ($detail as $item) {
-                // Kembalikan stok
-                $produk = $this->produkModel->find($item['id_produk']);
-                $stok_sebelum = $produk['stok'];
-                $stok_sesudah = $stok_sebelum + $item['jumlah'];
-
-                $this->produkModel->update($item['id_produk'], ['stok' => $stok_sesudah]);
-
-                // Log stok pembatalan
-                $this->logStokModel->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => session()->get('user_id'),
-                    'tipe_ref' => 'penjualan_batal',
-                    'id_ref' => $id,
-                    'jumlah_sebelum' => $stok_sebelum,
-                    'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah' => $stok_sesudah,
-                    'aktivitas' => 'Pembatalan transaksi penjualan',
-                    'created_at' => date('Y-m-d H:i:s')
-                ]);
-            }
-
-            // Update status transaksi
-            $this->transaksiModel->update($id, ['status' => 'batal']);
-
-            // Hapus catatan keuangan
-            $this->keuanganModel->where('tipe_ref', 'penjualan')->where('id_ref', $id)->delete();
-
-            $this->db->transComplete();
-
-            return redirect()->to('/kasir/penjualan')->with('success', 'Transaksi berhasil dibatalkan');
-
-        } catch (\Exception $e) {
-            $this->db->transRollback();
-            return redirect()->back()->with('error', 'Gagal membatalkan: ' . $e->getMessage());
-        }
-    }
-
     // Get data struk untuk AJAX
     public function getStrukData($id)
     {
-        $transaksi = $this->transaksiModel->find($id);
-        if (!$transaksi) {
+        $struk = $this->penjualanModel->getStrukData($id);
+        
+        if (!$struk) {
             return $this->response->setJSON(['success' => false, 'message' => 'Transaksi tidak ditemukan']);
         }
 
-        $detail = $this->detailTransaksiModel->where('id_transaksi', $id)->findAll();
-
-        $total_belanja = 0;
-        foreach ($detail as $item) {
-            $total_belanja += $item['subtotal'];
-        }
-
-        $data = [
+        return $this->response->setJSON([
             'success' => true,
-            'data' => [
-                'transaksi' => $transaksi,
-                'detail' => $detail,
-                'total_belanja' => $total_belanja,
-                'kembalian' => $transaksi['total_bayar'] - $total_belanja,
-                'kasir' => session()->get('username')
-            ]
-        ];
-
-        return $this->response->setJSON($data);
+            'data' => $struk
+        ]);
     }
 }

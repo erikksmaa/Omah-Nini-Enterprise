@@ -13,7 +13,8 @@
                     <label>Bulan</label>
                     <select name="bulan" class="form-control">
                         <?php foreach ($bulan_list as $key => $val): ?>
-                            <option value="<?= $key ?>" <?= ($bulan ?? date('m')) == $key ? 'selected' : '' ?>><?= $val ?></option>
+                            <option value="<?= $key ?>" <?= ($bulan ?? date('m')) == $key ? 'selected' : '' ?>><?= $val ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -21,7 +22,8 @@
                     <label>Tahun</label>
                     <select name="tahun" class="form-control">
                         <?php foreach ($tahun_list as $key => $val): ?>
-                            <option value="<?= $key ?>" <?= ($tahun ?? date('Y')) == $key ? 'selected' : '' ?>><?= $val ?></option>
+                            <option value="<?= $key ?>" <?= ($tahun ?? date('Y')) == $key ? 'selected' : '' ?>><?= $val ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -36,6 +38,13 @@
                     <button type="button" class="btn btn-success w-100" onclick="window.print()">
                         <i class="bi bi-printer"></i> Cetak
                     </button>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <a href="<?= base_url('admin/laporan/export-laba-rugi?bulan=' . $bulan . '&tahun=' . $tahun) ?>"
+                        class="btn btn-success w-100">
+                        <i class="bi bi-file-excel"></i> Export Excel
+                    </a>
                 </div>
             </form>
 
@@ -118,15 +127,18 @@
                             <tbody>
                                 <tr class="table-success">
                                     <td width="40%"><strong>PENDAPATAN</strong></td>
-                                    <td class="text-end"><strong>Rp <?= number_format($total_penjualan ?? 0, 0, ',', '.') ?></strong></td>
+                                    <td class="text-end"><strong>Rp
+                                            <?= number_format($total_penjualan ?? 0, 0, ',', '.') ?></strong></td>
                                 </tr>
                                 <tr>
                                     <td>Total Penjualan (Omset)</td>
-                                    <td class="text-end">Rp <?= number_format($total_penjualan ?? 0, 0, ',', '.') ?></td>
+                                    <td class="text-end">Rp <?= number_format($total_penjualan ?? 0, 0, ',', '.') ?>
+                                    </td>
                                 </tr>
                                 <tr class="table-danger">
                                     <td><strong>HARGA POKOK PENJUALAN (HPP)</strong></td>
-                                    <td class="text-end"><strong>Rp <?= number_format($hpp ?? 0, 0, ',', '.') ?></strong></td>
+                                    <td class="text-end"><strong>Rp
+                                            <?= number_format($hpp ?? 0, 0, ',', '.') ?></strong></td>
                                 </tr>
                                 <tr>
                                     <td>HPP (Modal barang yang terjual)</td>
@@ -134,23 +146,28 @@
                                 </tr>
                                 <tr class="table-warning">
                                     <td><strong>LABA KOTOR</strong></td>
-                                    <td class="text-end"><strong>Rp <?= number_format($laba_kotor ?? 0, 0, ',', '.') ?></strong></td>
+                                    <td class="text-end"><strong>Rp
+                                            <?= number_format($laba_kotor ?? 0, 0, ',', '.') ?></strong></td>
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>BIAYA OPERASIONAL</strong></td>
-                                    <td class="text-end"><strong>Rp <?= number_format($biaya_operasional ?? 0, 0, ',', '.') ?></strong></td>
+                                    <td class="text-end"><strong>Rp
+                                            <?= number_format($biaya_operasional ?? 0, 0, ',', '.') ?></strong></td>
                                 </tr>
                                 <tr>
                                     <td>Pembelian Barang</td>
-                                    <td class="text-end">Rp <?= number_format($total_pembelian ?? 0, 0, ',', '.') ?></td>
+                                    <td class="text-end">Rp <?= number_format($total_pembelian ?? 0, 0, ',', '.') ?>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Biaya Operasional Lainnya</td>
-                                    <td class="text-end">Rp <?= number_format($biaya_operasional_lain ?? 0, 0, ',', '.') ?></td>
+                                    <td class="text-end">Rp
+                                        <?= number_format($biaya_operasional_lain ?? 0, 0, ',', '.') ?></td>
                                 </tr>
                                 <tr class="table-primary">
                                     <td><strong>LABA BERSIH</strong></td>
-                                    <td class="text-end"><strong>Rp <?= number_format(abs($laba_bersih ?? 0), 0, ',', '.') ?></strong></td>
+                                    <td class="text-end"><strong>Rp
+                                            <?= number_format(abs($laba_bersih ?? 0), 0, ',', '.') ?></strong></td>
                                 </tr>
                                 <tr>
                                     <td>Margin Laba</td>
