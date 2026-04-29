@@ -52,8 +52,7 @@ class CreateLogStokTable extends Migration
             ],
             'created_at' => [
                 'type' => 'TIMESTAMP',
-                'null' => false,
-                'default' => null,
+                'null' => true,
             ],
         ]);
         $this->forge->addKey('id', true);

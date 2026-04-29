@@ -47,7 +47,6 @@ class CreateDetailReturPenjualanTable extends Migration
                 'constraint' => '15,2',
             ],
         ]);
-        
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('id_retur', 'retur_penjualan', 'id', 'CASCADE', 'CASCADE');
         $this->forge->createTable('detail_retur_penjualan');

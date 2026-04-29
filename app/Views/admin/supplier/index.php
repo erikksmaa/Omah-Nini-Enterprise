@@ -8,9 +8,9 @@
             <h5 class="mb-0"><i class="bi bi-truck"></i> Tambah Supplier</h5>
         </div>
         <div class="card-body p-3">
-            <?php if (session()->getFlashdata('errors')): ?>
+            <?php if (session()->getFlashdata('validation_errors')): ?>
                 <div class="alert alert-danger">
-                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <?php foreach (session()->getFlashdata('validation_errors') as $error): ?>
                         <p class="mb-0"><?= $error ?></p>
                     <?php endforeach; ?>
                 </div>
@@ -22,25 +22,25 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Nama Supplier <span class="text-danger">*</span></label>
-                            <input type="text" name="nama" class="form-control" value="<?= old('nama') ?>" required>
+                            <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>" value="<?= old('nama') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Kontak <span class="text-danger">*</span></label>
-                            <input type="text" name="kontak" class="form-control" value="<?= old('kontak') ?>" required>
+                            <input type="text" name="kontak" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>" value="<?= old('kontak') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Email</label>
-                            <input type="email" name="email" class="form-control" value="<?= old('email') ?>">
+                            <input type="email" name="email" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>" value="<?= old('email') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Alamat</label>
-                            <input type="text" name="alamat" class="form-control" value="<?= old('alamat') ?>">
+                            <input type="text" name="alamat" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>" value="<?= old('alamat') ?>">
                         </div>
                     </div>
                 </div>
@@ -122,22 +122,22 @@
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label>Nama Supplier <span class="text-danger">*</span></label>
-                                                        <input type="text" name="nama" class="form-control"
-                                                            value="<?= old('nama', esc($item['nama'])) ?>" required>
+                                                        <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
+                                                            value="<?= old('nama', esc($item['nama'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Kontak <span class="text-danger">*</span></label>
-                                                        <input type="text" name="kontak" class="form-control"
-                                                            value="<?= old('kontak', esc($item['kontak'])) ?>" required>
+                                                        <input type="text" name="kontak" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
+                                                            value="<?= old('kontak', esc($item['kontak'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Email</label>
-                                                        <input type="email" name="email" class="form-control"
+                                                        <input type="email" name="email" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
                                                             value="<?= old('email', esc($item['email'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Alamat</label>
-                                                        <textarea name="alamat" class="form-control"
+                                                        <textarea name="alamat" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
                                                             rows="2"><?= old('alamat', esc($item['alamat'])) ?></textarea>
                                                     </div>
                                                 </div>

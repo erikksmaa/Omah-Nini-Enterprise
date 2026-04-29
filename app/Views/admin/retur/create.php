@@ -28,13 +28,13 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label>Tanggal Retur <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_retur" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <input type="date" name="tanggal_retur" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label>Pilih Transaksi <span class="text-danger">*</span></label>
-                            <select name="id_transaksi" id="id_transaksi" class="form-control" required>
+                            <select name="id_transaksi" id="id_transaksi" class="form-control">
                                 <option value="">-- Pilih Transaksi --</option>
                                 <?php foreach ($transaksi as $t): ?>
                                     <option value="<?= $t['id'] ?>"><?= $t['no_invoice'] ?> - <?= date('d-m-Y', strtotime($t['created_at'])) ?> (Rp <?= number_format($t['total_bayar'], 0, ',', '.') ?>)</option>
@@ -84,7 +84,7 @@
 
                 <div class="mb-3">
                     <label>Alasan Retur <span class="text-danger">*</span></label>
-                    <textarea name="alasan" class="form-control" rows="3" required placeholder="Alasan retur (rusak, salah kirim, dll)"></textarea>
+                    <textarea name="alasan" class="form-control" rows="3" placeholder="Alasan retur (rusak, salah kirim, dll)"></textarea>
                 </div>
 
                 <div class="table-responsive">

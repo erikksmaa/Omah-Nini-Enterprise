@@ -50,8 +50,6 @@ class CreatePembelianTable extends Migration
         $this->forge->addForeignKey('id_supplier', 'supplier', 'id', 'RESTRICT', 'RESTRICT');
         $this->forge->addForeignKey('id_user', 'users', 'user_id', 'RESTRICT', 'RESTRICT');
         $this->forge->createTable('pembelian');
-        
-        echo "Table pembelian created successfully\n";
     }
 
     public function down()

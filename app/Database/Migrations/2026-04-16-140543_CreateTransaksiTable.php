@@ -18,7 +18,6 @@ class CreateTransaksiTable extends Migration
             'no_invoice' => [
                 'type' => 'VARCHAR',
                 'constraint' => 30,
-                'unique' => true,
             ],
             'id_user' => [
                 'type' => 'INT',
@@ -51,6 +50,7 @@ class CreateTransaksiTable extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('no_invoice');
         $this->forge->addForeignKey('id_user', 'users', 'user_id', 'RESTRICT', 'RESTRICT');
         $this->forge->createTable('transaksi');
     }

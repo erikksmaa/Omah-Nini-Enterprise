@@ -101,8 +101,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label>Bayar <span class="text-danger">*</span></label>
-                                    <input type="number" name="bayar" id="bayar" class="form-control" value="0"
-                                        step="1000" required>
+                                    <input type="text" name="bayar" id="bayar" class="form-control rupiah" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -131,10 +130,20 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 <script>
     let cart = [];
     let total = 0;
     let searchTimeout;
+
+    // Fungsi untuk mendapatkan nilai numerik dari input format rupiah
+    function getNumericValue(inputElement) {
+        if (!inputElement) return 0;
+        let rawValue = inputElement.value.replace(/\./g, '').replace(/\D/g, '');
+        return parseInt(rawValue) || 0;
+    }
 
     // Render keranjang
     function renderCart() {
@@ -206,12 +215,14 @@
         renderCart();
     }
 
+    // Hitung kembalian - PERBAIKAN
     function hitungKembalian() {
-        let bayar = parseInt(document.getElementById('bayar').value) || 0;
-        let total = <?= isset($total) ? $total : 0 ?>; // Atau ambil dari hidden field
+        // Ambil nilai bayar dari input (bersihkan titik)
+        let bayarInput = document.getElementById('bayar');
+        let bayar = getNumericValue(bayarInput);
 
         // Ambil total dari hidden field
-        total = parseInt(document.getElementById('totalBelanjaHidden').value) || 0;
+        let total = parseInt(document.getElementById('totalBelanjaHidden').value) || 0;
 
         let kembalian = bayar - total;
         let kembalianInput = document.getElementById('kembalian');
@@ -222,12 +233,19 @@
             kembalianInput.classList.add('text-danger');
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'Pembayaran Kurang';
+            btnSubmit.classList.remove('btn-success');
+            btnSubmit.classList.add('btn-danger');
         } else {
             kembalianInput.value = 'Rp ' + kembalian.toLocaleString('id-ID');
             kembalianInput.classList.remove('text-danger');
             btnSubmit.disabled = false;
             btnSubmit.textContent = 'Proses Pembayaran';
+            btnSubmit.classList.remove('btn-danger');
+            btnSubmit.classList.add('btn-success');
         }
+
+        // Debug (hapus setelah testing)
+        console.log('Bayar:', bayar, 'Total:', total, 'Kembalian:', kembalian);
     }
 
     // Search produk
@@ -263,7 +281,8 @@
                     resultList.innerHTML = '<li class="list-group-item text-center text-muted">Produk tidak ditemukan</li>';
                     resultDiv.style.display = 'block';
                 }
-            });
+            })
+            .catch(error => console.error('Error:', error));
     }
 
     // Tambah produk ke keranjang
@@ -292,14 +311,44 @@
         document.getElementById('searchProduk').value = '';
     }
 
+    // Setup format rupiah untuk input bayar
+    function setupRupiahFormat() {
+        const bayarInput = document.getElementById('bayar');
+        if (!bayarInput) return;
+
+        // Format saat input
+        bayarInput.addEventListener('input', function (e) {
+            let raw = this.value.replace(/\D/g, '');
+            if (raw === '' || raw === '0') {
+                this.value = '';
+            } else {
+                this.value = parseInt(raw).toLocaleString('id-ID');
+            }
+            hitungKembalian();
+        });
+
+        // Format nilai awal
+        if (bayarInput.value && bayarInput.value !== '0') {
+            let raw = bayarInput.value.replace(/\D/g, '');
+            if (raw) {
+                bayarInput.value = parseInt(raw).toLocaleString('id-ID');
+            }
+        }
+    }
+
     // Event listeners
-    document.getElementById('btnSearch').addEventListener('click', searchProduk);
-    document.getElementById('searchProduk').addEventListener('keyup', function (e) {
-        if (searchTimeout) clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(searchProduk, 500);
-        if (e.key === 'Enter') searchProduk();
+    document.addEventListener('DOMContentLoaded', function () {
+        setupRupiahFormat();
+
+        document.getElementById('btnSearch').addEventListener('click', searchProduk);
+        document.getElementById('searchProduk').addEventListener('keyup', function (e) {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(searchProduk, 500);
+            if (e.key === 'Enter') searchProduk();
+        });
+
+        // Event listener untuk bayar sudah di handle di setupRupiahFormat
     });
-    document.getElementById('bayar').addEventListener('input', hitungKembalian);
 
     // Validasi submit
     document.getElementById('formTransaksi').addEventListener('submit', function (e) {
@@ -310,7 +359,8 @@
         }
 
         let total = parseInt(document.getElementById('totalBelanjaHidden').value) || 0;
-        let bayar = parseInt(document.getElementById('bayar').value) || 0;
+        let bayarInput = document.getElementById('bayar');
+        let bayar = getNumericValue(bayarInput);
 
         if (bayar < total) {
             e.preventDefault();
@@ -324,6 +374,9 @@
             alert('Pilih tipe pembayaran!');
             return false;
         }
+
+        // Bersihkan format rupiah sebelum submit
+        bayarInput.value = bayar;
 
         return true;
     });
@@ -352,6 +405,11 @@
 
     .list-group-item-action:hover {
         background-color: #f8f9fa;
+    }
+
+    .btn-danger:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>
 <?= $this->endSection() ?>

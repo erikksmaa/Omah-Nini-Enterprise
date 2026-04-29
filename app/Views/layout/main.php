@@ -76,6 +76,9 @@
     <script src="<?= base_url('assets/static/js/components/dark.js') ?>"></script>
     <script src="<?= base_url('assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js') ?>"></script>
     <script src="<?= base_url('assets/compiled/js/app.js') ?>"></script>
+
+
+    <script src="<?= base_url('jQuery-Mask-Plugin-master/dist/jquery.mask.min.js') ?>"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- SweetAlert untuk Flashdata -->

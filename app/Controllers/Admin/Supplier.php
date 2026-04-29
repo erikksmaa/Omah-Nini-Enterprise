@@ -45,7 +45,7 @@ class Supplier extends BaseController
     {
         // Validasi menggunakan rules dari model
         if (!$this->validate($this->supplierModel->validationRules, $this->supplierModel->validationMessages)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
         try {
@@ -59,7 +59,7 @@ class Supplier extends BaseController
             return redirect()->to('/admin/supplier')->with('success', 'Supplier berhasil ditambahkan.');
             
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan supplier: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('validation_error', 'Gagal menambahkan supplier: ' . $e->getMessage());
         }
     }
 
@@ -72,7 +72,7 @@ class Supplier extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
         $supplier = $this->supplierModel->getById($id);

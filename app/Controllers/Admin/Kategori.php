@@ -61,9 +61,8 @@ class Kategori extends BaseController
 
     public function update($id)
     {
-        // Update validation rules (skip unique check for current ID)
+        // Nama tidak boleh diubah, hanya deskripsi
         $rules = [
-            'nama' => "required|min_length[3]|max_length[100]|is_unique[kategori.nama,id,{$id}]",
             'deskripsi' => 'permit_empty|max_length[500]'
         ];
 
@@ -77,8 +76,8 @@ class Kategori extends BaseController
         }
 
         try {
+            // Hanya update deskripsi, nama tetap
             $this->kategoriModel->update($id, [
-                'nama' => $this->request->getPost('nama'),
                 'deskripsi' => $this->request->getPost('deskripsi')
             ]);
             return redirect()->to('/admin/kategori')->with('success', 'Kategori berhasil diperbarui.');
@@ -86,7 +85,6 @@ class Kategori extends BaseController
             return redirect()->back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
-
     public function delete($id)
     {
         if ($this->kategoriModel->hasRelatedProducts($id)) {

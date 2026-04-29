@@ -18,7 +18,6 @@ class CreateReturPenjualanTable extends Migration
             'no_retur' => [
                 'type' => 'VARCHAR',
                 'constraint' => 30,
-                'unique' => true,
             ],
             'id_transaksi' => [
                 'type' => 'INT',
@@ -46,8 +45,8 @@ class CreateReturPenjualanTable extends Migration
                 'null' => true,
             ],
         ]);
-        
         $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('no_retur');
         $this->forge->addForeignKey('id_transaksi', 'transaksi', 'id', 'RESTRICT', 'RESTRICT');
         $this->forge->addForeignKey('id_user', 'users', 'user_id', 'RESTRICT', 'RESTRICT');
         $this->forge->createTable('retur_penjualan');

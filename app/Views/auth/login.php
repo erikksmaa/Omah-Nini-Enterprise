@@ -300,7 +300,7 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person"></i></span>
                             <input type="text" name="username" id="username" class="form-control"
-                                value="<?= old('username') ?>" placeholder="Masukkan username" autofocus required>
+                                value="<?= old('username') ?>" placeholder="Masukkan username" autofocus>
                         </div>
                     </div>
 
@@ -309,7 +309,7 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
                             <input type="password" name="password" id="password" class="form-control"
-                                placeholder="Masukkan password" required>
+                                placeholder="Masukkan password">
                         </div>
                     </div>
 

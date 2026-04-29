@@ -28,12 +28,12 @@ class Produk extends BaseController
         $supplier_id = $this->request->getGet('supplier_id');
         $status_stok = $this->request->getGet('status_stok');
         $perPage = 10;
-        
+
         $builder = $this->produkModel
             ->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
             ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
             ->join('supplier', 'supplier.id = produk.id_supplier', 'left');
-        
+
         // Filter pencarian
         if (!empty($keyword)) {
             $builder->groupStart()
@@ -41,17 +41,17 @@ class Produk extends BaseController
                 ->orLike('produk.sku', $keyword)
                 ->groupEnd();
         }
-        
+
         // Filter kategori
         if (!empty($kategori_id)) {
             $builder->where('produk.id_kategori', $kategori_id);
         }
-        
+
         // Filter supplier
         if (!empty($supplier_id)) {
             $builder->where('produk.id_supplier', $supplier_id);
         }
-        
+
         // Filter status stok
         if ($status_stok == 'menipis') {
             $builder->where('produk.stok <=', 'produk.min_stok', false);
@@ -60,10 +60,10 @@ class Produk extends BaseController
         } elseif ($status_stok == 'aman') {
             $builder->where('produk.stok >', 'produk.min_stok', false);
         }
-        
+
         $produk = $builder->orderBy('produk.id', 'DESC')->paginate($perPage);
         $pager = $this->produkModel->pager;
-        
+
         $data = [
             'title' => 'Kelola Master Produk',
             'produk' => $produk,
@@ -75,7 +75,7 @@ class Produk extends BaseController
             'supplier_id' => $supplier_id,
             'status_stok' => $status_stok
         ];
-        
+
         return view('admin/produk/index', $data);
     }
 
@@ -167,15 +167,15 @@ class Produk extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
         // Validasi manual harga_jual > harga_beli
-        $harga_beli = (float) $this->request->getPost('harga_beli');
-        $harga_jual = (float) $this->request->getPost('harga_jual');
+        $harga_beli = unformat_rupiah($this->request->getPost('harga_beli'));
+        $harga_jual = unformat_rupiah($this->request->getPost('harga_jual'));
 
         if ($harga_jual <= $harga_beli) {
-            return redirect()->back()->withInput()->with('errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
+            return redirect()->back()->withInput()->with('validation_errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
         }
 
         try {
@@ -193,7 +193,7 @@ class Produk extends BaseController
 
             // Insert langsung tanpa transaksi kompleks
             $insertId = $this->produkModel->insert($data);
-            
+
             if ($insertId) {
                 return redirect()->to('/admin/produk')->with('success', 'Produk berhasil disimpan.');
             } else {
@@ -201,7 +201,7 @@ class Produk extends BaseController
                 log_message('error', 'Insert produk gagal: ' . json_encode($errors));
                 return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . json_encode($errors));
             }
-            
+
         } catch (\Exception $e) {
             log_message('error', 'Exception: ' . $e->getMessage());
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
@@ -282,15 +282,15 @@ class Produk extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('validation_errors', $this->validator->getErrors());
         }
 
         // Validasi manual harga_jual > harga_beli
-        $harga_beli = (float) $this->request->getPost('harga_beli');
-        $harga_jual = (float) $this->request->getPost('harga_jual');
+        $harga_beli = unformat_rupiah($this->request->getPost('harga_beli'));
+        $harga_jual = unformat_rupiah($this->request->getPost('harga_jual'));
 
         if ($harga_jual <= $harga_beli) {
-            return redirect()->back()->withInput()->with('errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
+            return redirect()->back()->withInput()->with('validation_errors', ['harga_jual' => 'Harga jual harus lebih besar dari harga beli.']);
         }
 
         $dataUpdate = [

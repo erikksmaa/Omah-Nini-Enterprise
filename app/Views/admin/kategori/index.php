@@ -23,7 +23,7 @@
                         <div class="mb-3">
                             <label>Nama Kategori <span class="text-danger">*</span></label>
                             <input type="text" name="nama" class="form-control" value="<?= old('nama') ?>"
-                                placeholder="Contoh: Elektronik, Makanan, Minuman" required>
+                                placeholder="Contoh: Robot Robotan dll.">
                             <small class="text-muted">Nama kategori harus unik dan minimal 3 karakter</small>
                         </div>
                     </div>
@@ -110,7 +110,7 @@
                                                     <div class="mb-3">
                                                         <label>Nama Kategori <span class="text-danger">*</span></label>
                                                         <input type="text" name="nama" class="form-control"
-                                                            value="<?= old('nama', esc($item['nama'])) ?>" required>
+                                                            value="<?= old('nama', esc($item['nama'])) ?>" disabled>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Deskripsi</label>
@@ -152,10 +152,4 @@
     </div>
 </div>
 
-<script>
-    // Hapus DataTable karena pakai CI4 pagination
-    // $(document).ready(function() {
-    //     $('#tableKategori').DataTable({ ... });
-    // });
-</script>
 <?= $this->endSection() ?>

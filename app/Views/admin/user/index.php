@@ -27,7 +27,7 @@
                         <label>Username <span class="text-danger">*</span></label>
                         <input type="text" name="username"
                             class="form-control <?= (isset(session()->getFlashdata('validation_errors')['username'])) ? 'is-invalid' : '' ?>"
-                            value="<?= old('username') ?>" placeholder="Contoh: admin, gudang01, kasir01" required>
+                            value="<?= old('username') ?>" placeholder="Contoh: admin, gudang01, kasir01">
                     </div>
 
                     <div class="row">
@@ -36,7 +36,7 @@
                                 <label>Password <span class="text-danger">*</span></label>
                                 <input type="password" name="password"
                                     class="form-control <?= (isset(session()->getFlashdata('validation_errors')['password'])) ? 'is-invalid' : '' ?>"
-                                    required>
+                                >
                                 <small class="text-muted">Minimal 6 karakter</small>
                             </div>
                         </div>
@@ -45,7 +45,7 @@
                                 <label>Konfirmasi Password <span class="text-danger">*</span></label>
                                 <input type="password" name="confirm_password"
                                     class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['confirm_password'])) ? 'is-invalid' : '' ?>"
-                                    required>
+                                >
                             </div>
                         </div>
                     </div>
@@ -54,7 +54,7 @@
                         <label>Role <span class="text-danger">*</span></label>
                         <select name="role"
                             class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['role'])) ? 'is-invalid' : '' ?>"
-                            required>
+                        >
                             <option value="">Pilih Role</option>
                             <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Admin</option>
                             <option value="gudang" <?= old('role') == 'gudang' ? 'selected' : '' ?>>Gudang</option>
@@ -135,7 +135,7 @@
                                                     <div class="mb-3">
                                                         <label>Username <span class="text-danger">*</span></label>
                                                         <input type="text" name="username" class="form-control"
-                                                            value="<?= old('username', esc($item['username'])) ?>" required>
+                                                            value="<?= old('username', esc($item['username'])) ?>">
                                                     </div>
 
                                                     <div class="row">
@@ -157,7 +157,7 @@
 
                                                     <div class="mb-3">
                                                         <label>Role <span class="text-danger">*</span></label>
-                                                        <select name="role" class="form-control" required>
+                                                        <select name="role" class="form-control">
                                                             <option value="admin" <?= $item['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
                                                             <option value="gudang" <?= $item['role'] == 'gudang' ? 'selected' : '' ?>>Gudang</option>
                                                             <option value="kasir" <?= $item['role'] == 'kasir' ? 'selected' : '' ?>>Kasir</option>

@@ -38,13 +38,13 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label>Tanggal <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_pembelian" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <input type="date" name="tanggal_pembelian" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label>Supplier <span class="text-danger">*</span></label>
-                            <select name="id_supplier" class="form-control" required>
+                            <select name="id_supplier" class="form-control">
                                 <option value="">-- Pilih Supplier --</option>
                                 <?php foreach ($supplier as $s): ?>
                                     <option value="<?= $s['id'] ?>"><?= $s['nama'] ?></option>
