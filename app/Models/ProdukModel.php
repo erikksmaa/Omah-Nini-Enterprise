@@ -1,45 +1,94 @@
 <?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
 
 class ProdukModel extends Model
 {
-    protected $table = 'produk';
-    protected $primaryKey = 'id';
+    protected $table            = 'produk';
+    protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType = 'array';
-    protected $useSoftDeletes = false;
-    protected $protectFields = true;
-    protected $allowedFields = [
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
         'sku',
-        'nama_barang',
-        'id_kategori',
         'id_supplier',
-        'harga_beli',
-        'harga_jual',
+        'id_motif',
+        'id_warna',
         'stok',
         'min_stok',
-        'keterangan'
+        'keterangan',
+        'created_at',
+        'updated_at'
     ];
 
-    // Matikan timestamps jika kolom created_at/updated_at tidak ada atau bermasalah
     protected $useTimestamps = true;
-    protected $createdField = 'created_at';
-    protected $updatedField = 'updated_at';
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    // ========== VALIDATION RULES ==========
+    protected $validationRules = [
+        'sku'         => 'required|is_unique[produk.sku,id,{id}]',
+        'id_supplier' => 'required|numeric|is_not_unique[supplier.id]',
+        'id_motif'    => 'required|numeric|is_not_unique[motif.id]',
+        'id_warna'    => 'required|numeric|is_not_unique[warna.id]',
+        'stok'        => 'required|numeric|greater_than_equal_to[0]',
+        'min_stok'    => 'permit_empty|numeric|greater_than_equal_to[0]'
+    ];
+
+    protected $validationMessages = [
+        'sku' => [
+            'required'  => 'SKU wajib diisi.',
+            'is_unique' => 'SKU sudah terdaftar.'
+        ],
+        'id_supplier' => [
+            'required' => 'Supplier wajib dipilih.'
+        ],
+        'id_motif' => [
+            'required' => 'Motif wajib dipilih.'
+        ],
+        'id_warna' => [
+            'required' => 'Warna wajib dipilih.'
+        ],
+        'stok' => [
+            'required' => 'Stok wajib diisi.',
+            'greater_than_equal_to' => 'Stok tidak boleh negatif.'
+        ]
+    ];
 
     // ========== CUSTOM METHODS ==========
 
     /**
-     * Get all produk with kategori and supplier info (with pagination)
+     * Get full product data with relations (supplier, motif, warna)
+     */
+    public function getFullData($id = null)
+    {
+        $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+                        ->join('supplier', 'supplier.id = produk.id_supplier')
+                        ->join('motif', 'motif.id = produk.id_motif')
+                        ->join('warna', 'warna.id = produk.id_warna');
+
+        if ($id) {
+            return $builder->where('produk.id', $id)->first();
+        }
+
+        return $builder->orderBy('produk.id', 'DESC')->findAll();
+    }
+
+    /**
+     * Get all produk with relations (with pagination)
      */
     public function getAllWithRelations($perPage = 10)
     {
-        return $this->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
-            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
-            ->join('supplier', 'supplier.id = produk.id_supplier', 'left')
-            ->orderBy('produk.id', 'DESC')
-            ->paginate($perPage);
+        return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+                    ->join('supplier', 'supplier.id = produk.id_supplier')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->orderBy('produk.id', 'DESC')
+                    ->paginate($perPage);
     }
 
     /**
@@ -47,62 +96,118 @@ class ProdukModel extends Model
      */
     public function getByIdWithRelations($id)
     {
-        return $this->select('produk.*, kategori.nama as nama_kategori, supplier.nama as nama_supplier')
-            ->join('kategori', 'kategori.id = produk.id_kategori', 'left')
-            ->join('supplier', 'supplier.id = produk.id_supplier', 'left')
-            ->find($id);
+        return $this->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id, motif.nama_motif, motif.id as motif_id, warna.nama_warna, warna.id as warna_id')
+                    ->join('supplier', 'supplier.id = produk.id_supplier')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->find($id);
     }
 
     /**
-     * Get all produk for dropdown/select options (only id and name)
+     * Get produk for dropdown (for form pembelian/penjualan)
      */
     public function getOptions()
     {
-        return $this->select('id, nama_barang, sku, harga_jual, stok')
-            ->orderBy('nama_barang', 'ASC')
-            ->findAll();
+        return $this->select('produk.id, motif.nama_motif, warna.nama_warna, produk.stok')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->orderBy('motif.nama_motif', 'ASC')
+                    ->findAll();
     }
 
     /**
-     * Get produk with stok > 0 (for POS)
+     * Get available products (stok > 0) for POS
      */
     public function getAvailableProducts()
     {
-        return $this->where('stok >', 0)->orderBy('nama_barang', 'ASC')->findAll();
+        return $this->select('produk.id, produk.sku, motif.nama_motif, warna.nama_warna, produk.stok')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->where('produk.stok >', 0)
+                    ->orderBy('motif.nama_motif', 'ASC')
+                    ->findAll();
     }
 
     /**
-     * Search produk by keyword (name or sku)
+     * Search produk by keyword (motif name, warna name, or sku)
      */
     public function search($keyword, $limit = 10)
     {
-        return $this->groupStart()
-            ->like('nama_barang', $keyword)
-            ->orLike('sku', $keyword)
-            ->groupEnd()
-            ->where('stok >', 0)
-            ->limit($limit)
-            ->findAll();
+        return $this->select('produk.id, produk.sku, motif.nama_motif, warna.nama_warna, produk.stok')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->groupStart()
+                        ->like('produk.sku', $keyword)
+                        ->orLike('motif.nama_motif', $keyword)
+                        ->orLike('warna.nama_warna', $keyword)
+                    ->groupEnd()
+                    ->where('produk.stok >', 0)
+                    ->limit($limit)
+                    ->findAll();
     }
 
     /**
-     * Update stok produk
+     * Update stok produk with validation (tidak bisa minus)
      */
-    public function updateStock($id, $newStock)
+    public function updateStock($id, $jumlah, $tipe = 'tambah')
     {
-        return $this->update($id, ['stok' => $newStock]);
+        $produk = $this->find($id);
+        if (!$produk) {
+            return ['success' => false, 'message' => 'Produk tidak ditemukan'];
+        }
+
+        $stok_sekarang = $produk['stok'];
+        
+        if ($tipe == 'tambah') {
+            $stok_baru = $stok_sekarang + $jumlah;
+        } else {
+            if ($stok_sekarang < $jumlah) {
+                return ['success' => false, 'message' => 'Stok tidak mencukupi. Stok tersedia: ' . $stok_sekarang];
+            }
+            $stok_baru = $stok_sekarang - $jumlah;
+        }
+
+        $result = $this->update($id, ['stok' => $stok_baru]);
+        
+        if ($result) {
+            return ['success' => true, 'stok_baru' => $stok_baru];
+        }
+        
+        return ['success' => false, 'message' => 'Gagal update stok'];
     }
 
     /**
-     * Get produk with low stock (stok <= min_stok)
+     * Get produk with low stock
      */
     public function getLowStockProducts($limit = null)
     {
-        $query = $this->where('stok <=', 'min_stok', false)->orderBy('stok', 'ASC');
+        $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+                        ->join('supplier', 'supplier.id = produk.id_supplier')
+                        ->join('motif', 'motif.id = produk.id_motif')
+                        ->join('warna', 'warna.id = produk.id_warna')
+                        ->where('produk.stok <= produk.min_stok')
+                        ->where('produk.stok >', 0)
+                        ->orderBy('produk.stok', 'ASC');
+        
         if ($limit) {
-            $query->limit($limit);
+            $builder->limit($limit);
         }
-        return $query->findAll();
+        
+        return $builder->findAll();
+    }
+
+    /**
+     * Get out of stock products (stok = 0)
+     */
+    public function getOutOfStockProducts()
+    {
+        return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+                    ->join('supplier', 'supplier.id = produk.id_supplier')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->where('produk.stok', 0)
+                    ->orderBy('motif.nama_motif', 'ASC')
+                    ->findAll();
     }
 
     /**
@@ -110,19 +215,22 @@ class ProdukModel extends Model
      */
     public function getHighestStockProducts($limit = 10)
     {
-        return $this->orderBy('stok', 'DESC')->limit($limit)->findAll();
+        return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+                    ->join('supplier', 'supplier.id = produk.id_supplier')
+                    ->join('motif', 'motif.id = produk.id_motif')
+                    ->join('warna', 'warna.id = produk.id_warna')
+                    ->orderBy('produk.stok', 'DESC')
+                    ->limit($limit)
+                    ->findAll();
     }
 
     /**
-     * Get total stock value (stok * harga_beli)
+     * Get total stock quantity
      */
-    public function getTotalStockValue()
+    public function getTotalStockQuantity()
     {
-        $result = $this->db->table($this->table)
-            ->select('SUM(stok * harga_beli) as total')
-            ->get()
-            ->getRow();
-        return $result->total ?? 0;
+        $result = $this->select('SUM(stok) as total')->first();
+        return $result['total'] ?? 0;
     }
 
     /**
@@ -135,5 +243,58 @@ class ProdukModel extends Model
             $query->where('id !=', $excludeId);
         }
         return $query->countAllResults() > 0;
+    }
+
+    /**
+     * Generate SKU otomatis
+     */
+    public function generateSku($id_supplier, $id_motif, $id_warna)
+    {
+        $supplierModel = new SupplierModel();
+        $motifModel = new MotifModel();
+        $warnaModel = new WarnaModel();
+
+        $supplier = $supplierModel->find($id_supplier);
+        $motif = $motifModel->find($id_motif);
+        $warna = $warnaModel->find($id_warna);
+
+        $supplierCode = $this->getSupplierCode($supplier['nama']);
+        $motifCode = $this->generateCode($motif['nama_motif'], 3);
+        $warnaCode = $this->generateCode($warna['nama_warna'], 3);
+        
+        $like = $supplierCode . '-' . $motifCode . '-' . $warnaCode . '-%';
+        $last = $this->like('sku', $like, 'after')->orderBy('id', 'DESC')->first();
+        
+        if ($last) {
+            $lastSeq = explode('-', $last['sku']);
+            $seq = intval(end($lastSeq)) + 1;
+        } else {
+            $seq = 1;
+        }
+        
+        $sequence = str_pad($seq, 3, '0', STR_PAD_LEFT);
+        
+        return $supplierCode . '-' . $motifCode . '-' . $warnaCode . '-' . $sequence;
+    }
+
+    private function getSupplierCode($nama)
+    {
+        $codes = [
+            'Bang Jack\'s / Aulia' => 'BJK',
+            'Maida Exclusive' => 'MDX',
+            'Maida Katun Super' => 'MDK',
+            'AL FATI' => 'AFT'
+        ];
+        return $codes[$nama] ?? substr(preg_replace('/[^A-Z]/', '', strtoupper($nama)), 0, 3);
+    }
+
+    private function generateCode($text, $length)
+    {
+        $clean = preg_replace('/[^A-Za-z0-9]/', '', $text);
+        $code = strtoupper(substr($clean, 0, $length));
+        if (strlen($code) < $length) {
+            $code = str_pad($code, $length, 'X');
+        }
+        return $code;
     }
 }

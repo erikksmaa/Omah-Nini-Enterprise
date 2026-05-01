@@ -14,46 +14,39 @@ class RoleGuard implements FilterInterface
         if (!session()->get('logged_in')) {
             return redirect()->to('/login');
         }
-        
+
         $role = session()->get('role');
         $currentPath = $request->getPath();
-        
-        // Jika tidak ada arguments, allow semua
+
+        // Jika tidak ada arguments, allow semua (tidak mungkin terjadi karena filter selalu dipanggil dengan arguments)
         if (empty($arguments)) {
             return;
         }
-        
+
         $allowedRoles = $arguments;
-        
-        // Cek apakah role user diizinkan
+
+        // Cek apakah role user diizinkan untuk route group ini
         if (!in_array($role, $allowedRoles)) {
             return redirect()->to('/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
         }
-        
-        // ========== RESTRIKSI KHUSUS ==========
-        
-        // GUDANG: Tidak boleh akses master data & kasir
-        if ($role === 'gudang') {
+
+        // ========== RESTRIKSI KHUSUS BERDASARKAN ROLE ==========
+
+        // KARYAWAN: Tidak boleh akses halaman admin (master data, user, laporan)
+        if ($role === 'karyawan') {
             $forbiddenPaths = [
-                'admin/kategori', 'admin/supplier', 'admin/produk', 'admin/user',
-                'kasir/penjualan', 'admin/laporan/keuangan', 'admin/retur'
+                'admin/supplier',
+                'admin/motif',
+                'admin/warna',
+                'admin/produk',
+                'admin/pelanggan',
+                'admin/user',
+                'admin/laporan'
             ];
+
             foreach ($forbiddenPaths as $path) {
                 if (strpos($currentPath, $path) === 0) {
-                    return redirect()->to('/gudang/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
-                }
-            }
-        }
-        
-        // KASIR: Tidak boleh akses master data, gudang, laporan
-        if ($role === 'kasir') {
-            $forbiddenPaths = [
-                'admin/kategori', 'admin/supplier', 'admin/produk', 'admin/user',
-                'gudang/pembelian', 'gudang/stok', 'admin/laporan', 'admin/retur'
-            ];
-            foreach ($forbiddenPaths as $path) {
-                if (strpos($currentPath, $path) === 0) {
-                    return redirect()->to('/kasir/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
+                    return redirect()->to('/karyawan/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
                 }
             }
         }

@@ -4,28 +4,38 @@ namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
 
-class UserSeeder extends Seeder // Harus sama dengan nama file
+class UserSeeder extends Seeder
 {
     public function run()
     {
         $data = [
             [
-                'username' => 'admin',
-                'password' => password_hash('123', PASSWORD_BCRYPT),
-                'role'     => 'admin', // Sesuai desain A3 
+                'username'   => 'admin',
+                'password'   => password_hash('123', PASSWORD_BCRYPT),
+                'role'       => 'admin',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'username' => 'gudang',
-                'password' => password_hash('123', PASSWORD_BCRYPT),
-                'role'     => 'gudang', // Sesuai desain A3 
+                'username'   => 'karyawan1',
+                'password'   => password_hash('123', PASSWORD_BCRYPT),
+                'role'       => 'karyawan',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'username' => 'kasir',
-                'password' => password_hash('123', PASSWORD_BCRYPT),
-                'role'     => 'kasir', // Sesuai desain A3 
+                'username'   => 'karyawan2',
+                'password'   => password_hash('123', PASSWORD_BCRYPT),
+                'role'       => 'karyawan',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
             ],
         ];
 
-        $this->db->table('users')->insertBatch($data);
+        foreach ($data as $row) {
+            $this->db->table('users')->insert($row);
+        }
+
+        echo "✓ UserSeeder completed\n";
     }
 }

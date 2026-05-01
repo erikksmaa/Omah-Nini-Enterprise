@@ -12,8 +12,13 @@ class PembelianModel extends Model
     protected $useSoftDeletes = false;
     protected $protectFields = true;
     protected $allowedFields = [
-        'no_invoice', 'id_supplier', 'id_user',
-        'tanggal_pembelian', 'total_harga', 'catatan', 'created_at'
+        'no_invoice',
+        'id_supplier',
+        'id_user',
+        'tanggal_pembelian',
+        'total_harga',
+        'catatan',
+        'created_at'
     ];
 
     protected $useTimestamps = true;
@@ -79,6 +84,9 @@ class PembelianModel extends Model
     /**
      * Get count pembelian bulan ini
      */
+    /**
+     * Get count pembelian this month
+     */
     public function getCountPembelianBulanIni()
     {
         return $this->where('MONTH(tanggal_pembelian)', date('m'))
@@ -108,14 +116,14 @@ class PembelianModel extends Model
     {
         $db = \Config\Database::connect();
         $now = date('Y-m-d H:i:s');
-        
+
         $db->transStart();
-        
+
         try {
             // Insert pembelian
             $db->table('pembelian')->insert($data);
             $pembelian_id = $db->insertID();
-            
+
             foreach ($items as $item) {
                 // Insert detail pembelian
                 $detailData = [
@@ -127,7 +135,7 @@ class PembelianModel extends Model
                     'subtotal' => $item['subtotal']
                 ];
                 $db->table('detail_pembelian')->insert($detailData);
-                
+
                 // Update stok produk
                 $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
                 $stok_baru = $produk['stok'] + $item['jumlah'];
@@ -135,7 +143,7 @@ class PembelianModel extends Model
                     'stok' => $stok_baru,
                     'harga_beli' => $item['harga_beli']
                 ]);
-                
+
                 // Log stok
                 $db->table('log_stok')->insert([
                     'id_produk' => $item['id_produk'],
@@ -149,7 +157,7 @@ class PembelianModel extends Model
                     'created_at' => $now
                 ]);
             }
-            
+
             // Insert keuangan
             $db->table('keuangan')->insert([
                 'id_user' => $userId,
@@ -161,18 +169,20 @@ class PembelianModel extends Model
                 'tanggal_transaksi' => $data['tanggal_pembelian'],
                 'created_at' => $now
             ]);
-            
+
             $db->transComplete();
-            
+
             if ($db->transStatus() === false) {
                 throw new \Exception('Transaksi gagal');
             }
-            
+
             return ['success' => true, 'id' => $pembelian_id];
-            
+
         } catch (\Exception $e) {
             $db->transRollback();
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+
+
 }

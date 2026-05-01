@@ -3,84 +3,111 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\DashboardAdminModel;
+use App\Models\ProdukModel;
+use App\Models\SupplierModel;
+use App\Models\MotifModel;
+use App\Models\WarnaModel;
+use App\Models\UserModel;
+use App\Models\TransaksiModel;
+use App\Models\PembelianModel;
+use App\Models\PelangganModel;
 
 class Dashboard extends BaseController
 {
-    protected $dashboardModel;
+    protected $produkModel;
+    protected $supplierModel;
+    protected $motifModel;
+    protected $warnaModel;
+    protected $userModel;
+    protected $transaksiModel;
+    protected $pembelianModel;
+    protected $pelangganModel;
 
     public function __construct()
     {
-        if (!session()->get('logged_in')) {
-            redirect()->to('/login');
-        }
-
-        $this->dashboardModel = new DashboardAdminModel();
+        $this->produkModel = new ProdukModel();
+        $this->supplierModel = new SupplierModel();
+        $this->motifModel = new MotifModel();
+        $this->warnaModel = new WarnaModel();
+        $this->userModel = new UserModel();
+        $this->transaksiModel = new TransaksiModel();
+        $this->pembelianModel = new PembelianModel();
+        // $this->pelangganModel = new PelangganModel();
     }
 
     public function index()
     {
+        // Ambil data stok menipis
+        $stokMenipis = $this->produkModel->getLowStockProducts(10);
+        
+        // Proses nama produk di controller
+        $stokMenipisWithName = [];
+        foreach ($stokMenipis as $item) {
+            $motif = $this->motifModel->find($item['id_motif'] ?? 0);
+            $warna = $this->warnaModel->find($item['id_warna'] ?? 0);
+            $nama_produk = ($motif['nama_motif'] ?? '?') . ' - ' . ($warna['nama_warna'] ?? '?');
+            
+            $stokMenipisWithName[] = [
+                'id' => $item['id'],
+                'nama_produk' => $nama_produk,
+                'stok' => $item['stok'],
+                'min_stok' => $item['min_stok']
+            ];
+        }
+        
         $data = [
             'title' => 'Dashboard Admin',
             'username' => session()->get('username'),
             'role' => session()->get('role'),
-            'total_produk' => $this->dashboardModel->getTotalProduk(),
-            'total_kategori' => $this->dashboardModel->getTotalKategori(),
-            'total_supplier' => $this->dashboardModel->getTotalSupplier(),
-            'total_user' => $this->dashboardModel->getTotalUser(),
-            'stok_menipis' => $this->dashboardModel->getStokMenipis(),
-            'stok_habis' => $this->dashboardModel->getStokHabis(),
+            'total_produk' => $this->produkModel->countAllResults(),
+            'total_supplier' => $this->supplierModel->countAllResults(),
+            'total_motif' => $this->motifModel->countAllResults(),
+            'total_warna' => $this->warnaModel->countAllResults(),
+            'total_user' => $this->userModel->countAllResults(),
+            // 'total_pelanggan' => $this->pelangganModel->countAllResults(),
+            'stok_menipis' => $stokMenipisWithName,
+            'transaksi_hari_ini' => $this->transaksiModel->getCountTransactionsToday(),
+            'pembelian_bulan_ini' => $this->pembelianModel->getCountPembelianBulanIni(),
+            'penjualan_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
         ];
 
-        return view('admin/dashboard', $data);
+        return view('admin/dashboard/index', $data);
     }
 
-    // API untuk Chart Penjualan 7 Hari Terakhir
-    public function getWeeklySalesChart()
-    {
-        $data = $this->dashboardModel->getWeeklySales();
-        return $this->response->setJSON($data);
-    }
-
-    // API untuk Chart Penjualan 12 Bulan Terakhir
-    public function getMonthlySalesChart()
-    {
-        $data = $this->dashboardModel->getMonthlySales();
-        return $this->response->setJSON($data);
-    }
-
-    // API untuk Chart Laba/Rugi Bulan Ini
-    public function getProfitLossChart()
-    {
-        $data = $this->dashboardModel->getProfitLoss();
-        return $this->response->setJSON($data);
-    }
-
-    // API untuk Data Stok Menipis
+    // API Methods
     public function getLowStockData()
     {
-        $data = $this->dashboardModel->getLowStockProducts(10);
-        return $this->response->setJSON($data);
+        $lowStock = $this->produkModel->getLowStockProducts(5);
+        
+        $data = [];
+        foreach ($lowStock as $item) {
+            $motif = $this->motifModel->find($item['id_motif'] ?? 0);
+            $warna = $this->warnaModel->find($item['id_warna'] ?? 0);
+            $nama_produk = ($motif['nama_motif'] ?? '?') . ' - ' . ($warna['nama_warna'] ?? '?');
+            
+            $data[] = [
+                'id' => $item['id'],
+                'nama_produk' => $nama_produk,
+                'stok' => $item['stok'],
+                'min_stok' => $item['min_stok']
+            ];
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $data
+        ]);
     }
 
-    // API untuk Produk Terlaris
-    public function getTopProductsChart()
+    public function getDashboardStats()
     {
-        $data = $this->dashboardModel->getTopProducts();
-        return $this->response->setJSON($data);
-    }
-
-    // API untuk Tipe Pembayaran
-    public function getPaymentMethodChart()
-    {
-        $data = $this->dashboardModel->getPaymentMethods();
-        return $this->response->setJSON($data);
-    }
-
-    // API untuk Data Dashboard Lengkap
-    public function getDashboardData()
-    {
-        $data = $this->dashboardModel->getDashboardData();
-        return $this->response->setJSON($data);
+        $weeklyTransaksi = $this->transaksiModel->getWeeklyCount();
+        $totalStokQuantity = $this->produkModel->getTotalStockQuantity();
+        
+        return $this->response->setJSON([
+            'status' => 'success',
+            'weekly_transaksi' => $weeklyTransaksi,
+            'total_stok_quantity' => $totalStokQuantity
+        ]);
     }
 }

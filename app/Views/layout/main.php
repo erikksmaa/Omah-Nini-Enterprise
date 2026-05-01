@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?> | Omah Nini Enterprise</title>
+    <title><?= $title ?> | Syarifa Batik Inventory</title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -60,16 +60,17 @@
                 <?= $this->renderSection('content') ?>
             </div>
 
-            <footer>
-                <div class="footer clearfix mb-0 text-muted">
-                    <div class="float-start">
-                        <p>2026 &copy; Omah Nini Enterprise</p>
-                    </div>
-                    <div class="float-end">
-                        <p>Crafted by <span class="text-danger">ER</span></p>
-                    </div>
-                </div>
-            </footer>
+            <!-- Ganti footer -->
+<footer>
+    <div class="footer clearfix mb-0 text-muted">
+        <div class="float-start">
+            <p>2026 &copy; Syarifa Batik Inventory</p>
+        </div>
+        <div class="float-end">
+            <p>Crafted by <span class="text-danger">ER Team</span></p>
+        </div>
+    </div>
+</footer>
         </div>
     </div>
 
