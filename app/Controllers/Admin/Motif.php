@@ -21,29 +21,29 @@ class Motif extends BaseController
     {
         $keyword = $this->request->getGet('keyword');
         $perPage = 10;
-        
+
         $builder = $this->motifModel->select('motif.*, supplier.nama as nama_supplier')
-                                    ->join('supplier', 'supplier.id = motif.id_supplier')
-                                    ->orderBy('motif.id', 'DESC');
-        
+            ->join('supplier', 'supplier.id = motif.id_supplier')
+            ->orderBy('motif.id', 'DESC');
+
         if (!empty($keyword)) {
             $builder->groupStart()
                 ->like('motif.nama_motif', $keyword)
                 ->orLike('supplier.nama', $keyword)
                 ->groupEnd();
         }
-        
+
         $motif = $builder->paginate($perPage);
         $pager = $this->motifModel->pager;
-        
+
         $data = [
-            'title'    => 'Kelola Data Motif',
-            'motif'    => $motif,
+            'title' => 'Kelola Data Motif',
+            'motif' => $motif,
             'suppliers' => $this->supplierModel->getOptions(),
-            'pager'    => $pager,
-            'keyword'  => $keyword
+            'pager' => $pager,
+            'keyword' => $keyword
         ];
-        
+
         return view('admin/motif/index', $data);
     }
 
@@ -59,13 +59,13 @@ class Motif extends BaseController
         try {
             $this->motifModel->save([
                 'id_supplier' => $this->request->getPost('id_supplier'),
-                'nama_motif'  => $this->request->getPost('nama_motif'),
-                'keterangan'  => $this->request->getPost('keterangan'),
+                'nama_motif' => $this->request->getPost('nama_motif'),
+                'keterangan' => $this->request->getPost('keterangan'),
             ]);
 
             return redirect()->to('/admin/motif')
                 ->with('success', 'Motif berhasil ditambahkan.');
-            
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -84,7 +84,7 @@ class Motif extends BaseController
 
         // Validasi
         $rules = $this->motifModel->validationRules;
-        
+
         if (!$this->validate($rules, $this->motifModel->validationMessages)) {
             return redirect()->back()
                 ->withInput()
@@ -94,13 +94,13 @@ class Motif extends BaseController
         try {
             $this->motifModel->update($id, [
                 'id_supplier' => $this->request->getPost('id_supplier'),
-                'nama_motif'  => $this->request->getPost('nama_motif'),
-                'keterangan'  => $this->request->getPost('keterangan'),
+                'nama_motif' => $this->request->getPost('nama_motif'),
+                'keterangan' => $this->request->getPost('keterangan'),
             ]);
 
             return redirect()->to('/admin/motif')
                 ->with('success', 'Motif berhasil diperbarui.');
-            
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -127,7 +127,7 @@ class Motif extends BaseController
             $this->motifModel->delete($id);
             return redirect()->to('/admin/motif')
                 ->with('success', 'Motif berhasil dihapus.');
-            
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal menghapus motif: ' . $e->getMessage());
@@ -139,8 +139,10 @@ class Motif extends BaseController
      */
     public function getBySupplier($id_supplier)
     {
-        $motif = $this->motifModel->getBySupplier($id_supplier);
-        
+        $motif = $this->motifModel->where('id_supplier', $id_supplier)
+            ->orderBy('nama_motif', 'ASC')
+            ->findAll();
+
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $motif

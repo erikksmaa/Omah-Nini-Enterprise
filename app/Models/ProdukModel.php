@@ -6,13 +6,13 @@ use CodeIgniter\Model;
 
 class ProdukModel extends Model
 {
-    protected $table            = 'produk';
-    protected $primaryKey       = 'id';
+    protected $table = 'produk';
+    protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
-    protected $allowedFields    = [
+    protected $returnType = 'array';
+    protected $useSoftDeletes = false;
+    protected $protectFields = true;
+    protected $allowedFields = [
         'sku',
         'id_supplier',
         'id_motif',
@@ -25,23 +25,23 @@ class ProdukModel extends Model
     ];
 
     protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $dateFormat = 'datetime';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 
     // ========== VALIDATION RULES ==========
     protected $validationRules = [
-        'sku'         => 'required|is_unique[produk.sku,id,{id}]',
+        'sku' => 'required',  // Hanya required, tanpa is_unique
         'id_supplier' => 'required|numeric|is_not_unique[supplier.id]',
-        'id_motif'    => 'required|numeric|is_not_unique[motif.id]',
-        'id_warna'    => 'required|numeric|is_not_unique[warna.id]',
-        'stok'        => 'required|numeric|greater_than_equal_to[0]',
-        'min_stok'    => 'permit_empty|numeric|greater_than_equal_to[0]'
+        'id_motif' => 'required|numeric|is_not_unique[motif.id]',
+        'id_warna' => 'required|numeric|is_not_unique[warna.id]',
+        'stok' => 'required|numeric|greater_than_equal_to[0]',
+        'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]'
     ];
 
     protected $validationMessages = [
         'sku' => [
-            'required'  => 'SKU wajib diisi.',
+            'required' => 'SKU wajib diisi.',
             'is_unique' => 'SKU sudah terdaftar.'
         ],
         'id_supplier' => [
@@ -67,9 +67,9 @@ class ProdukModel extends Model
     public function getFullData($id = null)
     {
         $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                        ->join('supplier', 'supplier.id = produk.id_supplier')
-                        ->join('motif', 'motif.id = produk.id_motif')
-                        ->join('warna', 'warna.id = produk.id_warna');
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna');
 
         if ($id) {
             return $builder->where('produk.id', $id)->first();
@@ -84,11 +84,11 @@ class ProdukModel extends Model
     public function getAllWithRelations($perPage = 10)
     {
         return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                    ->join('supplier', 'supplier.id = produk.id_supplier')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->orderBy('produk.id', 'DESC')
-                    ->paginate($perPage);
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('produk.id', 'DESC')
+            ->paginate($perPage);
     }
 
     /**
@@ -97,10 +97,10 @@ class ProdukModel extends Model
     public function getByIdWithRelations($id)
     {
         return $this->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id, motif.nama_motif, motif.id as motif_id, warna.nama_warna, warna.id as warna_id')
-                    ->join('supplier', 'supplier.id = produk.id_supplier')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->find($id);
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->find($id);
     }
 
     /**
@@ -109,10 +109,10 @@ class ProdukModel extends Model
     public function getOptions()
     {
         return $this->select('produk.id, motif.nama_motif, warna.nama_warna, produk.stok')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->orderBy('motif.nama_motif', 'ASC')
-                    ->findAll();
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -121,11 +121,11 @@ class ProdukModel extends Model
     public function getAvailableProducts()
     {
         return $this->select('produk.id, produk.sku, motif.nama_motif, warna.nama_warna, produk.stok')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->where('produk.stok >', 0)
-                    ->orderBy('motif.nama_motif', 'ASC')
-                    ->findAll();
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->where('produk.stok >', 0)
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -134,16 +134,16 @@ class ProdukModel extends Model
     public function search($keyword, $limit = 10)
     {
         return $this->select('produk.id, produk.sku, motif.nama_motif, warna.nama_warna, produk.stok')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->groupStart()
-                        ->like('produk.sku', $keyword)
-                        ->orLike('motif.nama_motif', $keyword)
-                        ->orLike('warna.nama_warna', $keyword)
-                    ->groupEnd()
-                    ->where('produk.stok >', 0)
-                    ->limit($limit)
-                    ->findAll();
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->groupStart()
+            ->like('produk.sku', $keyword)
+            ->orLike('motif.nama_motif', $keyword)
+            ->orLike('warna.nama_warna', $keyword)
+            ->groupEnd()
+            ->where('produk.stok >', 0)
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -157,7 +157,7 @@ class ProdukModel extends Model
         }
 
         $stok_sekarang = $produk['stok'];
-        
+
         if ($tipe == 'tambah') {
             $stok_baru = $stok_sekarang + $jumlah;
         } else {
@@ -168,11 +168,11 @@ class ProdukModel extends Model
         }
 
         $result = $this->update($id, ['stok' => $stok_baru]);
-        
+
         if ($result) {
             return ['success' => true, 'stok_baru' => $stok_baru];
         }
-        
+
         return ['success' => false, 'message' => 'Gagal update stok'];
     }
 
@@ -182,17 +182,17 @@ class ProdukModel extends Model
     public function getLowStockProducts($limit = null)
     {
         $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                        ->join('supplier', 'supplier.id = produk.id_supplier')
-                        ->join('motif', 'motif.id = produk.id_motif')
-                        ->join('warna', 'warna.id = produk.id_warna')
-                        ->where('produk.stok <= produk.min_stok')
-                        ->where('produk.stok >', 0)
-                        ->orderBy('produk.stok', 'ASC');
-        
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->where('produk.stok <= produk.min_stok')
+            ->where('produk.stok >', 0)
+            ->orderBy('produk.stok', 'ASC');
+
         if ($limit) {
             $builder->limit($limit);
         }
-        
+
         return $builder->findAll();
     }
 
@@ -202,12 +202,12 @@ class ProdukModel extends Model
     public function getOutOfStockProducts()
     {
         return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                    ->join('supplier', 'supplier.id = produk.id_supplier')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->where('produk.stok', 0)
-                    ->orderBy('motif.nama_motif', 'ASC')
-                    ->findAll();
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->where('produk.stok', 0)
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -216,12 +216,12 @@ class ProdukModel extends Model
     public function getHighestStockProducts($limit = 10)
     {
         return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                    ->join('supplier', 'supplier.id = produk.id_supplier')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->orderBy('produk.stok', 'DESC')
-                    ->limit($limit)
-                    ->findAll();
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('produk.stok', 'DESC')
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -261,23 +261,23 @@ class ProdukModel extends Model
         $supplierCode = $this->getSupplierCode($supplier['nama']);
         $motifCode = $this->generateCode($motif['nama_motif'], 3);
         $warnaCode = $this->generateCode($warna['nama_warna'], 3);
-        
+
         $like = $supplierCode . '-' . $motifCode . '-' . $warnaCode . '-%';
         $last = $this->like('sku', $like, 'after')->orderBy('id', 'DESC')->first();
-        
+
         if ($last) {
             $lastSeq = explode('-', $last['sku']);
             $seq = intval(end($lastSeq)) + 1;
         } else {
             $seq = 1;
         }
-        
+
         $sequence = str_pad($seq, 3, '0', STR_PAD_LEFT);
-        
+
         return $supplierCode . '-' . $motifCode . '-' . $warnaCode . '-' . $sequence;
     }
 
-    private function getSupplierCode($nama)
+    private function getSupplierCode($nama, $id_supplier = null)
     {
         $codes = [
             'Bang Jack\'s / Aulia' => 'BJK',
@@ -285,7 +285,27 @@ class ProdukModel extends Model
             'Maida Katun Super' => 'MDK',
             'AL FATI' => 'AFT'
         ];
-        return $codes[$nama] ?? substr(preg_replace('/[^A-Z]/', '', strtoupper($nama)), 0, 3);
+
+        // Jika sudah di predefined, pakai kode tersebut
+        if (isset($codes[$nama])) {
+            return $codes[$nama];
+        }
+
+        // Generate dari nama (3 huruf pertama)
+        $code = substr(preg_replace('/[^A-Z]/', '', strtoupper($nama)), 0, 3);
+
+        // Cek apakah kode sudah digunakan oleh supplier lain
+        $supplierModel = new SupplierModel();
+        $existing = $supplierModel->select('id, nama')
+            ->like('nama', $code)
+            ->first();
+
+        if ($existing && $existing['nama'] != $nama) {
+            // Jika tabrakan, tambahkan angka
+            $code = $code . rand(1, 9);
+        }
+
+        return $code;
     }
 
     private function generateCode($text, $length)

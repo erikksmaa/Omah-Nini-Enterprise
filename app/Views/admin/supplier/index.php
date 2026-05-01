@@ -71,7 +71,7 @@
         </div>
         <div class="card-body p-3">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-boredered table-hover">
                     <thead class="table-dark">
                         <tr>
                             <th width="5%">No</th>
