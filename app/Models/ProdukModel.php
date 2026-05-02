@@ -200,11 +200,8 @@ class ProdukModel extends Model
             ->where('produk.stok <= produk.min_stok')
             ->where('produk.stok >', 0)
             ->orderBy('produk.stok', 'ASC');
-
-        if ($limit) {
+        if ($limit)
             $builder->limit($limit);
-        }
-
         return $builder->findAll();
     }
 
@@ -328,5 +325,130 @@ class ProdukModel extends Model
             $code = str_pad($code, $length, 'X');
         }
         return $code;
+    }
+
+    // ========== METHOD UNTUK LAPORAN STOK ==========
+
+    /**
+     * Get all produk for stock report with filters
+     */
+    public function getStockReport($filter_supplier = null, $filter_motif = null, $filter_warna = null, $filter_stok = null)
+    {
+        $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('supplier.nama', 'ASC')
+            ->orderBy('motif.nama_motif', 'ASC');
+
+        if (!empty($filter_supplier)) {
+            $builder->where('produk.id_supplier', $filter_supplier);
+        }
+        if (!empty($filter_motif)) {
+            $builder->where('produk.id_motif', $filter_motif);
+        }
+        if (!empty($filter_warna)) {
+            $builder->where('produk.id_warna', $filter_warna);
+        }
+        if (!empty($filter_stok)) {
+            switch ($filter_stok) {
+                case 'menipis':
+                    $builder->where('produk.stok <= produk.min_stok')->where('produk.stok >', 0);
+                    break;
+                case 'habis':
+                    $builder->where('produk.stok', 0);
+                    break;
+                case 'aman':
+                    $builder->where('produk.stok > produk.min_stok');
+                    break;
+            }
+        }
+
+        return $builder->findAll();
+    }
+
+    /**
+     * Get stock summary (total stok, nilai stok dll)
+     */
+    public function getStockSummary()
+    {
+        $result = $this->select('
+        SUM(stok) as total_stok,
+        SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END) as produk_habis,
+        SUM(CASE WHEN stok <= min_stok AND stok > 0 THEN 1 ELSE 0 END) as produk_menipis,
+        COUNT(*) as total_produk
+    ')->first();
+
+        return $result;
+    }
+
+    /**
+     * Get stock report with advanced filters (including date range and keyword)
+     * 
+     * @param string|null $start_date Filter stok yang diupdate mulai tanggal ini
+     * @param string|null $end_date   Filter stok yang diupdate sampai tanggal ini
+     * @param string|null $keyword    Cari berdasarkan SKU, motif, warna, supplier
+     * @param int|null $supplier_id
+     * @param int|null $motif_id
+     * @param int|null $warna_id
+     * @param string|null $stok_status (aman, menipis, habis)
+     * @return array
+     */
+    public function getStockReportWithFilters($start_date = null, $end_date = null, $keyword = null, $supplier_id = null, $motif_id = null, $warna_id = null, $stok_status = null)
+    {
+        $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna');
+
+        // Filter tanggal (berdasarkan updated_at produk, asumsi stok terakhir diupdate)
+        if (!empty($start_date)) {
+            $builder->where('DATE(produk.updated_at) >=', $start_date);
+        }
+        if (!empty($end_date)) {
+            $builder->where('DATE(produk.updated_at) <=', $end_date);
+        }
+
+        // Filter keyword (nama produk/SKU)
+        if (!empty($keyword)) {
+            $builder->groupStart()
+                ->like('produk.sku', $keyword)
+                ->orLike('motif.nama_motif', $keyword)
+                ->orLike('warna.nama_warna', $keyword)
+                ->orLike('supplier.nama', $keyword)
+                ->groupEnd();
+        }
+
+        // Filter supplier
+        if (!empty($supplier_id)) {
+            $builder->where('produk.id_supplier', $supplier_id);
+        }
+
+        // Filter motif
+        if (!empty($motif_id)) {
+            $builder->where('produk.id_motif', $motif_id);
+        }
+
+        // Filter warna
+        if (!empty($warna_id)) {
+            $builder->where('produk.id_warna', $warna_id);
+        }
+
+        // Filter status stok
+        if (!empty($stok_status)) {
+            switch ($stok_status) {
+                case 'menipis':
+                    $builder->where('produk.stok <= produk.min_stok')->where('produk.stok >', 0);
+                    break;
+                case 'habis':
+                    $builder->where('produk.stok', 0);
+                    break;
+                case 'aman':
+                    $builder->where('produk.stok > produk.min_stok');
+                    break;
+            }
+        }
+
+        return $builder->orderBy('produk.updated_at', 'DESC')->findAll();
     }
 }

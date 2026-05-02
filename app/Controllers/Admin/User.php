@@ -39,7 +39,7 @@ class User extends BaseController
             'username' => 'required|min_length[3]|max_length[50]|is_unique[users.username]|alpha_numeric',
             'password' => 'required|min_length[6]',
             'confirm_password' => 'required|matches[password]',
-            'role' => 'required|in_list[admin,karyawan]'
+            'role' => 'required|in_list[admin,karyawan,pemilik]'
         ];
         
         $messages = [

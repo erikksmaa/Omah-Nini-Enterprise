@@ -276,16 +276,16 @@ class Produk extends BaseController
         }
 
         // Cek apakah produk memiliki relasi di detail_pembelian atau detail_transaksi
-        // $detailPembelianModel = new \App\Models\DetailPembelianModel();
-        // $detailTransaksiModel = new \App\Models\DetailTransaksiModel();
+        $detailPembelianModel = new \App\Models\DetailPembelianModel();
+        $detailTransaksiModel = new \App\Models\DetailTransaksiModel();
 
-        // $pembelianCount = $detailPembelianModel->where('id_produk', $id)->countAllResults();
-        // $transaksiCount = $detailTransaksiModel->where('id_produk', $id)->countAllResults();
+        $pembelianCount = $detailPembelianModel->where('id_produk', $id)->countAllResults();
+        $transaksiCount = $detailTransaksiModel->where('id_produk', $id)->countAllResults();
 
-        // if ($pembelianCount > 0 || $transaksiCount > 0) {
-        //     return redirect()->back()
-        //         ->with('error', "Produk tidak bisa dihapus karena sudah memiliki riwayat transaksi.");
-        // }
+        if ($pembelianCount > 0 || $transaksiCount > 0) {
+            return redirect()->back()
+                ->with('error', "Produk tidak bisa dihapus karena sudah memiliki riwayat transaksi.");
+        }
 
         try {
             $this->produkModel->delete($id);

@@ -103,7 +103,32 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
                 $routes->get('barang-masuk', 'Laporan::barangMasuk');
                 $routes->get('barang-keluar', 'Laporan::barangKeluar');
                 $routes->get('log-stok', 'Laporan::logStok');
+
+                $routes->get('export-stok', 'Laporan::exportStokExcel');
+                $routes->get('export-log-stok', 'Laporan::exportLogStokExcel');
             });
+        });
+
+        // ========== OWNER ROUTES (Hanya pemilik) ==========
+        $routes->group('pemilik', ['namespace' => 'App\Controllers\Pemilik', 'filter' => 'role:pemilik'], function ($routes) {
+            // Dashboard Owner
+            $routes->get('dashboard', 'Dashboard::index');
+
+            // Laporan Stok
+            $routes->get('laporan/stok', 'Laporan::stok');
+            $routes->get('laporan/export-stok', 'Laporan::exportStokExcel');
+
+            // Laporan Log Stok
+            $routes->get('laporan/log-stok', 'Laporan::logStok');
+            $routes->get('laporan/export-log-stok', 'Laporan::exportLogStokExcel');
+
+            // Laporan Barang Masuk (Pembelian)
+            $routes->get('laporan/barang-masuk', 'Laporan::barangMasuk');
+            $routes->get('laporan/export-barang-masuk', 'Laporan::exportBarangMasukExcel');
+
+            // Laporan Barang Keluar (Penjualan)
+            $routes->get('laporan/barang-keluar', 'Laporan::barangKeluar');
+            $routes->get('laporan/export-barang-keluar', 'Laporan::exportBarangKeluarExcel');
         });
 
         // ========== KARYAWAN ROUTES (Karyawan & Admin bisa akses) ==========

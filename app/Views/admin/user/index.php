@@ -57,6 +57,7 @@
                         <select name="role" class="form-control" required>
                             <option value="">Pilih Role</option>
                             <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Admin</option>
+                            <option value="pemilik" <?= old('role') == 'pemilik' ? 'selected' : '' ?>>Pemilik</option>
                             <option value="karyawan" <?= old('role') == 'karyawan' ? 'selected' : '' ?>>Karyawan</option>
                         </select>
                     </div>
@@ -160,6 +161,7 @@
                         <select name="role" id="edit_role" class="form-control" required>
                             <option value="admin">Admin</option>
                             <option value="karyawan">Karyawan</option>
+                            <option value="pemilik">Pemilik</option>
                         </select>
                     </div>
                 </div>

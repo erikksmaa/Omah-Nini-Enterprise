@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Controllers\Admin;
+namespace App\Controllers\Pemilik;
 
 use App\Controllers\BaseController;
-use App\Models\PembelianModel;
-use App\Models\SupplierModel;
-use App\Models\DetailPembelianModel;
-
 use App\Models\ProdukModel;
 use App\Models\LogStokModel;
+use App\Models\PembelianModel;
+use App\Models\TransaksiModel;
+use App\Models\SupplierModel;
 use App\Models\MotifModel;
 use App\Models\WarnaModel;
+use App\Models\DetailPembelianModel;
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -22,6 +23,8 @@ class Laporan extends BaseController
 {
     protected $produkModel;
     protected $logStokModel;
+    protected $pembelianModel;
+    protected $transaksiModel;
     protected $supplierModel;
     protected $motifModel;
     protected $warnaModel;
@@ -30,6 +33,8 @@ class Laporan extends BaseController
     {
         $this->produkModel = new ProdukModel();
         $this->logStokModel = new LogStokModel();
+        $this->pembelianModel = new PembelianModel();
+        $this->transaksiModel = new TransaksiModel();
         $this->supplierModel = new SupplierModel();
         $this->motifModel = new MotifModel();
         $this->warnaModel = new WarnaModel();
@@ -76,7 +81,7 @@ class Laporan extends BaseController
             'filter_stok' => $filter_stok,
         ];
 
-        return view('admin/laporan/stok', $data);
+        return view('pemilik/laporan/stok', $data);
     }
 
     // ========== LAPORAN LOG STOK ==========
@@ -106,7 +111,7 @@ class Laporan extends BaseController
             'filter_tipe' => $tipe_ref,
         ];
 
-        return view('admin/laporan/log_stok', $data);
+        return view('pemilik/laporan/log_stok', $data);
     }
 
     public function exportStokExcel()
