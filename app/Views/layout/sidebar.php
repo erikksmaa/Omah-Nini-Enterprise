@@ -88,8 +88,8 @@
                             <span>Laporan Stok</span>
                         </a>
                     </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/barang_masuk') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/barang_masuk') ?>" class='sidebar-link'>
+                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/barang-masuk') ? 'active' : '' ?>">
+                        <a href="<?= base_url('admin/laporan/barang-masuk') ?>" class='sidebar-link'>
                             <i class="bi bi-truck"></i>
                             <span>Laporan Barang Masuk</span>
                         </a>
