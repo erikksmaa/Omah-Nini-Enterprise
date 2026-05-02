@@ -13,27 +13,51 @@ class Pembelian extends BaseController
     public function index()
     {
         $pembelianModel = new PembelianModel();
+        $supplierModel  = new SupplierModel();
+
+        $tanggalMulai = $this->request->getGet('tanggal_mulai');
+        $tanggalAkhir = $this->request->getGet('tanggal_akhir');
+        $supplierId   = $this->request->getGet('supplier');
+
+        $builder = $pembelianModel
+            ->select('pembelian.*, supplier.nama as supplier_nama')
+            ->join('supplier', 'supplier.id = pembelian.id_supplier');
+
+        if (!empty($tanggalMulai)) {
+            $builder->where('tanggal_pembelian >=', $tanggalMulai);
+        }
+        if (!empty($tanggalAkhir)) {
+            $builder->where('tanggal_pembelian <=', $tanggalAkhir);
+        }
+        if (!empty($supplierId)) {
+            $builder->where('pembelian.id_supplier', $supplierId);
+        }
+
         $data = [
-            'title' => 'Riwayat Barang Masuk',
-            'pembelian' => $pembelianModel->getAllWithSupplier(10),
-            'pager' => $pembelianModel->pager,
+            'title'            => 'Riwayat Barang Masuk',
+            'pembelian'        => $builder->orderBy('pembelian.id', 'DESC')->paginate(10),
+            'pager'            => $pembelianModel->pager,
+            'suppliers'        => $supplierModel->findAll(),
+            'tanggalMulai'     => $tanggalMulai,
+            'tanggalAkhir'     => $tanggalAkhir,
+            'selectedSupplier' => $supplierId,
         ];
 
         return view('karyawan/pembelian/index', $data);
     }
 
     public function create()
-{
-    $supplierModel = new SupplierModel();
-    $produkModel = new ProdukModel();
+    {
+        $supplierModel = new SupplierModel();
+        $produkModel = new ProdukModel();
 
-    return view('karyawan/pembelian/create', [
-        'title'         => 'Tambah Barang Masuk',
-        'suppliers'     => $supplierModel->findAll(),
-        'produk_list'   => $produkModel->getAllForDropdown(),
-        'no_invoice'    => (new PembelianModel())->generateNoInvoice(),
-    ]);
-}
+        return view('karyawan/pembelian/create', [
+            'title'         => 'Tambah Barang Masuk',
+            'suppliers'     => $supplierModel->findAll(),
+            'produk_list'   => $produkModel->getAllForDropdown(),
+            'no_invoice'    => (new PembelianModel())->generateNoInvoice(),
+        ]);
+    }
 
     public function store()
     {
