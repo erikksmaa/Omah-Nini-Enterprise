@@ -7,6 +7,10 @@ use App\Models\PembelianModel;
 use App\Models\SupplierModel;
 use App\Models\DetailPembelianModel;
 
+use App\Models\TransaksiModel;
+use App\Models\DetailTransaksiModel;
+use App\Models\PelangganModel;
+
 use App\Models\ProdukModel;
 use App\Models\LogStokModel;
 use App\Models\MotifModel;
@@ -462,5 +466,44 @@ class Laporan extends BaseController
         ];
 
         return view('admin/laporan/barang-masuk', $data);
+    }
+
+    public function barangKeluar()
+    {
+        $transaksiModel = new TransaksiModel();
+        $pelangganModel = new PelangganModel();
+        $detailModel    = new DetailTransaksiModel();
+
+        $tanggalMulai = $this->request->getGet('tanggal_mulai');
+        $tanggalAkhir = $this->request->getGet('tanggal_akhir');
+        $pelangganId  = $this->request->getGet('pelanggan');
+
+        $builder = $transaksiModel
+            ->select('transaksi.*, pelanggan.nama as nama_pelanggan')
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left');
+
+        if (!empty($tanggalMulai)) {
+            $builder->where('DATE(tanggal_transaksi) >=', $tanggalMulai);
+        }
+        if (!empty($tanggalAkhir)) {
+            $builder->where('DATE(tanggal_transaksi) <=', $tanggalAkhir);
+        }
+        if (!empty($pelangganId)) {
+            $builder->where('transaksi.id_pelanggan', $pelangganId);
+        }
+
+        $transaksi = $builder->orderBy('transaksi.id', 'DESC')->paginate(15);
+
+        $data = [
+            'title'           => 'Laporan Barang Keluar',
+            'transaksi'       => $transaksi,
+            'pager'           => $transaksiModel->pager,
+            'pelanggan_list'  => $pelangganModel->findAll(),
+            'selectedPelanggan' => $pelangganId,
+            'tanggalMulai'    => $tanggalMulai,
+            'tanggalAkhir'    => $tanggalAkhir,
+        ];
+
+        return view('admin/laporan/barang-keluar', $data);
     }
 }
