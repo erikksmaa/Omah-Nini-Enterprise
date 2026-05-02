@@ -92,6 +92,18 @@ class ProdukModel extends Model
     }
 
     /**
+     * Get all products with relations (no pagination) for dropdown
+     */
+    public function getAllForDropdown()
+    {
+        return $this->select('produk.id, produk.sku, produk.stok, motif.nama_motif, warna.nama_warna')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->findAll();
+    }
+
+    /**
      * Get produk by ID with relations
      */
     public function getByIdWithRelations($id)

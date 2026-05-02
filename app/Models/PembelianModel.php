@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
@@ -16,7 +17,6 @@ class PembelianModel extends Model
         'id_supplier',
         'id_user',
         'tanggal_pembelian',
-        'total_harga',
         'catatan',
         'created_at'
     ];
@@ -25,18 +25,14 @@ class PembelianModel extends Model
     protected $createdField = 'created_at';
     protected $updatedField = null;
 
-    // ========== VALIDATION RULES ==========
     protected $validationRules = [
         'no_invoice' => 'required|is_unique[pembelian.no_invoice]',
         'id_supplier' => 'required|is_not_unique[supplier.id]',
         'id_user' => 'required|is_not_unique[users.user_id]',
-        'total_harga' => 'required|numeric|greater_than[0]'
     ];
 
-    // ========== CUSTOM METHODS ==========
-
     /**
-     * Get all pembelian with supplier info and pagination
+     * Get all pembelian with supplier info, paginated
      */
     public function getAllWithSupplier($perPage = 10)
     {
@@ -47,7 +43,7 @@ class PembelianModel extends Model
     }
 
     /**
-     * Get pembelian by ID with supplier info
+     * Get single pembelian with supplier info
      */
     public function getByIdWithSupplier($id)
     {
@@ -57,45 +53,18 @@ class PembelianModel extends Model
     }
 
     /**
-     * Get pembelian for detail view with supplier and user info
+     * Get detail pembelian (header + supplier)
      */
     public function getDetail($id)
     {
-        $db = \Config\Database::connect();
-        return $db->table('pembelian')
-            ->select('pembelian.*, supplier.nama as supplier_nama')
+        return $this->select('pembelian.*, supplier.nama as supplier_nama')
             ->join('supplier', 'supplier.id = pembelian.id_supplier')
             ->where('pembelian.id', $id)
-            ->get()
-            ->getRowArray();
+            ->first();
     }
 
     /**
-     * Get total pembelian bulan ini
-     */
-    public function getTotalPembelianBulanIni()
-    {
-        return $this->selectSum('total_harga')
-            ->where('MONTH(tanggal_pembelian)', date('m'))
-            ->where('YEAR(tanggal_pembelian)', date('Y'))
-            ->first()['total_harga'] ?? 0;
-    }
-
-    /**
-     * Get count pembelian bulan ini
-     */
-    /**
-     * Get count pembelian this month
-     */
-    public function getCountPembelianBulanIni()
-    {
-        return $this->where('MONTH(tanggal_pembelian)', date('m'))
-            ->where('YEAR(tanggal_pembelian)', date('Y'))
-            ->countAllResults();
-    }
-
-    /**
-     * Generate nomor invoice
+     * Generate nomor invoice: PO-YYMMDD-XXXX
      */
     public function generateNoInvoice()
     {
@@ -110,7 +79,7 @@ class PembelianModel extends Model
     }
 
     /**
-     * Save pembelian with transaction (insert manual via Query Builder)
+     * Simpan pembelian beserta detail, update stok, catat log
      */
     public function savePembelian($data, $items, $userId)
     {
@@ -120,55 +89,40 @@ class PembelianModel extends Model
         $db->transStart();
 
         try {
-            // Insert pembelian
+            // 1. Insert header pembelian
             $db->table('pembelian')->insert($data);
-            $pembelian_id = $db->insertID();
+            $pembelianId = $db->insertID();
 
+            // 2. Insert detail & update stok & log
             foreach ($items as $item) {
-                // Insert detail pembelian
-                $detailData = [
-                    'id_pembelian' => $pembelian_id,
-                    'id_produk' => $item['id_produk'],
-                    'nama_produk' => $item['nama_produk'],
-                    'jumlah' => $item['jumlah'],
-                    'harga_beli' => $item['harga_beli'],
-                    'subtotal' => $item['subtotal']
-                ];
-                $db->table('detail_pembelian')->insert($detailData);
+                // Insert detail
+                $db->table('detail_pembelian')->insert([
+                    'id_pembelian' => $pembelianId,
+                    'id_produk'    => $item['id_produk'],
+                    'nama_produk'  => $item['nama_produk'],
+                    'jumlah'       => $item['jumlah']
+                ]);
+
+                // Ambil stok sekarang
+                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
+                $stokLama = $produk['stok'];
+                $stokBaru = $stokLama + $item['jumlah'];
 
                 // Update stok produk
-                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
-                $stok_baru = $produk['stok'] + $item['jumlah'];
-                $db->table('produk')->where('id', $item['id_produk'])->update([
-                    'stok' => $stok_baru,
-                    'harga_beli' => $item['harga_beli']
-                ]);
+                $db->table('produk')->where('id', $item['id_produk'])->update(['stok' => $stokBaru]);
 
-                // Log stok
+                // Catat log stok
                 $db->table('log_stok')->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => $userId,
-                    'tipe_ref' => 'pembelian',
-                    'id_ref' => $pembelian_id,
-                    'jumlah_sebelum' => $produk['stok'],
+                    'id_produk'        => $item['id_produk'],
+                    'id_user'          => $userId,
+                    'tipe_ref'         => 'pembelian',
+                    'id_ref'           => $pembelianId,
+                    'jumlah_sebelum'   => $stokLama,
                     'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah' => $stok_baru,
-                    'aktivitas' => 'Pembelian barang',
-                    'created_at' => $now
+                    'jumlah_sesudah'   => $stokBaru,
+                    'created_at'       => $now
                 ]);
             }
-
-            // Insert keuangan
-            $db->table('keuangan')->insert([
-                'id_user' => $userId,
-                'tipe' => 'pengeluaran',
-                'kategori' => 'pembelian',
-                'tipe_ref' => 'pembelian',
-                'id_ref' => $pembelian_id,
-                'jumlah' => $data['total_harga'],
-                'tanggal_transaksi' => $data['tanggal_pembelian'],
-                'created_at' => $now
-            ]);
 
             $db->transComplete();
 
@@ -176,13 +130,20 @@ class PembelianModel extends Model
                 throw new \Exception('Transaksi gagal');
             }
 
-            return ['success' => true, 'id' => $pembelian_id];
-
+            return ['success' => true, 'id' => $pembelianId];
         } catch (\Exception $e) {
             $db->transRollback();
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
-
+        /**
+     * Get count pembelian this month
+     */
+    public function getCountPembelianBulanIni()
+    {
+        return $this->where('MONTH(tanggal_pembelian)', date('m'))
+                    ->where('YEAR(tanggal_pembelian)', date('Y'))
+                    ->countAllResults();
+    }
 }

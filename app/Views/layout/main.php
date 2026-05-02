@@ -61,16 +61,16 @@
             </div>
 
             <!-- Ganti footer -->
-<footer>
-    <div class="footer clearfix mb-0 text-muted">
-        <div class="float-start">
-            <p>2026 &copy; Syarifa Batik Inventory</p>
-        </div>
-        <div class="float-end">
-            <p>Crafted by <span class="text-danger">ER Team</span></p>
-        </div>
-    </div>
-</footer>
+            <footer>
+                <div class="footer clearfix mb-0 text-muted">
+                    <div class="float-start">
+                        <p>2026 &copy; Syarifa Batik Inventory</p>
+                    </div>
+                    <div class="float-end">
+                        <p>Crafted by <span class="text-danger">ER Team</span></p>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 
@@ -78,7 +78,7 @@
     <script src="<?= base_url('assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js') ?>"></script>
     <script src="<?= base_url('assets/compiled/js/app.js') ?>"></script>
 
-
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="<?= base_url('jQuery-Mask-Plugin-master/dist/jquery.mask.min.js') ?>"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -167,7 +167,7 @@
         // SweetAlert untuk Logout dari Navbar
         const btnLogoutNavbar = document.getElementById('btnLogoutNavbar');
         if (btnLogoutNavbar) {
-            btnLogoutNavbar.addEventListener('click', function (e) {
+            btnLogoutNavbar.addEventListener('click', function(e) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'Yakin ingin logout?',
@@ -189,7 +189,7 @@
         // SweetAlert untuk Logout dari Sidebar
         const btnLogoutSidebar = document.getElementById('btnLogoutSidebar');
         if (btnLogoutSidebar) {
-            btnLogoutSidebar.addEventListener('click', function (e) {
+            btnLogoutSidebar.addEventListener('click', function(e) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'Yakin ingin logout?',
@@ -226,6 +226,7 @@
             return false;
         }
     </script>
+    <?= $this->renderSection('scripts') ?>
 </body>
 
 </html>
