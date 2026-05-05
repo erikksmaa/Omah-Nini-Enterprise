@@ -2,12 +2,12 @@
 
 <?= $this->section('content') ?>
 
-<div class="container-fluid px-2 px-md-3">
+<div class="container">
 
     <!-- Welcome Banner -->
-    <div class="row mb-4">
+    <div class="row">
         <div class="col-12">
-            <div class="card bg-gradient-primary text-white shadow">
+            <div class="card bg-primary text-white shadow">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -113,7 +113,7 @@
     <!-- Grafik & Ringkasan Aktivitas -->
     <div class="row">
         <!-- Grafik Penjualan Bulanan -->
-        <div class="col-xl-7 mb-4">
+        <div class="col-xl-7 ">
             <div class="card shadow">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-graph-up"></i> Aktivitas Transaksi

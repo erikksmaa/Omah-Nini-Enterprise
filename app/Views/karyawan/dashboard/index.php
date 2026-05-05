@@ -2,12 +2,12 @@
 
 <?= $this->section('content') ?>
 
-<div class="container-fluid px-2 px-md-3">
+<div class="container-fluid">
     
     <!-- Welcome Banner -->
-    <div class="row mb-4">
+    <div class="row">
         <div class="col-12">
-            <div class="card bg-gradient-success text-white shadow">
+            <div class="card bg-primary text-white shadow">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -78,9 +78,9 @@
                         <div class="col-6">
                             <div class="card bg-success text-white">
                                 <div class="card-body py-3">
-                                    <h5>Barang Masuk</h5>
+                                    <h5 class="text-white">Barang Masuk</h5>
                                     <h3><?= number_format($pembelian_bulan_ini) ?>x</h3>
-                                    <small>Transaksi Pembelian</small>
+                                    <h6>Transaksi Pembelian</h6>
                                 </div>
                             </div>
                         </div>
@@ -89,7 +89,7 @@
                                 <div class="card-body py-3">
                                     <h5>Barang Keluar</h5>
                                     <h3><?= number_format($penjualan_bulan_ini) ?>x</h3>
-                                    <small>Transaksi Penjualan</small>
+                                    <h6>Transaksi Penjualan</h6>
                                 </div>
                             </div>
                         </div>
@@ -109,25 +109,25 @@
                         <div class="col-6">
                             <a href="<?= base_url('karyawan/pembelian/create') ?>" class="btn btn-success w-100 py-3">
                                 <i class="bi bi-box-seam fs-4 d-block"></i>
-                                <small>Barang Masuk</small>
+                                <h6 class="text-white">Barang Masuk</h6>
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="<?= base_url('karyawan/penjualan/create') ?>" class="btn btn-info w-100 py-3">
                                 <i class="bi bi-cart-plus fs-4 d-block"></i>
-                                <small>Barang Keluar</small>
+                                <h6 class="text-white">Barang Keluar</h6>
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="<?= base_url('karyawan/stok') ?>" class="btn btn-warning w-100 py-3">
                                 <i class="bi bi-box-seam fs-4 d-block"></i>
-                                <small>Manajemen Stok</small>
+                                <h6 class="text-white">Manajemen Stok</h6>
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="<?= base_url('karyawan/penjualan') ?>" class="btn btn-secondary w-100 py-3">
                                 <i class="bi bi-receipt fs-4 d-block"></i>
-                                <small>Riwayat Penjualan</small>
+                                <h6 class="text-white">Riwayat Penjualan</h6>
                             </a>
                         </div>
                     </div>

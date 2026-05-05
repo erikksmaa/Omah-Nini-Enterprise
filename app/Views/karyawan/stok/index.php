@@ -18,7 +18,7 @@
                 <div class="card-body p-2 p-md-3">
 
                     <!-- Filter Form -->
-                    <div class="card mb-3 shadow-sm bg-light">
+                    <div class="card mb-3 shadow-sm">
                         <div class="card-body p-2 p-md-3">
                             <form method="get" class="row g-2">
                                 <div class="col-md-4">
@@ -31,7 +31,7 @@
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">-- Semua Status --</option>
                                         <option value="aman" <?= ($selectedStatus ?? '') == 'aman' ? 'selected' : '' ?>>✅ Stok Aman</option>
@@ -39,7 +39,7 @@
                                         <option value="habis" <?= ($selectedStatus ?? '') == 'habis' ? 'selected' : '' ?>>❌ Stok Habis</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3 d-flex align-items-end">
+                                <div class="col-md-2 d-flex align-items-end">
                                     <a href="<?= base_url('karyawan/stok') ?>" class="btn btn-outline-secondary btn-sm w-100">
                                         <i class="bi bi-arrow-repeat"></i> Reset
                                     </a>

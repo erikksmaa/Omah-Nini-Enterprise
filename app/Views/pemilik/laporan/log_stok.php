@@ -12,7 +12,7 @@
                 <div class="card-body p-2 p-md-3">
 
                     <!-- Filter Form -->
-                    <div class="card mb-3 bg-light">
+                    <div class="card mb-3">
                         <div class="card-body p-2 p-md-3">
                             <form method="GET" class="row g-2">
                                 <div class="col-md-3 col-6">

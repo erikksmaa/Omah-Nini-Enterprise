@@ -7,7 +7,7 @@
         <div class="col-12">
 
             <!-- Welcome Banner -->
-            <div class="row mb-4">
+            <div class="row">
                 <div class="col-12">
                     <div class="card"
                         style="background: linear-gradient(135deg, #435ebe 0%, #1a2fa0 100%); border: none;">
@@ -33,7 +33,7 @@
             </div>
 
             <!-- Statistik Cards -->
-            <div class="row mb-4">
+            <div class="row">
                 <!-- Total Produk -->
                 <div class="col-6 col-md-4 mb-3">
                     <div class="card h-100">

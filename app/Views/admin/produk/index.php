@@ -13,8 +13,7 @@
                 </div>
                 <div class="card-body">
                     <!-- ========== FILTER CARD MODERN ========== -->
-                    <div class="card mb-4 shadow-sm"
-                        style="background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);">
+                    <div class="card mb-4 shadow-sm">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
                                 <i class="bi bi-funnel fs-5 me-2 text-primary"></i>

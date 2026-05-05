@@ -40,12 +40,6 @@
                             <?= session()->get('username') ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">
-                                    <i class="bi bi-person-badge"></i> Role: <?= session()->get('role') ?>
-                                </a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
                             <li><a class="dropdown-item text-danger" href="#" id="btnLogoutNavbar">
                                     <i class="bi bi-box-arrow-right"></i> Logout
                                 </a></li>

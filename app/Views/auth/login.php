@@ -274,7 +274,7 @@
                 <div class="login-icon">
                     <i class="bi bi-shop"></i>
                 </div>
-                <h3>Omah Nini</h3>
+                <h3>Syarifa Batik</h3>
                 <p>Enterprise Inventory System</p>
             </div>
             <div class="login-body">
@@ -313,7 +313,7 @@
                         </div>
                     </div>
 
-                    <div class="form-check">
+                    <div class="form-check mb-4">
                         <input type="checkbox" class="form-check-input" id="showPassword">
                         <label class="form-check-label" for="showPassword">
                             <i class="bi bi-eye"></i> Lihat Password
@@ -324,19 +324,6 @@
                         <i class="bi bi-box-arrow-in-right me-2"></i> Masuk
                     </button>
                 </form>
-
-                <div class="divider">
-                    <span>Demo Account</span>
-                </div>
-
-                <div class="demo-accounts">
-                    <div class="demo-title">Gunakan akun berikut untuk login</div>
-                    <div class="demo-grid">
-                        <div class="demo-item"><strong>admin</strong> / admin123</div>
-                        <div class="demo-item"><strong>gudang</strong> / admin123</div>
-                        <div class="demo-item"><strong>kasir</strong> / admin123</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

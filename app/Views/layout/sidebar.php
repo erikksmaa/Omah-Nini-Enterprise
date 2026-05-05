@@ -3,7 +3,7 @@
         <div class="sidebar-header position-relative">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="logo">
-                    <a href="<?= base_url('dashboard') ?>">Batik Inventory</a>
+                    <a href="<?= base_url('dashboard') ?>">Syarifa Batik Inventory</a>
                 </div>
             </div>
             <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
@@ -42,6 +42,8 @@
                             <span>Dashboard</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-title">Master</li>
 
                     <li
                         class="sidebar-item has-sub <?= in_array(uri_string(), ['admin/supplier', 'admin/motif', 'admin/warna', 'admin/produk', 'admin/pelanggan', 'admin/user']) ? 'active' : '' ?>">
@@ -105,6 +107,8 @@
                         </ul>
                     </li>
 
+                    <li class="sidebar-title">Stok</li>
+
                     <li
                         class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/stok', 'karyawan/pembelian', 'karyawan/penjualan']) ? 'active' : '' ?>">
                         <a href="#" class="sidebar-link">
@@ -131,8 +135,9 @@
                         </ul>
                     </li>
 
+                    <li class="sidebar-title">Laporan</li>
                     <li
-                        class="sidebar-item has-sub <?= in_array(uri_string(), ['admin/laporan/stok', 'admin/laporan/barang-masuk', 'admin/laporan/barang-keluar', 'admin/laporan/log-stok']) ? 'active' : '' ?>">
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['pemilik/laporan/stok', 'pemilik/laporan/barang-masuk', 'pemilik/laporan/barang-keluar', 'pemilik/laporan/log-stok']) ? 'active' : '' ?>">
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-file-earmark-bar-graph-fill"></i>
                             <span>Laporan</span>
@@ -144,12 +149,14 @@
                                     <i class="bi bi-box-seam"></i> Laporan Stok
                                 </a>
                             </li>
-                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
+                            <li
+                                class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
                                 <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="submenu-link">
                                     <i class="bi bi-truck"></i> Laporan Barang Masuk
                                 </a>
                             </li>
-                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
+                            <li
+                                class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
                                 <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="submenu-link">
                                     <i class="bi bi-receipt"></i> Laporan Barang Keluar
                                 </a>
@@ -164,12 +171,15 @@
 
                     <!-- ========== PEMILIK MENU ========== -->
                 <?php elseif ($role === 'pemilik'): ?>
+                    <li class="sidebar-title">Utama</li>
                     <li class="sidebar-item <?= (uri_string() == 'pemilik/dashboard') ? 'active' : '' ?>">
                         <a href="<?= base_url('pemilik/dashboard') ?>" class="sidebar-link">
                             <i class="bi bi-grid-fill"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-title">Laporan</li>
                     <li
                         class="sidebar-item has-sub <?= str_starts_with(uri_string(), 'pemilik/laporan') ? 'active' : '' ?>">
                         <a href="#" class="sidebar-link">
@@ -212,6 +222,8 @@
                             <span>Dashboard</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-title">Transaksi</li>
 
                     <li
                         class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/pembelian/create', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
