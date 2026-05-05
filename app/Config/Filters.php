@@ -36,6 +36,8 @@ class Filters extends BaseFilters
         'performance' => PerformanceMetrics::class,
         'role' => \App\Filters\RoleGuard::class,
         'auth' => \App\Filters\AuthGuard::class,
+        'session_security' => \App\Filters\SessionSecurity::class,
+        'server_restart' => \App\Filters\ServerRestartCheck::class,
     ];
 
     /**
@@ -76,6 +78,8 @@ class Filters extends BaseFilters
         'before' => [
             // 'honeypot',
             'csrf' => ['except' => ['api/*', 'login/*', 'admin/produk/generateSku']],
+            'session_security' => ['except' => ['login', 'login/*', 'auth/*', 'api/*']],
+            'server_restart' => ['except' => ['login*', 'auth*', 'api*']],
             // 'invalidchars',
         ],
         'after' => [
@@ -114,7 +118,9 @@ class Filters extends BaseFilters
                 'admin/*',
                 'gudang/*',
                 'kasir/*',
-                'dashboard'
+                'dashboard',
+                'pemilik/*',
+                'karyawan/*',
             ],
         ],
     ];

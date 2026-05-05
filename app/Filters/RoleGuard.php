@@ -10,50 +10,25 @@ class RoleGuard implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return redirect()->to('/login');
+        $userRole = session()->get('role');
+        
+        if (!$userRole) {
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu');
         }
-
-        $role = session()->get('role');
-        $currentPath = $request->getPath();
-
-        // Jika tidak ada arguments, allow semua (tidak mungkin terjadi karena filter selalu dipanggil dengan arguments)
+        
+        // Jika tidak ada arguments, izinkan semua
         if (empty($arguments)) {
             return;
         }
-
+        
         $allowedRoles = $arguments;
-
-        // Cek apakah role user diizinkan untuk route group ini
-        if (!in_array($role, $allowedRoles)) {
+        
+        // Apakah role user ada di allowed roles?
+        if (!in_array($userRole, $allowedRoles)) {
+            // Redirect ke dashboard sesuai role atau ke halaman sebelumnya
             return redirect()->to('/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
         }
-
-        // ========== RESTRIKSI KHUSUS BERDASARKAN ROLE ==========
-
-        // KARYAWAN: Tidak boleh akses halaman admin (master data, user, laporan)
-        if ($role === 'karyawan') {
-            $forbiddenPaths = [
-                'admin/supplier',
-                'admin/motif',
-                'admin/warna',
-                'admin/produk',
-                'admin/pelanggan',
-                'admin/user',
-                'admin/laporan'
-            ];
-
-            foreach ($forbiddenPaths as $path) {
-                if (strpos($currentPath, $path) === 0) {
-                    return redirect()->to('/karyawan/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman ini');
-                }
-            }
-        }
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
-    {
-        // Tidak perlu melakukan apa-apa
-    }
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}
 }

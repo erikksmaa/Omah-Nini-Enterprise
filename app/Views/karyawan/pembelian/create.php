@@ -16,9 +16,9 @@
                     <input type="text" name="no_invoice" class="form-control" value="<?= old('no_invoice', $no_invoice) ?>" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Supplier</label>
+                    <label class="form-label">Merk</label>
                     <select name="id_supplier" class="form-select" required>
-                        <option value="">-- Pilih Supplier --</option>
+                        <option value="">-- Pilih Merk --</option>
                         <?php foreach ($suppliers as $sup): ?>
                             <option value="<?= $sup['id'] ?>" <?= old('id_supplier') == $sup['id'] ? 'selected' : '' ?>>
                                 <?= esc($sup['nama']) ?>

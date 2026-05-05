@@ -459,6 +459,12 @@ class Laporan extends BaseController
 
         $pembelian = $builder->orderBy('pembelian.id', 'DESC')->paginate(15);
 
+        foreach ($pembelian as &$pemb) {
+            $items = $detailModel->where('id_pembelian', $pemb['id'])->findAll();
+            $pemb['items'] = $items;           // Simpan items ke array
+            $pemb['total_items'] = count($items); // Simpan total items
+        }
+
         $data = [
             'title' => 'Laporan Barang Masuk',
             'pembelian' => $pembelian,
@@ -469,18 +475,18 @@ class Laporan extends BaseController
             'tanggalAkhir' => $tanggalAkhir,
         ];
 
-        return view('admin/laporan/barang-masuk', $data);
+        return view('pemilik/laporan/barang-masuk', $data);
     }
 
     public function barangKeluar()
     {
         $transaksiModel = new TransaksiModel();
         $pelangganModel = new PelangganModel();
-        $detailModel    = new DetailTransaksiModel();
+        $detailModel = new DetailTransaksiModel();
 
         $tanggalMulai = $this->request->getGet('tanggal_mulai');
         $tanggalAkhir = $this->request->getGet('tanggal_akhir');
-        $pelangganId  = $this->request->getGet('pelanggan');
+        $pelangganId = $this->request->getGet('pelanggan');
 
         $builder = $transaksiModel
             ->select('transaksi.*, pelanggan.nama as nama_pelanggan')
@@ -498,16 +504,22 @@ class Laporan extends BaseController
 
         $transaksi = $builder->orderBy('transaksi.id', 'DESC')->paginate(15);
 
+        foreach ($transaksi as &$trans) {
+            $items = $detailModel->where('id_transaksi', $trans['id'])->findAll();
+            $trans['items'] = $items;           // Simpan items ke array
+            $trans['total_items'] = count($items); // Simpan total items
+        }
+
         $data = [
-            'title'           => 'Laporan Barang Keluar',
-            'transaksi'       => $transaksi,
-            'pager'           => $transaksiModel->pager,
-            'pelanggan_list'  => $pelangganModel->findAll(),
+            'title' => 'Laporan Barang Keluar',
+            'transaksi' => $transaksi,
+            'pager' => $transaksiModel->pager,
+            'pelanggan_list' => $pelangganModel->findAll(),
             'selectedPelanggan' => $pelangganId,
-            'tanggalMulai'    => $tanggalMulai,
-            'tanggalAkhir'    => $tanggalAkhir,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalAkhir' => $tanggalAkhir,
         ];
 
-        return view('admin/laporan/barang-keluar', $data);
+        return view('pemilik/laporan/barang-keluar', $data);
     }
 }

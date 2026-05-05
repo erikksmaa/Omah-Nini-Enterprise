@@ -47,6 +47,14 @@ class Auth extends BaseController
                     'login_message' => 'Selamat datang, ' . $dataUser['username'] . '!'  // ← TAMBAHKAN
                 ]);
 
+                // TAMBAHKAN: simpan IP dan User Agent untuk keamanan
+                session()->set([
+                    'session_ip' => $this->request->getIPAddress(),
+                    'session_user_agent' => $this->request->getUserAgent()->getAgentString(),
+                    'last_regeneration' => time(),
+                ]);
+                session()->set('server_start_time', getServerStartTime());
+
                 return redirect()->to('/dashboard');
 
             } else {

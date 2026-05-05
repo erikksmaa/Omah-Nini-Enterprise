@@ -16,9 +16,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Supplier / Brand <span class="text-danger">*</span></label>
+                                    <label class="form-label">Merk / Brand <span class="text-danger">*</span></label>
                                     <select name="id_supplier" id="id_supplier" class="form-control" required>
-                                        <option value="">-- Pilih Supplier --</option>
+                                        <option value="">-- Pilih Merk --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= $produk['id_supplier'] == $sup['id'] ? 'selected' : '' ?>>
                                                 <?= esc($sup['nama']) ?>
@@ -34,7 +34,7 @@
                                         <input type="text" name="sku" id="sku" class="form-control" value="<?= old('sku', $produk['sku']) ?>" required>
                                         <button type="button" id="btnGenerateSku" class="btn btn-secondary">Generate</button>
                                     </div>
-                                    <small class="text-muted">Klik Generate untuk membuat SKU otomatis berdasarkan supplier, motif, dan warna</small>
+                                    <small class="text-muted">Klik Generate untuk membuat SKU otomatis berdasarkan merk, motif, dan warna</small>
                                 </div>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
     // Load motif based on supplier
     async function loadMotif(supplierId) {
         if (!supplierId) {
-            motifSelect.innerHTML = '<option value="">-- Pilih Supplier Terlebih Dahulu --</option>';
+            motifSelect.innerHTML = '<option value="">-- Pilih Merk Terlebih Dahulu --</option>';
             return;
         }
         
@@ -133,7 +133,7 @@
                 });
                 motifSelect.innerHTML = options;
             } else {
-                motifSelect.innerHTML = '<option value="">-- Tidak ada motif untuk supplier ini --</option>';
+                motifSelect.innerHTML = '<option value="">-- Tidak ada motif untuk merk ini --</option>';
             }
         } catch (error) {
             console.error('Error loading motif:', error);
@@ -177,7 +177,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan',
-                    text: 'Pilih supplier terlebih dahulu!'
+                    text: 'Pilih merk terlebih dahulu!'
                 });
                 return;
             }

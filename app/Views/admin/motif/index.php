@@ -34,7 +34,7 @@
                             <thead>
                                 <tr>
                                     <th width="5%">No</th>
-                                    <th>Supplier / Brand</th>
+                                    <th>Merk / Brand</th>
                                     <th>Nama Motif</th>
                                     <th>Keterangan</th>
                                     <th width="15%">Aksi</th>
@@ -94,9 +94,9 @@
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Supplier / Brand <span class="text-danger">*</span></label>
+                        <label class="form-label">Merk / Brand <span class="text-danger">*</span></label>
                         <select name="id_supplier" class="form-control">
-                            <option value="">-- Pilih Supplier --</option>
+                            <option value="">-- Pilih Merk --</option>
                             <?php foreach ($suppliers as $sup): ?>
                                 <option value="<?= $sup['id'] ?>"><?= esc($sup['nama']) ?></option>
                             <?php endforeach; ?>
@@ -132,9 +132,9 @@
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Supplier / Brand <span class="text-danger">*</span></label>
+                        <label class="form-label">Merk / Brand <span class="text-danger">*</span></label>
                         <select name="id_supplier" id="edit_id_supplier" class="form-control">
-                            <option value="">-- Pilih Supplier --</option>
+                            <option value="">-- Pilih Merk --</option>
                             <?php foreach ($suppliers as $sup): ?>
                                 <option value="<?= $sup['id'] ?>"><?= esc($sup['nama']) ?></option>
                             <?php endforeach; ?>

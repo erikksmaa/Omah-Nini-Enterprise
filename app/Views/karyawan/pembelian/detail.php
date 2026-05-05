@@ -17,7 +17,7 @@
                         <td>: <?= esc($header['no_invoice']) ?></td>
                     </tr>
                     <tr>
-                        <th>Supplier</th>
+                        <th>Merk</th>
                         <td>: <?= esc($header['supplier_nama']) ?></td>
                     </tr>
                     <tr>

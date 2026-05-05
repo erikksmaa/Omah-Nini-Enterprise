@@ -16,10 +16,10 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Supplier / Brand <span
+                                    <label class="form-label">Merk / Brand <span
                                             class="text-danger">*</span></label>
                                     <select name="id_supplier" id="id_supplier" class="form-control" required>
-                                        <option value="">-- Pilih Supplier --</option>
+                                        <option value="">-- Pilih Merk --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= old('id_supplier') == $sup['id'] ? 'selected' : '' ?>>
                                                 <?= esc($sup['nama']) ?>
@@ -47,7 +47,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Motif <span class="text-danger">*</span></label>
                                     <select name="id_motif" id="id_motif" class="form-control" required>
-                                        <option value="">-- Pilih Supplier Terlebih Dahulu --</option>
+                                        <option value="">-- Pilih Merk Terlebih Dahulu --</option>
                                     </select>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
     // Fungsi untuk load motif
     async function loadMotif(supplierId) {
         if (!supplierId) {
-            motifSelect.innerHTML = '<option value="">-- Pilih Supplier Terlebih Dahulu --</option>';
+            motifSelect.innerHTML = '<option value="">-- Pilih Merk Terlebih Dahulu --</option>';
             return;
         }
 
@@ -129,7 +129,7 @@
                 });
                 motifSelect.innerHTML = options;
             } else {
-                motifSelect.innerHTML = '<option value="">-- Tidak ada motif untuk supplier ini --</option>';
+                motifSelect.innerHTML = '<option value="">-- Tidak ada motif untuk merk ini --</option>';
             }
         } catch (error) {
             console.error('Error loading motif:', error);
@@ -173,7 +173,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan',
-                    text: 'Pilih supplier, motif, dan warna terlebih dahulu!'
+                    text: 'Pilih merk, motif, dan warna terlebih dahulu!'
                 });
                 return;
             }

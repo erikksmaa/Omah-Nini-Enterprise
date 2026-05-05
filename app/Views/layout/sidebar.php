@@ -37,157 +37,240 @@
 
                     <li class="sidebar-title">Utama</li>
                     <li class="sidebar-item <?= (uri_string() == 'admin/dashboard') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/dashboard') ?>" class='sidebar-link'>
+                        <a href="<?= base_url('admin/dashboard') ?>" class="sidebar-link">
                             <i class="bi bi-grid-fill"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
 
-                    <li class="sidebar-title">Master Data</li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/supplier') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/supplier') ?>" class='sidebar-link'>
-                            <i class="bi bi-building"></i>
-                            <span>Supplier / Brand</span>
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['admin/supplier', 'admin/motif', 'admin/warna', 'admin/produk', 'admin/pelanggan', 'admin/user']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-database-fill"></i>
+                            <span>Master Data</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/motif') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/motif') ?>" class='sidebar-link'>
-                            <i class="bi bi-brush"></i>
-                            <span>Motif</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/warna') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/warna') ?>" class='sidebar-link'>
-                            <i class="bi bi-palette"></i>
-                            <span>Warna</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/produk') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/produk') ?>" class='sidebar-link'>
-                            <i class="bi bi-box"></i>
-                            <span>Produk</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/pelanggan') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/pelanggan') ?>" class='sidebar-link'>
-                            <i class="bi bi-people"></i>
-                            <span>Pelanggan</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/user') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/user') ?>" class='sidebar-link'>
-                            <i class="bi bi-person-badge"></i>
-                            <span>Manajemen User</span>
-                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['admin/supplier', 'admin/motif', 'admin/warna', 'admin/produk', 'admin/pelanggan', 'admin/user']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'admin/supplier') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/supplier') ?>" class="submenu-link">
+                                    <i class="bi bi-building"></i> Merk / Brand
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/motif') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/motif') ?>" class="submenu-link">
+                                    <i class="bi bi-brush"></i> Motif
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/warna') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/warna') ?>" class="submenu-link">
+                                    <i class="bi bi-palette"></i> Warna
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/produk') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/produk') ?>" class="submenu-link">
+                                    <i class="bi bi-box"></i> Produk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/pelanggan') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/pelanggan') ?>" class="submenu-link">
+                                    <i class="bi bi-people"></i> Pelanggan
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'admin/user') ? 'active' : '' ?>">
+                                <a href="<?= base_url('admin/user') ?>" class="submenu-link">
+                                    <i class="bi bi-person-badge"></i> Manajemen User
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="sidebar-title">Laporan</li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/stok') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/stok') ?>" class='sidebar-link'>
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/pembelian/create', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Transaksi</span>
+                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['karyawan/pembelian/create', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/pembelian/create') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/pembelian/create') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Barang Masuk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/penjualan/create') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/penjualan/create') ?>" class="submenu-link">
+                                    <i class="bi bi-cart-plus"></i> Barang Keluar (POS)
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/stok', 'karyawan/pembelian', 'karyawan/penjualan']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
                             <i class="bi bi-box-seam"></i>
-                            <span>Laporan Stok</span>
+                            <span>Stok &amp; Riwayat</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/barang-masuk') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/barang-masuk') ?>" class='sidebar-link'>
-                            <i class="bi bi-truck"></i>
-                            <span>Laporan Barang Masuk</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/barang-keluar') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/barang-keluar') ?>" class='sidebar-link'>
-                            <i class="bi bi-receipt"></i>
-                            <span>Laporan Barang Keluar</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'admin/laporan/log-stok') ? 'active' : '' ?>">
-                        <a href="<?= base_url('admin/laporan/log-stok') ?>" class='sidebar-link'>
-                            <i class="bi bi-clock-history"></i>
-                            <span>Log Stok</span>
-                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['karyawan/stok', 'karyawan/pembelian', 'karyawan/penjualan']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/stok') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Manajemen Stok
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/pembelian') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/pembelian') ?>" class="submenu-link">
+                                    <i class="bi bi-truck"></i> Riwayat Barang Masuk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/penjualan') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/penjualan') ?>" class="submenu-link">
+                                    <i class="bi bi-receipt"></i> Riwayat Penjualan
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['admin/laporan/stok', 'admin/laporan/barang-masuk', 'admin/laporan/barang-keluar', 'admin/laporan/log-stok']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            <span>Laporan</span>
+                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['pemilik/laporan/stok', 'pemilik/laporan/barang-masuk', 'pemilik/laporan/barang-keluar', 'pemilik/laporan/log-stok']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/stok') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Laporan Stok
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="submenu-link">
+                                    <i class="bi bi-truck"></i> Laporan Barang Masuk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="submenu-link">
+                                    <i class="bi bi-receipt"></i> Laporan Barang Keluar
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/log-stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/log-stok') ?>" class="submenu-link">
+                                    <i class="bi bi-clock-history"></i> Log Stok
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- ========== PEMILIK MENU ========== -->
                 <?php elseif ($role === 'pemilik'): ?>
-                    <li class="sidebar-title">Laporan</li>
-                    <li class="sidebar-item">
-                        <a href="<?= base_url('pemilik/laporan/stok') ?>" class="sidebar-link">
-                            <i class="bi bi-box-seam"></i> Laporan Stok
+                    <li class="sidebar-item <?= (uri_string() == 'pemilik/dashboard') ? 'active' : '' ?>">
+                        <a href="<?= base_url('pemilik/dashboard') ?>" class="sidebar-link">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
                         </a>
                     </li>
-                    <li class="sidebar-item">
-                        <a href="<?= base_url('pemilik/laporan/log-stok') ?>" class="sidebar-link">
-                            <i class="bi bi-clock-history"></i> Log Stok
+                    <li
+                        class="sidebar-item has-sub <?= str_starts_with(uri_string(), 'pemilik/laporan') ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            <span>Laporan</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="sidebar-link">
-                            <i class="bi bi-truck"></i> Barang Masuk
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="sidebar-link">
-                            <i class="bi bi-receipt"></i> Barang Keluar
-                        </a>
+                        <ul class="submenu <?= str_starts_with(uri_string(), 'pemilik/laporan') ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/stok') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Laporan Stok
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'pemilik/laporan/log-stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/log-stok') ?>" class="submenu-link">
+                                    <i class="bi bi-clock-history"></i> Log Stok
+                                </a>
+                            </li>
+                            <li
+                                class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="submenu-link">
+                                    <i class="bi bi-truck"></i> Barang Masuk
+                                </a>
+                            </li>
+                            <li
+                                class="submenu-item <?= (uri_string() == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
+                                <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="submenu-link">
+                                    <i class="bi bi-receipt"></i> Barang Keluar
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- ========== KARYAWAN MENU ========== -->
-
                 <?php elseif ($role === 'karyawan'): ?>
 
                     <li class="sidebar-title">Utama</li>
                     <li class="sidebar-item <?= (uri_string() == 'karyawan/dashboard') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/dashboard') ?>" class='sidebar-link'>
+                        <a href="<?= base_url('karyawan/dashboard') ?>" class="sidebar-link">
                             <i class="bi bi-grid-fill"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
 
-                    <li class="sidebar-title">Transaksi</li>
-                    <li class="sidebar-item <?= (uri_string() == 'karyawan/pembelian/create') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/pembelian/create') ?>" class='sidebar-link'>
-                            <i class="bi bi-box-seam"></i>
-                            <span>Barang Masuk</span>
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/pembelian/create', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Transaksi</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'karyawan/penjualan/create') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/penjualan/create') ?>" class='sidebar-link'>
-                            <i class="bi bi-cart-plus"></i>
-                            <span>Barang Keluar (POS)</span>
-                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['karyawan/pembelian/create', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/pembelian/create') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/pembelian/create') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Barang Masuk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/penjualan/create') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/penjualan/create') ?>" class="submenu-link">
+                                    <i class="bi bi-cart-plus"></i> Barang Keluar (POS)
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="sidebar-title">Stok & Riwayat</li>
-                    <li class="sidebar-item <?= (uri_string() == 'karyawan/stok') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/stok') ?>" class='sidebar-link'>
+                    <li
+                        class="sidebar-item has-sub <?= in_array(uri_string(), ['karyawan/stok', 'karyawan/pembelian', 'karyawan/penjualan']) ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
                             <i class="bi bi-box-seam"></i>
-                            <span>Manajemen Stok</span>
+                            <span>Stok &amp; Riwayat</span>
                         </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'karyawan/pembelian') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/pembelian') ?>" class='sidebar-link'>
-                            <i class="bi bi-truck"></i>
-                            <span>Riwayat Barang Masuk</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item <?= (uri_string() == 'karyawan/penjualan') ? 'active' : '' ?>">
-                        <a href="<?= base_url('karyawan/penjualan') ?>" class='sidebar-link'>
-                            <i class="bi bi-receipt"></i>
-                            <span>Riwayat Penjualan</span>
-                        </a>
+                        <ul
+                            class="submenu <?= in_array(uri_string(), ['karyawan/stok', 'karyawan/pembelian', 'karyawan/penjualan']) ? 'active' : '' ?>">
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/stok') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/stok') ?>" class="submenu-link">
+                                    <i class="bi bi-box-seam"></i> Manajemen Stok
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/pembelian') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/pembelian') ?>" class="submenu-link">
+                                    <i class="bi bi-truck"></i> Riwayat Barang Masuk
+                                </a>
+                            </li>
+                            <li class="submenu-item <?= (uri_string() == 'karyawan/penjualan') ? 'active' : '' ?>">
+                                <a href="<?= base_url('karyawan/penjualan') ?>" class="submenu-link">
+                                    <i class="bi bi-receipt"></i> Riwayat Penjualan
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                 <?php endif; ?>
 
-
-
                 <!-- Sesi (sama untuk semua role) -->
                 <li class="sidebar-title">Sesi</li>
                 <li class="sidebar-item">
-                    <a href="#" id="btnLogoutSidebar" class='sidebar-link'>
+                    <a href="#" id="btnLogoutSidebar" class="sidebar-link">
                         <i class="bi bi-door-open-fill"></i>
                         <span>Keluar</span>
                     </a>
                 </li>
+
             </ul>
         </div>
     </div>

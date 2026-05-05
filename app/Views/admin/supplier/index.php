@@ -5,7 +5,7 @@
     <!-- FORM TAMBAH SUPPLIER -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-truck"></i> Tambah Supplier</h5>
+            <h5 class="mb-0"><i class="bi bi-truck"></i> Tambah Merk</h5>
         </div>
         <div class="card-body p-3">
             <?php if (session()->getFlashdata('validation_errors')): ?>
@@ -21,7 +21,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label>Nama Supplier <span class="text-danger">*</span></label>
+                            <label>Nama Merk <span class="text-danger">*</span></label>
                             <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>" value="<?= old('nama') ?>">
                         </div>
                     </div>
@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Simpan Supplier
+                    <i class="bi bi-save"></i> Simpan Merk
                 </button>
             </form>
         </div>
@@ -54,7 +54,7 @@
     <!-- TABEL DAFTAR SUPPLIER -->
     <div class="card">
         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Kategori</h5>
+            <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Merk</h5>
             <!-- Form Search -->
             <form method="GET" class="d-flex">
                 <input type="text" name="keyword" class="form-control form-control-sm me-2" style="width: 250px;"
@@ -75,7 +75,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th width="5%">No</th>
-                            <th width="25%">Nama Supplier</th>
+                            <th width="25%">Nama Merk</th>
                             <th width="15%">Kontak</th>
                             <th width="20%">Email</th>
                             <th width="20%">Alamat</th>
@@ -113,7 +113,7 @@
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header bg-warning">
-                                                <h5 class="modal-title">Edit Supplier: <?= esc($item['nama']) ?></h5>
+                                                <h5 class="modal-title">Edit Merk: <?= esc($item['nama']) ?></h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <form action="<?= base_url('admin/supplier/update/' . $item['id']) ?>"
@@ -121,7 +121,7 @@
                                                 <?= csrf_field() ?>
                                                 <div class="modal-body">
                                                     <div class="mb-3">
-                                                        <label>Nama Supplier <span class="text-danger">*</span></label>
+                                                        <label>Nama Merk <span class="text-danger">*</span></label>
                                                         <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
                                                             value="<?= old('nama', esc($item['nama'])) ?>">
                                                     </div>
@@ -154,7 +154,7 @@
                         <?php else: ?>
                             <tr>
                                 <td colspan="6" class="text-center">
-                                    <?= !empty($keyword) ? 'Supplier "' . esc($keyword) . '" tidak ditemukan' : 'Belum ada data supplier' ?>
+                                    <?= !empty($keyword) ? 'Merk "' . esc($keyword) . '" tidak ditemukan' : 'Belum ada data merk' ?>
                                 </td>
                             </tr>
                         <?php endif; ?>

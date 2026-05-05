@@ -31,7 +31,7 @@
                                                 <i class="bi bi-search text-muted"></i>
                                             </span>
                                             <input type="text" name="keyword" class="form-control border-start-0"
-                                                placeholder="Cari produk berdasarkan SKU, motif, warna, atau supplier..."
+                                                placeholder="Cari produk berdasarkan SKU, motif, warna, atau merk..."
                                                 value="<?= $keyword ?? '' ?>" style="border-left: none;">
                                             <button class="btn btn-primary px-4" type="submit">
                                                 <i class="bi bi-search me-1"></i> Cari
@@ -50,14 +50,14 @@
                                                 <div class="form-floating">
                                                     <select name="filter_supplier" id="filter_supplier"
                                                         class="form-select">
-                                                        <option value="">-- Semua Supplier --</option>
+                                                        <option value="">-- Semua Merk --</option>
                                                         <?php foreach ($suppliers as $sup): ?>
                                                             <option value="<?= $sup['id'] ?>" <?= ($filter_supplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
                                                                 <?= esc($sup['nama']) ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
-                                                    <label><i class="bi bi-building me-1"></i> Supplier / Brand</label>
+                                                    <label><i class="bi bi-building me-1"></i> Merk / Brand</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
@@ -120,7 +120,7 @@
                                     <tr>
                                         <th width="5%">No</th>
                                         <th width="15%">SKU</th>
-                                        <th>Supplier / Brand</th>
+                                        <th>Merk / Brand</th>
                                         <th>Motif</th>
                                         <th>Warna</th>
                                         <th>Stok</th>
@@ -208,7 +208,7 @@
 
                                         <!-- Info Produk -->
                                         <div class="row g-1 small">
-                                            <div class="col-4 text-muted">Supplier:</div>
+                                            <div class="col-4 text-muted">merk:</div>
                                             <div class="col-8"><?= esc($row['nama_supplier']) ?></div>
 
                                             <div class="col-4 text-muted">Motif:</div>
