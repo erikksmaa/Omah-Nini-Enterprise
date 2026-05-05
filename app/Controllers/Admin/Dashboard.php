@@ -32,43 +32,48 @@ class Dashboard extends BaseController
         $this->userModel = new UserModel();
         $this->transaksiModel = new TransaksiModel();
         $this->pembelianModel = new PembelianModel();
-        // $this->pelangganModel = new PelangganModel();
+        $this->pelangganModel = new PelangganModel();
     }
 
     public function index()
     {
-        // Ambil data stok menipis
         $stokMenipis = $this->produkModel->getLowStockProducts(10);
-        
-        // Proses nama produk di controller
-        $stokMenipisWithName = [];
+        $stokMenipisData = [];
         foreach ($stokMenipis as $item) {
-            $motif = $this->motifModel->find($item['id_motif'] ?? 0);
-            $warna = $this->warnaModel->find($item['id_warna'] ?? 0);
-            $nama_produk = ($motif['nama_motif'] ?? '?') . ' - ' . ($warna['nama_warna'] ?? '?');
-            
-            $stokMenipisWithName[] = [
+            $stokMenipisData[] = [
                 'id' => $item['id'],
-                'nama_produk' => $nama_produk,
+                'nama_produk' => ($item['nama_motif'] ?? '?') . ' - ' . ($item['nama_warna'] ?? '?'),
+                'sku' => $item['sku'],
                 'stok' => $item['stok'],
-                'min_stok' => $item['min_stok']
+                'min_stok' => $item['min_stok'],
             ];
         }
+
         
+
         $data = [
             'title' => 'Dashboard Admin',
-            'username' => session()->get('username'),
-            'role' => session()->get('role'),
-            'total_produk' => $this->produkModel->countAllResults(),
-            'total_supplier' => $this->supplierModel->countAllResults(),
-            'total_motif' => $this->motifModel->countAllResults(),
-            'total_warna' => $this->warnaModel->countAllResults(),
-            'total_user' => $this->userModel->countAllResults(),
-            // 'total_pelanggan' => $this->pelangganModel->countAllResults(),
-            'stok_menipis' => $stokMenipisWithName,
+
+            // Statistik Utama
+            'total_produk' => $this->produkModel->getTotalProduk(),
+            'total_supplier' => $this->supplierModel->getTotalSupplier(),
+            'total_motif' => $this->motifModel->getTotalMotif(),
+            'total_warna' => $this->warnaModel->getTotalWarna(),
+            'total_user' => $this->userModel->getTotalUser(),
+            'total_pelanggan' => $this->pelangganModel->getTotalPelanggan(),
+
+            // ========== TAMBAHKAN INI ==========
+            'total_stok' => $this->produkModel->getTotalStockQuantity(),  // ← BARIS INI
+
+            // Stok
+            'stok_menipis' => $stokMenipisData,
+            'stok_habis' => count($this->produkModel->getOutOfStockProducts()),
+
+            // Transaksi
             'transaksi_hari_ini' => $this->transaksiModel->getCountTransactionsToday(),
+            'pembelian_hari_ini' => $this->pembelianModel->getCountPembelianHariIni(),
+            'transaksi_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
             'pembelian_bulan_ini' => $this->pembelianModel->getCountPembelianBulanIni(),
-            'penjualan_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
         ];
 
         return view('admin/dashboard/index', $data);
@@ -78,13 +83,13 @@ class Dashboard extends BaseController
     public function getLowStockData()
     {
         $lowStock = $this->produkModel->getLowStockProducts(5);
-        
+
         $data = [];
         foreach ($lowStock as $item) {
             $motif = $this->motifModel->find($item['id_motif'] ?? 0);
             $warna = $this->warnaModel->find($item['id_warna'] ?? 0);
             $nama_produk = ($motif['nama_motif'] ?? '?') . ' - ' . ($warna['nama_warna'] ?? '?');
-            
+
             $data[] = [
                 'id' => $item['id'],
                 'nama_produk' => $nama_produk,
@@ -92,7 +97,7 @@ class Dashboard extends BaseController
                 'min_stok' => $item['min_stok']
             ];
         }
-        
+
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $data
@@ -103,11 +108,23 @@ class Dashboard extends BaseController
     {
         $weeklyTransaksi = $this->transaksiModel->getWeeklyCount();
         $totalStokQuantity = $this->produkModel->getTotalStockQuantity();
-        
+
         return $this->response->setJSON([
             'status' => 'success',
             'weekly_transaksi' => $weeklyTransaksi,
             'total_stok_quantity' => $totalStokQuantity
         ]);
     }
+
+    public function getWeeklySales()
+{
+    $data = $this->transaksiModel->getWeeklyCount();
+    
+    // Pastikan $data adalah array
+    if (!$data || !is_array($data)) {
+        $data = [];
+    }
+    
+    return $this->response->setJSON($data);
+}
 }

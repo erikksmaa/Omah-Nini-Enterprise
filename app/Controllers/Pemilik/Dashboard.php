@@ -37,19 +37,72 @@ class Dashboard extends BaseController
 
     public function index()
     {
+        // Format stok menipis
+        $stokMenipis = $this->produkModel->getLowStockProducts(10);
+        $stokMenipisData = [];
+        foreach ($stokMenipis as $item) {
+            $stokMenipisData[] = [
+                'id' => $item['id'],
+                'nama_produk' => ($item['nama_motif'] ?? '?') . ' - ' . ($item['nama_warna'] ?? '?'),
+                'sku' => $item['sku'],
+                'stok' => $item['stok'],
+                'min_stok' => $item['min_stok'],
+            ];
+        }
+
+
+
         $data = [
             'title' => 'Dashboard Owner',
-            'total_produk' => $this->produkModel->countAllResults(),
-            'total_supplier' => $this->supplierModel->countAllResults(),
-            'total_motif' => $this->motifModel->countAllResults(),
-            'total_warna' => $this->warnaModel->countAllResults(),
-            'total_user' => $this->userModel->countAllResults(),
-            'total_pelanggan' => $this->pelangganModel->countAllResults(),
-            'stok_menipis' => $this->produkModel->getLowStockProducts(10),
+
+            // Statistik Utama
+            'total_produk' => $this->produkModel->getTotalProduk(),
+            'total_supplier' => $this->supplierModel->getTotalSupplier(),
+            'total_motif' => $this->motifModel->getTotalMotif(),
+            'total_warna' => $this->warnaModel->getTotalWarna(),
+            'total_user' => $this->userModel->getTotalUser(),
+            'total_pelanggan' => $this->pelangganModel->getTotalPelanggan(),
+
+            // Statistik Stok
+            'total_stok' => $this->produkModel->getTotalStockQuantity(),
+            'stok_menipis' => $stokMenipisData,
+            'stok_habis' => count($this->produkModel->getOutOfStockProducts()),
+
+            // Statistik Transaksi
             'transaksi_hari_ini' => $this->transaksiModel->getCountTransactionsToday(),
+            'transaksi_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
             'pembelian_bulan_ini' => $this->pembelianModel->getCountPembelianBulanIni(),
-            'penjualan_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
+
+            // Tren (perbandingan bulan lalu)
+            'transaksi_bulan_lalu' => $this->transaksiModel->getCountTransactionsLastMonth(),
         ];
+
         return view('pemilik/dashboard/index', $data);
+    }
+
+    /**
+     * API untuk grafik aktivitas 7 hari terakhir
+     */
+    public function getWeeklyActivity()
+    {
+        $result = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $dateLabel = date('d/m', strtotime($date));
+
+            // Hitung penjualan (barang keluar) per hari
+            $penjualan = $this->transaksiModel->where('DATE(tanggal_transaksi)', $date)->countAllResults();
+
+            // Hitung pembelian (barang masuk) per hari
+            $pembelian = $this->pembelianModel->where('DATE(tanggal_pembelian)', $date)->countAllResults();
+
+            $result[] = [
+                'date' => $dateLabel,
+                'penjualan' => $penjualan,
+                'pembelian' => $pembelian
+            ];
+        }
+
+        return $this->response->setJSON($result);
     }
 }

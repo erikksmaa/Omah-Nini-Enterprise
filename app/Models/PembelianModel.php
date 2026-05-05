@@ -31,6 +31,48 @@ class PembelianModel extends Model
         'id_user' => 'required|is_not_unique[users.user_id]',
     ];
 
+
+    // ========== QUERY DASHBOARD ==========
+
+    /**
+     * Get count of purchases today
+     */
+    public function getCountPembelianHariIni()
+    {
+        return $this->where('DATE(tanggal_pembelian)', date('Y-m-d'))->countAllResults();
+    }
+
+    /**
+     * Get count of purchases this month
+     */
+    public function getCountPembelianBulanIni()
+    {
+        return $this->where('MONTH(tanggal_pembelian)', date('m'))
+            ->where('YEAR(tanggal_pembelian)', date('Y'))
+            ->countAllResults();
+    }
+
+    /**
+     * Get recent purchases
+     */
+    public function getRecentPurchases($limit = 10)
+    {
+        return $this->select('pembelian.*, supplier.nama as supplier_nama')
+            ->join('supplier', 'supplier.id = pembelian.id_supplier')
+            ->orderBy('pembelian.id', 'DESC')
+            ->limit($limit)
+            ->findAll();
+    }
+
+    /**
+     * Get total count of purchases
+     */
+    public function getTotalPembelian()
+    {
+        return $this->countAllResults();
+    }
+
+
     /**
      * Get all pembelian with supplier info, paginated
      */
@@ -98,9 +140,9 @@ class PembelianModel extends Model
                 // Insert detail
                 $db->table('detail_pembelian')->insert([
                     'id_pembelian' => $pembelianId,
-                    'id_produk'    => $item['id_produk'],
-                    'nama_produk'  => $item['nama_produk'],
-                    'jumlah'       => $item['jumlah']
+                    'id_produk' => $item['id_produk'],
+                    'nama_produk' => $item['nama_produk'],
+                    'jumlah' => $item['jumlah']
                 ]);
 
                 // Ambil stok sekarang
@@ -113,14 +155,14 @@ class PembelianModel extends Model
 
                 // Catat log stok
                 $db->table('log_stok')->insert([
-                    'id_produk'        => $item['id_produk'],
-                    'id_user'          => $userId,
-                    'tipe_ref'         => 'pembelian',
-                    'id_ref'           => $pembelianId,
-                    'jumlah_sebelum'   => $stokLama,
+                    'id_produk' => $item['id_produk'],
+                    'id_user' => $userId,
+                    'tipe_ref' => 'pembelian',
+                    'id_ref' => $pembelianId,
+                    'jumlah_sebelum' => $stokLama,
                     'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah'   => $stokBaru,
-                    'created_at'       => $now
+                    'jumlah_sesudah' => $stokBaru,
+                    'created_at' => $now
                 ]);
             }
 
@@ -137,13 +179,8 @@ class PembelianModel extends Model
         }
     }
 
-        /**
+    /**
      * Get count pembelian this month
      */
-    public function getCountPembelianBulanIni()
-    {
-        return $this->where('MONTH(tanggal_pembelian)', date('m'))
-                    ->where('YEAR(tanggal_pembelian)', date('Y'))
-                    ->countAllResults();
-    }
+   
 }

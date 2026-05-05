@@ -21,18 +21,64 @@ class TransaksiModel extends Model
         'created_at'
     ];
 
-    // ========== DASHBOARD METHODS ==========
+    // ========== QUERY DASHBOARD ==========
+    
+    /**
+     * Get count of transactions today
+     */
     public function getCountTransactionsToday()
     {
         return $this->where('DATE(tanggal_transaksi)', date('Y-m-d'))->countAllResults();
     }
 
+    /**
+     * Get count of transactions this month
+     */
     public function getCountTransactionsThisMonth()
     {
         return $this->where('MONTH(tanggal_transaksi)', date('m'))
                     ->where('YEAR(tanggal_transaksi)', date('Y'))
                     ->countAllResults();
     }
+
+    /**
+     * Get weekly transactions count for chart
+     */
+    public function getWeeklyCount()
+    {
+        $result = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $count = $this->where('DATE(tanggal_transaksi)', $date)->countAllResults();
+            $result[] = [
+                'date' => date('d/m', strtotime($date)),
+                'total' => $count
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * Get recent transactions
+     */
+    public function getRecentTransactions($limit = 10)
+    {
+        return $this->select('transaksi.*, pelanggan.nama as nama_pelanggan')
+                    ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+                    ->orderBy('transaksi.id', 'DESC')
+                    ->limit($limit)
+                    ->findAll();
+    }
+
+    public function getCountTransactionsLastMonth()
+{
+    $lastMonth = date('m', strtotime('-1 month'));
+    $year = date('Y', strtotime('-1 month'));
+    
+    return $this->where('MONTH(tanggal_transaksi)', $lastMonth)
+                ->where('YEAR(tanggal_transaksi)', $year)
+                ->countAllResults();
+}
 
     // ========== INVOICE GENERATOR ==========
     public function generateNoInvoice()

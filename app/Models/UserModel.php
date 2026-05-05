@@ -20,7 +20,7 @@ class UserModel extends Model
 
     // Hapus validation rules dari sini (pindahkan ke controller)
     // agar lebih fleksibel
-    
+
     // Auto hash password
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
@@ -40,11 +40,11 @@ class UserModel extends Model
     public function verifyLogin($username, $password)
     {
         $user = $this->where('username', $username)->first();
-        
+
         if ($user && password_verify($password, $user['password'])) {
             return $user;
         }
-        
+
         return null;
     }
 
@@ -96,5 +96,10 @@ class UserModel extends Model
     public function getByRole($role)
     {
         return $this->where('role', $role)->orderBy('username', 'ASC')->findAll();
+    }
+
+    public function getTotalUser()
+    {
+        return $this->countAllResults();
     }
 }

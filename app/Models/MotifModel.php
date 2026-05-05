@@ -42,7 +42,10 @@ class MotifModel extends Model
         ]
     ];
 
-    // ========== CUSTOM METHODS ==========
+    public function getTotalMotif()
+    {
+        return $this->countAllResults();
+    }
 
     /**
      * Get all motif with supplier info and pagination

@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/app-mod.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/app-dark.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/icon-ly.css') ?>">
+    <!-- Hapus atau komentari baris ini -->
+    <link rel="stylesheet" href="<?= base_url('assets/compiled/css/icon-ly.css') ?>">
 
 </head>
 
@@ -167,7 +169,7 @@
         // SweetAlert untuk Logout dari Navbar
         const btnLogoutNavbar = document.getElementById('btnLogoutNavbar');
         if (btnLogoutNavbar) {
-            btnLogoutNavbar.addEventListener('click', function(e) {
+            btnLogoutNavbar.addEventListener('click', function (e) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'Yakin ingin logout?',
@@ -189,7 +191,7 @@
         // SweetAlert untuk Logout dari Sidebar
         const btnLogoutSidebar = document.getElementById('btnLogoutSidebar');
         if (btnLogoutSidebar) {
-            btnLogoutSidebar.addEventListener('click', function(e) {
+            btnLogoutSidebar.addEventListener('click', function (e) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'Yakin ingin logout?',

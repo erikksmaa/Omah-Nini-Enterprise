@@ -9,44 +9,47 @@ use App\Models\TransaksiModel;
 
 class Dashboard extends BaseController
 {
+    protected $produkModel;
+    protected $pembelianModel;
+    protected $transaksiModel;
+
+    public function __construct()
+    {
+        $this->produkModel = new ProdukModel();
+        $this->pembelianModel = new PembelianModel();
+        $this->transaksiModel = new TransaksiModel();
+    }
+
     public function index()
     {
-        $produkModel = new ProdukModel();
-        $pembelianModel = new PembelianModel();
-        $transaksiModel = new TransaksiModel();
-
-        // Data stok menipis
-        $stokMenipis = $produkModel->getLowStockProducts(10);
+        // Data stok menipis (dari model sudah lengkap dengan nama_motif, nama_warna, nama_supplier)
+        $stokMenipis = $this->produkModel->getLowStockProducts(10);
+        
+        // Format data stok menipis
         $stokMenipisData = [];
         foreach ($stokMenipis as $item) {
-            // Jika model getLowStockProducts() sudah mengembalikan nama_motif, nama_warna, supplier, maka langsung pakai
-            $nama_produk = $item['nama_produk'] ?? ($item['sku'] . ' - ' . ($item['nama_motif'] ?? '?') . ' ' . ($item['nama_warna'] ?? '?'));
+            // Gunakan data yang sudah tersedia dari query join
+            $nama_produk = ($item['nama_motif'] ?? '?') . ' - ' . ($item['nama_warna'] ?? '?');
             $stokMenipisData[] = [
-                'id' => $item['id'],
-                'nama_produk' => $nama_produk,
-                'sku' => $item['sku'] ?? '',
-                'stok' => $item['stok'],
-                'min_stok' => $item['min_stok'],
+                'id'           => $item['id'],
+                'nama_produk'  => $nama_produk,
+                'sku'          => $item['sku'] ?? '',
+                'stok'         => $item['stok'],
+                'min_stok'     => $item['min_stok'],
+                'nama_supplier'=> $item['nama_supplier'] ?? '',
             ];
         }
 
-        // Statistik ringkas
-        $totalProduk = $produkModel->countAllResults();
-        $totalStok = $produkModel->getTotalStockQuantity();
-        $pembelianBulanIni = $pembelianModel->getCountPembelianBulanIni();
-        $penjualanBulanIni = $transaksiModel->getCountTransactionsThisMonth();
-        $transaksiHariIni = $transaksiModel->getCountTransactionsToday();
-
         $data = [
-            'title'         => 'Dashboard Karyawan',
-            'role'          => session()->get('role'),
-            'username'      => session()->get('username'),
-            'total_produk'  => $totalProduk,
-            'total_stok'    => $totalStok,
-            'stok_menipis'  => $stokMenipisData,
-            'pembelian_bulan_ini' => $pembelianBulanIni,
-            'penjualan_bulan_ini' => $penjualanBulanIni,
-            'transaksi_hari_ini'  => $transaksiHariIni,
+            'title'                 => 'Dashboard Karyawan',
+            'role'                  => session()->get('role'),
+            'username'              => session()->get('username'),
+            'total_produk'          => $this->produkModel->getTotalProduk(),
+            'total_stok'            => $this->produkModel->getTotalStockQuantity(),
+            'stok_menipis'          => $stokMenipisData,
+            'pembelian_bulan_ini'   => $this->pembelianModel->getCountPembelianBulanIni(),
+            'penjualan_bulan_ini'   => $this->transaksiModel->getCountTransactionsThisMonth(),
+            'transaksi_hari_ini'    => $this->transaksiModel->getCountTransactionsToday(),
         ];
 
         return view('karyawan/dashboard/index', $data);

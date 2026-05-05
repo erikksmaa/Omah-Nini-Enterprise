@@ -6,13 +6,13 @@ use CodeIgniter\Model;
 
 class PelangganModel extends Model
 {
-    protected $table            = 'pelanggan';
-    protected $primaryKey       = 'id';
+    protected $table = 'pelanggan';
+    protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
-    protected $allowedFields    = [
+    protected $returnType = 'array';
+    protected $useSoftDeletes = false;
+    protected $protectFields = true;
+    protected $allowedFields = [
         'nama',
         'alamat',
         'no_telp',
@@ -21,20 +21,20 @@ class PelangganModel extends Model
     ];
 
     protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $dateFormat = 'datetime';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 
     // ========== VALIDATION RULES ==========
     protected $validationRules = [
-        'nama'    => 'required|min_length[3]|max_length[100]',
-        'alamat'  => 'permit_empty|max_length[500]',
+        'nama' => 'required|min_length[3]|max_length[100]',
+        'alamat' => 'permit_empty|max_length[500]',
         'no_telp' => 'permit_empty|min_length[8]|max_length[20]'
     ];
 
     protected $validationMessages = [
         'nama' => [
-            'required'   => 'Nama pelanggan wajib diisi.',
+            'required' => 'Nama pelanggan wajib diisi.',
             'min_length' => 'Nama pelanggan minimal 3 karakter.',
             'max_length' => 'Nama pelanggan maksimal 100 karakter.'
         ],
@@ -44,7 +44,14 @@ class PelangganModel extends Model
         ]
     ];
 
-    // ========== CUSTOM METHODS ==========
+
+    /**
+     * Get total count of customers
+     */
+    public function getTotalPelanggan()
+    {
+        return $this->countAllResults();
+    }
 
     /**
      * Get all pelanggan with pagination
@@ -68,8 +75,8 @@ class PelangganModel extends Model
     public function getOptions()
     {
         return $this->select('id, nama, no_telp')
-                    ->orderBy('nama', 'ASC')
-                    ->findAll();
+            ->orderBy('nama', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -91,11 +98,11 @@ class PelangganModel extends Model
     public function search($keyword, $limit = 10)
     {
         return $this->groupStart()
-                    ->like('nama', $keyword)
-                    ->orLike('no_telp', $keyword)
-                    ->groupEnd()
-                    ->limit($limit)
-                    ->findAll();
+            ->like('nama', $keyword)
+            ->orLike('no_telp', $keyword)
+            ->groupEnd()
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -112,10 +119,10 @@ class PelangganModel extends Model
     public function getWithTransactionCount()
     {
         return $this->select('pelanggan.*, COUNT(transaksi.id) as total_transaksi')
-                    ->join('transaksi', 'transaksi.id_pelanggan = pelanggan.id', 'left')
-                    ->groupBy('pelanggan.id')
-                    ->orderBy('pelanggan.nama', 'ASC')
-                    ->findAll();
+            ->join('transaksi', 'transaksi.id_pelanggan = pelanggan.id', 'left')
+            ->groupBy('pelanggan.id')
+            ->orderBy('pelanggan.nama', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -124,10 +131,10 @@ class PelangganModel extends Model
     public function getTopPelanggan($limit = 10)
     {
         return $this->select('pelanggan.id, pelanggan.nama, pelanggan.no_telp, COUNT(transaksi.id) as total_transaksi')
-                    ->join('transaksi', 'transaksi.id_pelanggan = pelanggan.id', 'inner')
-                    ->groupBy('pelanggan.id')
-                    ->orderBy('total_transaksi', 'DESC')
-                    ->limit($limit)
-                    ->findAll();
+            ->join('transaksi', 'transaksi.id_pelanggan = pelanggan.id', 'inner')
+            ->groupBy('pelanggan.id')
+            ->orderBy('total_transaksi', 'DESC')
+            ->limit($limit)
+            ->findAll();
     }
 }

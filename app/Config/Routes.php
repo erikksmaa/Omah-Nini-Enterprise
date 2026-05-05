@@ -46,6 +46,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
         // Dashboard Admin
         $routes->get('dashboard', 'Dashboard::index');
+        $routes->get('dashboard/getWeeklySales', 'Dashboard::getWeeklySales');
 
         // Supplier / Brand
         $routes->get('supplier', 'Supplier::index');
@@ -98,6 +99,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         
         // Dashboard pemilik
         $routes->get('dashboard', 'Dashboard::index');
+        $routes->get('dashboard/getWeeklyActivity', 'Dashboard::getWeeklyActivity');
 
         // Laporan Stok
         $routes->get('laporan/stok', 'Laporan::stok');

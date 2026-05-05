@@ -17,10 +17,13 @@ class Dashboard extends BaseController
         switch ($role) {
             case 'admin':
                 return redirect()->to('/admin/dashboard');
-            case 'gudang':
-                return redirect()->to('/gudang/dashboard');
-            case 'kasir':
-                return redirect()->to('/kasir/dashboard');
+            
+            case 'karyawan':
+                return redirect()->to('/karyawan/dashboard');
+            
+            case 'owner':
+                return redirect()->to('/pemilik/dashboard');
+            
             default:
                 // Jika role tidak dikenal, logout
                 session()->destroy();

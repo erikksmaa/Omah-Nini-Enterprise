@@ -40,6 +40,26 @@ class SupplierModel extends Model
         ]
     ];
 
+
+    // ========== QUERY DASHBOARD ==========
+
+    /**
+     * Get total count of suppliers
+     */
+    public function getTotalSupplier()
+    {
+        return $this->countAllResults();
+    }
+
+    /**
+     * Get all suppliers for dropdown
+     */
+    public function getOptions()
+    {
+        return $this->select('id, nama')->orderBy('nama', 'ASC')->findAll();
+    }
+
+
     // ========== CUSTOM METHODS ==========
 
     /**
@@ -61,10 +81,6 @@ class SupplierModel extends Model
     /**
      * Get all supplier for dropdown/select options
      */
-    public function getOptions()
-    {
-        return $this->select('id, nama')->orderBy('nama', 'ASC')->findAll();
-    }
 
     /**
      * Check if supplier has related products

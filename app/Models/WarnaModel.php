@@ -36,7 +36,10 @@ class WarnaModel extends Model
         ],
     ];
 
-    // ========== CUSTOM METHODS ==========
+    public function getTotalWarna()
+{
+    return $this->countAllResults();
+}
 
     /**
      * Get all warna with pagination
