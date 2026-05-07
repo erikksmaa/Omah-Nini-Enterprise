@@ -10,11 +10,10 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', function () {
     if (session()->get('logged_in')) {
         $role = session()->get('role');
-        // Map role ke segment URL
         $roleMap = [
-            'admin' => 'admin',
+            'admin'    => 'admin',
             'karyawan' => 'karyawan',
-            'pemilik' => 'pemilik'
+            'pemilik'  => 'pemilik'
         ];
         $segment = $roleMap[$role] ?? 'karyawan';
         return redirect()->to("/{$segment}/dashboard");
@@ -29,24 +28,39 @@ $routes->get('/logout', 'Auth::logout');
 // ========== ROUTE DENGAN AUTH ==========
 $routes->group('', ['filter' => 'auth'], function ($routes) {
 
-    // Redirect dashboard berdasarkan role
     $routes->get('/dashboard', function () {
         $role = session()->get('role');
         $roleMap = [
-            'admin' => 'admin',
+            'admin'    => 'admin',
             'karyawan' => 'karyawan',
-            'pemilik' => 'pemilik'
+            'pemilik'  => 'pemilik'
         ];
         $segment = $roleMap[$role] ?? 'karyawan';
         return redirect()->to("/{$segment}/dashboard");
     });
 
-    // ========== ADMIN ROUTES (Hanya Admin) ==========
+    // =====================================================================
+    // ADMIN ONLY — Dashboard & Manajemen User
+    // Hanya role admin yang boleh mengakses
+    // =====================================================================
     $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'role:admin'], function ($routes) {
 
-        // Dashboard Admin
         $routes->get('dashboard', 'Dashboard::index');
         $routes->get('dashboard/getWeeklySales', 'Dashboard::getWeeklySales');
+
+        // Manajemen User — khusus admin
+        $routes->get('user', 'User::index');
+        $routes->post('user/store', 'User::store');
+        $routes->post('user/update/(:num)', 'User::update/$1');
+        $routes->get('user/delete/(:num)', 'User::delete/$1');
+        $routes->get('user/getData/(:num)', 'User::getData/$1');
+    });
+
+    // =====================================================================
+    // ADMIN & KARYAWAN — Master Data (CRUD penuh)
+    // Karyawan boleh akses seluruh master data kecuali manajemen user
+    // =====================================================================
+    $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'role:admin,karyawan'], function ($routes) {
 
         // Supplier / Brand
         $routes->get('supplier', 'Supplier::index');
@@ -83,18 +97,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('pelanggan/delete/(:num)', 'Pelanggan::delete/$1');
         $routes->get('pelanggan/getData/(:num)', 'Pelanggan::getData/$1');
         $routes->get('pelanggan/search', 'Pelanggan::search');
-
-        // User Management (HANYA ADMIN)
-        $routes->get('user', 'User::index');
-        $routes->post('user/store', 'User::store');
-        $routes->post('user/update/(:num)', 'User::update/$1');
-        $routes->get('user/delete/(:num)', 'User::delete/$1');
-        $routes->get('user/getData/(:num)', 'User::getData/$1');
-
     });
 
-    // ========== pemilik ROUTES (Hanya pemilik/Pemilik) ==========
-    // Gunakan role:pemilik di filter karena di database role = 'pemilik'
+    // =====================================================================
+    // PEMILIK & ADMIN — Laporan
+    // =====================================================================
     $routes->group('pemilik', ['namespace' => 'App\Controllers\Pemilik', 'filter' => 'role:pemilik,admin'], function ($routes) {
 
         // Dashboard pemilik
@@ -109,19 +116,20 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('laporan/log-stok', 'Laporan::logStok');
         $routes->get('laporan/export-log-stok', 'Laporan::exportLogStokExcel');
 
-        // Laporan Barang Masuk (Pembelian)
+        // Laporan Barang Masuk
         $routes->get('laporan/barang-masuk', 'Laporan::barangMasuk');
         $routes->get('laporan/export-barang-masuk', 'Laporan::exportBarangMasukExcel');
 
-        // Laporan Barang Keluar (Penjualan)
+        // Laporan Barang Keluar
         $routes->get('laporan/barang-keluar', 'Laporan::barangKeluar');
         $routes->get('laporan/export-barang-keluar', 'Laporan::exportBarangKeluarExcel');
     });
 
-    // ========== KARYAWAN ROUTES (Karyawan & Admin bisa akses) ==========
+    // =====================================================================
+    // KARYAWAN & ADMIN — Transaksi & Stok
+    // =====================================================================
     $routes->group('karyawan', ['namespace' => 'App\Controllers\Karyawan', 'filter' => 'role:karyawan,admin'], function ($routes) {
 
-        // Dashboard Karyawan
         $routes->get('dashboard', 'Dashboard::index');
 
         // Barang Masuk (Pembelian)
@@ -145,7 +153,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     });
 });
 
-// ========== API ROUTES (Tidak dalam group auth karena sudah ada filter sendiri) ==========
+// ========== API ROUTES ==========
 $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('search/produk', 'Api\Search::produk');
     $routes->get('motif/by-supplier/(:num)', 'Api\Motif::getBySupplier/$1');

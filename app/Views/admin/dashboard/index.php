@@ -339,7 +339,7 @@
                                                     <td class="ps-3">
                                                         <code class="text-muted small"><?= esc($item['sku']) ?></code>
                                                     </td>
-                                                    <td><?= esc($item['nama_motif']) ?> — <?= esc($item['nama_warna']) ?></td>
+                                                    <td><?= esc($item['nama_produk']) ?></td>
                                                     <td class="text-center">
                                                         <span class="badge bg-danger"><?= number_format($item['stok']) ?></span>
                                                     </td>
