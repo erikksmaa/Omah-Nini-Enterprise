@@ -1,83 +1,148 @@
 <?= $this->extend('layout/main') ?>
 
 <?= $this->section('content') ?>
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h4>Struk Penjualan</h4>
-        <div>
-            <a href="<?= base_url('karyawan/penjualan') ?>" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Kembali
-            </a>
-            <button onclick="window.print()" class="btn btn-primary">
-                <i class="bi bi-printer"></i> Cetak
-            </button>
-        </div>
-    </div>
-    <div class="card-body" id="struk-print">
-        <!-- Header Info -->
-        <div class="row">
-            <div class="col-md-6">
-                <table class="table table-borderless">
-                    <tr><th>No. Invoice</th><td>: <?= esc($header['no_invoice']) ?></td></tr>
-                    <tr><th>Tanggal</th><td>: <?= date('d/m/Y H:i', strtotime($header['tanggal_transaksi'])) ?></td></tr>
-                    <tr><th>Pembeli</th><td>: <?= esc($header['nama_pembeli']) ?></td></tr>
-                    <?php if ($header['nama_pelanggan']): ?>
-                        <tr><th>Pelanggan</th><td>: <?= esc($header['nama_pelanggan']) ?></td></tr>
-                    <?php endif; ?>
-                    <tr><th>Catatan</th><td>: <?= esc($header['catatan'] ?? '-') ?></td></tr>
-                </table>
+<div class="container-fluid px-2 px-md-3">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h4>Struk Penjualan</h4>
+            <div>
+                <a href="<?= base_url('karyawan/penjualan') ?>" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+                <button onclick="window.print()" class="btn btn-primary btn-sm">
+                    <i class="bi bi-printer"></i> Cetak
+                </button>
             </div>
         </div>
+        <div class="card-body p-2 p-md-3" id="struk-print">
+            <!-- Header Info -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="info-grid">
+                        <div class="row g-2">
+                            <div class="col-5 col-md-4 fw-bold text-muted">No. Invoice</div>
+                            <div class="col-7 col-md-8">: <?= esc($header['no_invoice']) ?></div>
+                            
+                            <div class="col-5 col-md-4 fw-bold text-muted">Tanggal</div>
+                            <div class="col-7 col-md-8">: <?= date('d/m/Y H:i', strtotime($header['tanggal_transaksi'])) ?></div>
+                            
+                            <div class="col-5 col-md-4 fw-bold text-muted">Pembeli</div>
+                            <div class="col-7 col-md-8">: <?= esc($header['nama_pembeli']) ?></div>
+                            
+                            <?php if ($header['nama_pelanggan']): ?>
+                                <div class="col-5 col-md-4 fw-bold text-muted">Pelanggan</div>
+                                <div class="col-7 col-md-8">: <?= esc($header['nama_pelanggan']) ?></div>
+                            <?php endif; ?>
+                            
+                            <div class="col-5 col-md-4 fw-bold text-muted">Catatan</div>
+                            <div class="col-7 col-md-8">: <?= esc($header['catatan'] ?? '-') ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <hr>
-        <h5>Item Produk</h5>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th width="5%">No</th>
-                        <th width="10%">Foto</th>
-                        <th>SKU</th>
-                        <th>Produk</th>
-                        <th>Motif</th>
-                        <th>Warna</th>
-                        <th class="text-center">Jumlah</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <hr>
+            <h5>Item Produk</h5>
+
+            <!-- ========== TABEL (Desktop) ========== -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">No</th>
+                                <th>Foto</th>
+                                <th>SKU</th>
+                                <th>Produk</th>
+                                <th>Motif</th>
+                                <th>Warna</th>
+                                <th class="text-center">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($items)): ?>
+                                <?php $no = 1; foreach ($items as $item): ?>
+                                    <tr>
+                                        <td class="text-center"><?= $no++ ?></td>
+                                        <td class="text-center">
+                                            <?php if (!empty($item['foto'])): ?>
+                                                <img src="<?= base_url('uploads/produk/' . $item['foto']) ?>" alt="Foto Produk"
+                                                    style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer;"
+                                                    class="img-thumbnail"
+                                                    onclick="showZoom('<?= base_url('uploads/produk/' . $item['foto']) ?>', '<?= esc($item['nama_produk']) ?>')">
+                                            <?php else: ?>
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                    style="width: 100px; height: 100px;">
+                                                    <i class="bi bi-image text-muted fs-4"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><code><?= esc($item['sku']) ?></code></td>
+                                        <td><?= esc($item['nama_produk']) ?></td>
+                                        <td><?= esc($item['nama_motif']) ?></td>
+                                        <td><?= esc($item['nama_warna']) ?></td>
+                                        <td class="text-center fw-bold"><?= number_format($item['jumlah']) ?> pcs</td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="7" class="text-center">Tidak ada item</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ========== CARD VIEW (Mobile) ========== -->
+            <div class="d-md-none">
                 <?php if (!empty($items)): ?>
                     <?php $no = 1; foreach ($items as $item): ?>
-                        <tr>
-                            <td class="text-center"><?= $no++ ?></td>
-                            <td class="text-center">
-                                <?php if (!empty($item['foto'])): ?>
-                                    <img src="<?= base_url('uploads/produk/' . $item['foto']) ?>" 
-                                         alt="Foto Produk" 
-                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer;"
-                                         class="img-thumbnail"
-                                         onclick="showZoom('<?= base_url('uploads/produk/' . $item['foto']) ?>', '<?= esc($item['nama_produk']) ?>')">
-                                <?php else: ?>
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="bi bi-image text-muted fs-4"></i>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-secondary">#<?= $no++ ?></span>
+                                        <code class="small"><?= esc($item['sku']) ?></code>
                                     </div>
-                                <?php endif; ?>
-                            </td>
-                            <td><code><?= esc($item['sku']) ?></code></td>
-                            <td><?= esc($item['nama_produk']) ?></td>
-                            <td><?= esc($item['nama_motif']) ?></td>
-                            <td><?= esc($item['nama_warna']) ?></td>
-                            <td class="text-center fw-bold"><?= number_format($item['jumlah']) ?> pcs</td>
-                        </tr>
+                                    <span class="fw-bold text-primary"><?= number_format($item['jumlah']) ?> pcs</span>
+                                </div>
+                                
+                                <div class="text-center mb-2">
+                                    <?php if (!empty($item['foto'])): ?>
+                                        <img src="<?= base_url('uploads/produk/' . $item['foto']) ?>" alt="Foto Produk"
+                                            style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                            class="img-thumbnail"
+                                            onclick="showZoom('<?= base_url('uploads/produk/' . $item['foto']) ?>', '<?= esc($item['nama_produk']) ?>')">
+                                    <?php else: ?>
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                                            style="width: 100px; height: 100px;">
+                                            <i class="bi bi-image text-muted fs-2"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="row g-1 small">
+                                    <div class="col-4 text-muted">Nama Produk:</div>
+                                    <div class="col-8 fw-semibold"><?= esc($item['nama_produk']) ?></div>
+                                    
+                                    <div class="col-4 text-muted">Motif:</div>
+                                    <div class="col-8"><?= esc($item['nama_motif']) ?></div>
+                                    
+                                    <div class="col-4 text-muted">Warna:</div>
+                                    <div class="col-8"><?= esc($item['nama_warna']) ?></div>
+                                </div>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr>
-                        <td colspan="7" class="text-center">Tidak ada item</td>
-                    </tr>
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox fs-2 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">Tidak ada item</p>
+                    </div>
                 <?php endif; ?>
-                </tbody>
-            </table>
+            </div>
+
+            <p class="text-muted mt-3 small">** Stok akan berkurang sesuai transaksi ini dan tercatat di log stok.</p>
         </div>
-        <p class="text-muted mt-3 small">** Stok akan berkurang sesuai transaksi ini dan tercatat di log stok.</p>
     </div>
 </div>
 
@@ -98,22 +163,33 @@
 </div>
 
 <script>
-function showZoom(imgSrc, caption) {
-    document.getElementById('zoomImage').src = imgSrc;
-    document.getElementById('zoomCaption').innerText = caption || 'Foto Produk';
-    new bootstrap.Modal(document.getElementById('zoomModal')).show();
-}
+    function showZoom(imgSrc, caption) {
+        document.getElementById('zoomImage').src = imgSrc;
+        document.getElementById('zoomCaption').innerText = caption || 'Foto Produk';
+        new bootstrap.Modal(document.getElementById('zoomModal')).show();
+    }
 </script>
 
 <style>
-@media print {
-    body * { visibility: hidden; }
-    #struk-print, #struk-print * { visibility: visible; }
-    #struk-print { position: absolute; left: 0; top: 0; width: 100%; }
-    .btn, .card-header, .modal, .img-thumbnail, [onclick] { display: none; }
-    table { width: 100%; }
-    td, th { padding: 5px; }
-}
+    .info-grid .row {
+        margin-bottom: 8px;
+    }
+    @media print {
+        body * { visibility: hidden; }
+        #struk-print, #struk-print * { visibility: visible; }
+        #struk-print { position: absolute; left: 0; top: 0; width: 100%; }
+        .btn, .card-header, .modal, .img-thumbnail, [onclick] { display: none; }
+        table { width: 100%; }
+        td, th { padding: 5px; }
+    }
+    @media (max-width: 768px) {
+        .info-grid .col-5, .info-grid .col-7 {
+            font-size: 13px;
+        }
+        .card-body {
+            padding: 12px;
+        }
+    }
 </style>
 
 <?= $this->endSection() ?>

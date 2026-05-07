@@ -78,8 +78,8 @@
             </div>
             <div class="card-body p-3">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="tableUser">
-                        <thead class="table-dark">
+                    <table class="table table-bordered table-hover" id="tableUser">
+                        <thead >
                             <tr>
                                 <th width="5%">No</th>
                                 <th width="35%">Username</th>

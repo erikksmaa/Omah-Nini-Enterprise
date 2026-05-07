@@ -44,7 +44,7 @@
                                 </div>
                                 <div class="col-12 text-end mt-2">
                                     <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                                    <a href="<?= base_url('admin/laporan/log-stok') ?>"
+                                    <a href="<?= base_url('pemilik/laporan/log-stok') ?>"
                                         class="btn btn-secondary btn-sm">Reset</a>
                                 </div>
                             </form>
@@ -53,7 +53,7 @@
 
                     <!-- Tombol Export -->
                     <div class="d-flex justify-content-end mb-3">
-                        <a href="<?= base_url('admin/laporan/export-log-stok?' . http_build_query($_GET)) ?>"
+                        <a href="<?= base_url('pemilik/laporan/export-log-stok?' . http_build_query($_GET)) ?>"
                             class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel"></i> Export Excel
                         </a>

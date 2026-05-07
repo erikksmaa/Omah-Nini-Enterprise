@@ -7,7 +7,8 @@
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addModal">
                         <i class="bi bi-plus-circle"></i> Tambah Pelanggan
                     </button>
                 </div>
@@ -15,9 +16,8 @@
                     <!-- Search Form -->
                     <form method="GET" class="mb-3">
                         <div class="input-group">
-                            <input type="text" name="keyword" class="form-control" 
-                                   placeholder="Cari pelanggan (nama atau no telepon)..." 
-                                   value="<?= $keyword ?? '' ?>">
+                            <input type="text" name="keyword" class="form-control"
+                                placeholder="Cari pelanggan (nama atau no telepon)..." value="<?= $keyword ?? '' ?>">
                             <button class="btn btn-primary" type="submit">
                                 <i class="bi bi-search"></i> Cari
                             </button>
@@ -51,16 +51,14 @@
                                             <td><?= esc($row['no_telp'] ?? '-') ?></td>
                                             <td><?= esc($row['alamat'] ?? '-') ?></td>
                                             <td class="text-center">
-                                                <button class="btn btn-warning btn-sm btn-edit" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-nama="<?= esc($row['nama']) ?>"
-                                                        data-no_telp="<?= esc($row['no_telp'] ?? '') ?>"
-                                                        data-alamat="<?= esc($row['alamat'] ?? '') ?>">
+                                                <button class="btn btn-warning btn-sm btn-edit" data-id="<?= $row['id'] ?>"
+                                                    data-nama="<?= esc($row['nama']) ?>"
+                                                    data-no_telp="<?= esc($row['no_telp'] ?? '') ?>"
+                                                    data-alamat="<?= esc($row['alamat'] ?? '') ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm btn-delete" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-nama="<?= esc($row['nama']) ?>">
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="<?= $row['id'] ?>"
+                                                    data-nama="<?= esc($row['nama']) ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -152,29 +150,29 @@
 <script>
     // Edit button handler
     document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const nama = this.dataset.nama;
             const no_telp = this.dataset.no_telp;
             const alamat = this.dataset.alamat;
-            
+
             document.getElementById('edit_nama').value = nama;
             document.getElementById('edit_no_telp').value = no_telp;
             document.getElementById('edit_alamat').value = alamat;
-            
+
             const form = document.getElementById('editForm');
             form.action = `<?= base_url('admin/pelanggan/update') ?>/${id}`;
-            
+
             new bootstrap.Modal(document.getElementById('editModal')).show();
         });
     });
 
     // Delete button handler
     document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const nama = this.dataset.nama;
-            
+
             Swal.fire({
                 title: 'Yakin hapus?',
                 text: `Pelanggan "${nama}" akan dihapus permanen!`,

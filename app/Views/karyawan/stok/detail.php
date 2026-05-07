@@ -17,7 +17,7 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
-                <table class="table table-borderless">
+                <table class="table  table-borderless">
                     <tr><th width="150">SKU</th><td>: <?= esc($produk['sku']) ?></td></tr>
                     <tr><th>Merk</th><td>: <?= esc($produk['nama_supplier'] ?? $produk['nama'] ?? '-') ?></td></tr>
                     <tr><th>Motif</th><td>: <?= esc($produk['nama_motif']) ?></td></tr>

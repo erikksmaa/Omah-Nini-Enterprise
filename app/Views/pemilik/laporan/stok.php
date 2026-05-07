@@ -76,7 +76,7 @@
                                 </div>
 
                                 <div class="col-12 text-end mt-2">
-                                    <a href="<?= base_url('admin/laporan/stok') ?>"
+                                    <a href="<?= base_url('pemilik/laporan/stok') ?>"
                                         class="btn btn-secondary btn-sm">Reset</a>
                                 </div>
                             </form>
@@ -85,7 +85,7 @@
 
                     <!-- Tombol Export & Info -->
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <a href="<?= base_url('admin/laporan/export-stok?' . http_build_query($_GET)) ?>"
+                        <a href="<?= base_url('pemilik/laporan/export-stok?' . http_build_query($_GET)) ?>"
                             class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel"></i> Export Excel
                         </a>

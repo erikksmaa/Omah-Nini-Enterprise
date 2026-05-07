@@ -7,7 +7,8 @@
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addModal">
                         <i class="bi bi-plus-circle"></i> Tambah Warna
                     </button>
                 </div>
@@ -15,8 +16,8 @@
                     <!-- Search Form -->
                     <form method="GET" class="mb-3">
                         <div class="input-group">
-                            <input type="text" name="keyword" class="form-control" 
-                                   placeholder="Cari warna..." value="<?= $keyword ?? '' ?>">
+                            <input type="text" name="keyword" class="form-control" placeholder="Cari warna..."
+                                value="<?= $keyword ?? '' ?>">
                             <button class="btn btn-primary" type="submit">
                                 <i class="bi bi-search"></i> Cari
                             </button>
@@ -30,7 +31,7 @@
 
                     <!-- Table -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover text-ce">
+                        <table class="table table-bordered table-hover">
                             <thead>
                                 <tr>
                                     <th width="5%">No</th>
@@ -46,15 +47,13 @@
                                             <td><?= $no++ ?></td>
                                             <td><?= esc($row['nama_warna']) ?></td>
                                             <td class="text-center">
-                                                <button class="btn btn-warning btn-sm btn-edit" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-nama_warna="<?= esc($row['nama_warna']) ?>"
-                                                        data-kode_hex="<?= esc($row['kode_hex'] ?? '') ?>">
+                                                <button class="btn btn-warning btn-sm btn-edit" data-id="<?= $row['id'] ?>"
+                                                    data-nama_warna="<?= esc($row['nama_warna']) ?>"
+                                                    data-kode_hex="<?= esc($row['kode_hex'] ?? '') ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm btn-delete" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-nama_warna="<?= esc($row['nama_warna']) ?>">
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="<?= $row['id'] ?>"
+                                                    data-nama_warna="<?= esc($row['nama_warna']) ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -132,26 +131,26 @@
 
     // Edit button handler
     document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const nama_warna = this.dataset.nama_warna;
             const kode_hex = this.dataset.kode_hex;
-            
+
             document.getElementById('edit_nama_warna').value = nama_warna;
-            
+
             const form = document.getElementById('editForm');
             form.action = `<?= base_url('admin/warna/update') ?>/${id}`;
-            
+
             new bootstrap.Modal(document.getElementById('editModal')).show();
         });
     });
 
     // Delete button handler
     document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const nama_warna = this.dataset.nama_warna;
-            
+
             Swal.fire({
                 title: 'Yakin hapus?',
                 text: `Warna "${nama_warna}" akan dihapus permanen!`,

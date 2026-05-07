@@ -40,7 +40,7 @@
                                     <button type="submit" class="btn btn-primary btn-sm w-100">
                                         <i class="bi bi-funnel"></i> Filter
                                     </button>
-                                    <a href="<?= base_url('admin/laporan/barang-keluar') ?>"
+                                    <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>"
                                         class="btn btn-outline-secondary btn-sm w-100">
                                         <i class="bi bi-arrow-repeat"></i> Reset
                                     </a>
@@ -51,7 +51,7 @@
 
                     <!-- Tombol Export -->
                     <div class="d-flex justify-content-end mb-3">
-                        <a href="<?= base_url('admin/laporan/export-barang-keluar?' . http_build_query($_GET)) ?>"
+                        <a href="<?= base_url('pemilik/laporan/export-barang-keluar?' . http_build_query($_GET)) ?>"
                             class="btn btn-success btn-sm">
                             <i class="bi bi-file-excel"></i> Export Excel
                         </a>

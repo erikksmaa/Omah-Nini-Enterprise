@@ -145,7 +145,6 @@ class Stok extends BaseController
         }
 
         $stokBaru    = $this->request->getPost('stok_baru');
-        $keterangan  = $this->request->getPost('keterangan') ?? 'Penyesuaian stok (opname)';
         $stokLama    = $produk['stok'];
         $perubahan   = $stokBaru - $stokLama;
         $userId      = session()->get('user_id');

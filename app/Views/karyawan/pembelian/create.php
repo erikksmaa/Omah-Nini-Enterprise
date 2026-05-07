@@ -62,7 +62,7 @@
             </select>
             <div class="mt-2 foto-preview" style="display: none;">
                 <img class="foto-img" src="" alt="Foto Produk"
-                    style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
+                    style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
                 <span class="small text-muted ms-2">Klik gambar untuk memperbesar</span>
             </div>
         </div>

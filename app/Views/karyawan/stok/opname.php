@@ -35,10 +35,6 @@
                     <input type="number" name="stok_baru" class="form-control" min="0" value="<?= old('stok_baru', $produk['stok']) ?>" required>
                     <small class="text-muted">Masukkan jumlah stok hasil opname terbaru.</small>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Keterangan</label>
-                    <input type="text" name="keterangan" class="form-control" value="<?= old('keterangan') ?>" placeholder="Alasan penyesuaian">
-                </div>
             </div>
 
             <div class="mt-3">

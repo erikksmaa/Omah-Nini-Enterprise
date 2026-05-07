@@ -22,25 +22,33 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Nama Merk <span class="text-danger">*</span></label>
-                            <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>" value="<?= old('nama') ?>">
+                            <input type="text" name="nama"
+                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
+                                value="<?= old('nama') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Kontak <span class="text-danger">*</span></label>
-                            <input type="text" name="kontak" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>" value="<?= old('kontak') ?>">
+                            <input type="text" name="kontak"
+                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
+                                value="<?= old('kontak') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Email</label>
-                            <input type="email" name="email" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>" value="<?= old('email') ?>">
+                            <input type="email" name="email"
+                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
+                                value="<?= old('email') ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Alamat</label>
-                            <input type="text" name="alamat" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>" value="<?= old('alamat') ?>">
+                            <input type="text" name="alamat"
+                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
+                                value="<?= old('alamat') ?>">
                         </div>
                     </div>
                 </div>
@@ -71,8 +79,8 @@
         </div>
         <div class="card-body p-3">
             <div class="table-responsive">
-                <table class="table table-boredered table-hover">
-                    <thead class="table-dark">
+                <table class="table table-bordered table-hover">
+                    <thead>
                         <tr>
                             <th width="5%">No</th>
                             <th width="25%">Nama Merk</th>
@@ -122,22 +130,26 @@
                                                 <div class="modal-body">
                                                     <div class="mb-3">
                                                         <label>Nama Merk <span class="text-danger">*</span></label>
-                                                        <input type="text" name="nama" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
+                                                        <input type="text" name="nama"
+                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
                                                             value="<?= old('nama', esc($item['nama'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Kontak <span class="text-danger">*</span></label>
-                                                        <input type="text" name="kontak" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
+                                                        <input type="text" name="kontak"
+                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
                                                             value="<?= old('kontak', esc($item['kontak'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Email</label>
-                                                        <input type="email" name="email" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
+                                                        <input type="email" name="email"
+                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
                                                             value="<?= old('email', esc($item['email'])) ?>">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label>Alamat</label>
-                                                        <textarea name="alamat" class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
+                                                        <textarea name="alamat"
+                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
                                                             rows="2"><?= old('alamat', esc($item['alamat'])) ?></textarea>
                                                     </div>
                                                 </div>

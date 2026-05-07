@@ -137,10 +137,13 @@
                                                 <td><?= $no++ ?></td>
                                                 <td class="text-center">
                                                     <?php if (!empty($row['foto'])): ?>
-                                                        <img src="<?= base_url('uploads/produk/' . $row['foto']) ?>" alt="Foto"
-                                                            style="width: 40px; height: 40px; object-fit: cover;" class="rounded">
+                                                        <img src="<?= base_url('uploads/produk/' . $row['foto']) ?>"
+                                                            alt="Foto Produk"
+                                                            style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer;"
+                                                            class="img-thumbnail"
+                                                            onclick="showZoom('<?= base_url('uploads/produk/' . $row['foto']) ?>', '<?= esc($row['nama_motif']) ?> - <?= esc($row['nama_warna']) ?>')">
                                                     <?php else: ?>
-                                                        <i class="bi bi-image text-muted fs-5"></i>
+                                                        <i class="bi bi-image text-muted fs-4"></i>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td><code><?= esc($row['sku']) ?></code></td>
@@ -198,9 +201,9 @@
                                     <div class="card-body p-2">
                                         <!-- Header Card -->
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <div>
+                                            <div class="d-flex align-items-center gap-2">
                                                 <span class="badge bg-secondary">#<?= $no++ ?></span>
-                                                <code class="ms-1 small"><?= esc($row['sku']) ?></code>
+                                                <code class="small"><?= esc($row['sku']) ?></code>
                                             </div>
                                             <div class="btn-group btn-group-sm">
                                                 <a href="<?= base_url('admin/produk/edit/' . $row['id']) ?>"
@@ -214,10 +217,25 @@
                                             </div>
                                         </div>
 
+                                        <!-- Foto Produk (Tampil di Mobile) -->
+                                        <div class="text-center mb-2">
+                                            <?php if (!empty($row['foto'])): ?>
+                                                <img src="<?= base_url('uploads/produk/' . $row['foto']) ?>" alt="Foto Produk"
+                                                    style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                                    class="img-thumbnail"
+                                                    onclick="showZoom('<?= base_url('uploads/produk/' . $row['foto']) ?>', '<?= esc($row['nama_motif']) ?> - <?= esc($row['nama_warna']) ?>')">
+                                            <?php else: ?>
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                                                    style="width: 100px; height: 100px;">
+                                                    <i class="bi bi-image text-muted fs-2"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+
                                         <!-- Info Produk -->
                                         <div class="row g-1 small">
-                                            <div class="col-4 text-muted">merk:</div>
-                                            <div class="col-8"><?= esc($row['nama_supplier']) ?></div>
+                                            <div class="col-4 text-muted">Merk:</div>
+                                            <div class="col-8 fw-semibold"><?= esc($row['nama_supplier']) ?></div>
 
                                             <div class="col-4 text-muted">Motif:</div>
                                             <div class="col-8"><?= esc($row['nama_motif']) ?></div>
@@ -270,6 +288,31 @@
     </div>
 </div>
 
+
+<!-- Modal Zoom Foto -->
+<div class="modal fade" id="zoomModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white">Foto Produk</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="zoomImage" src="" style="max-width: 100%; max-height: 70vh;">
+                <p id="zoomCaption" class="mt-2 text-muted"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showZoom(imgSrc, caption) {
+        document.getElementById('zoomImage').src = imgSrc;
+        document.getElementById('zoomCaption').innerText = caption || 'Foto Produk';
+        new bootstrap.Modal(document.getElementById('zoomModal')).show();
+    }
+</script>
+
 <script>
     // Dynamic motif loading based on supplier filter
     const filterSupplier = document.getElementById('filter_supplier');
@@ -314,13 +357,9 @@
         if (!text) return '';
         return text.replace(/[&<>]/g, function (m) {
             if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
+            if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m;
         });
-    }
-
-    // Delete button handler
+    } // Delete button handler
     document.querySelectorAll('.btn-delete').forEach(button => {
         button.addEventListener('click', function () {
             const id = this.dataset.id;
@@ -342,17 +381,17 @@
             });
         });
     });
-</script>
+    </>
 
-<style>
-    /* Card view styling */
-    .card {
-        border-radius: 10px;
-    }
+        <style>
+        /* Card view styling */
+            .card {
+                border - radius: 10px;
+        }
 
-    .card .badge {
-        font-size: 11px;
-    }
-</style>
+            .card .badge {
+                font - size: 11px;
+        }
+        </style>
 
-<?= $this->endSection() ?>
+    <?= $this->endSection() ?>
