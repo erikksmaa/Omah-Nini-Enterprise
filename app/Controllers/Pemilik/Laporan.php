@@ -60,17 +60,25 @@ class Laporan extends BaseController
             $end_date = date('Y-m-d');
         }
 
+        // Gunakan paginate() untuk mendapatkan data dengan pagination
+        $perPage = 10;
+        $produk = $this->produkModel->getStockReportWithFiltersPaginated(
+            $perPage,
+            $start_date,
+            $end_date,
+            $keyword,
+            $filter_supplier,
+            $filter_motif,
+            $filter_warna,
+            $filter_stok
+        );
+
+        $pager = $this->produkModel->pager;
+
         $data = [
             'title' => 'Laporan Stok Produk',
-            'produk' => $this->produkModel->getStockReportWithFilters(
-                $start_date,
-                $end_date,
-                $keyword,
-                $filter_supplier,
-                $filter_motif,
-                $filter_warna,
-                $filter_stok
-            ),
+            'produk' => $produk,
+            'pager' => $pager,
             'summary' => $this->produkModel->getStockSummary(),
             'suppliers' => $this->supplierModel->getOptions(),
             'motifs' => $this->motifModel->getOptions(),
@@ -103,9 +111,23 @@ class Laporan extends BaseController
             $end_date = date('Y-m-d');
         }
 
+        // Gunakan paginate untuk log stok
+        $perPage =
+            10;
+        $logs = $this->logStokModel->getLogStokReportPaginated(
+            $perPage,
+            $start_date,
+            $end_date,
+            $id_produk,
+            $tipe_ref
+        );
+
+        $pager = $this->logStokModel->pager;
+
         $data = [
             'title' => 'Laporan Log Stok (Histori Perubahan Stok)',
-            'logs' => $this->logStokModel->getLogStokReport($start_date, $end_date, $id_produk, $tipe_ref),
+            'logs' => $logs,
+            'pager' => $pager,
             'summary' => $this->logStokModel->getSummaryPerTipe($start_date, $end_date),
             'produk_list' => $this->produkModel->getOptions(),
             'start_date' => $start_date,
@@ -457,7 +479,9 @@ class Laporan extends BaseController
             $builder->where('pembelian.id_supplier', $supplierId);
         }
 
-        $pembelian = $builder->orderBy('pembelian.id', 'DESC')->paginate(15);
+        $pembelian = $builder->orderBy('pembelian.id', 'DESC')->paginate(
+            10
+        );
 
         foreach ($pembelian as &$pemb) {
             $items = $detailModel->where('id_pembelian', $pemb['id'])->findAll();
@@ -502,7 +526,9 @@ class Laporan extends BaseController
             $builder->where('transaksi.id_pelanggan', $pelangganId);
         }
 
-        $transaksi = $builder->orderBy('transaksi.id', 'DESC')->paginate(15);
+        $transaksi = $builder->orderBy('transaksi.id', 'DESC')->paginate(
+            10
+        );
 
         foreach ($transaksi as &$trans) {
             $items = $detailModel->where('id_transaksi', $trans['id'])->findAll();

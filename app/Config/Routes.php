@@ -96,7 +96,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // ========== pemilik ROUTES (Hanya pemilik/Pemilik) ==========
     // Gunakan role:pemilik di filter karena di database role = 'pemilik'
     $routes->group('pemilik', ['namespace' => 'App\Controllers\Pemilik', 'filter' => 'role:pemilik,admin'], function ($routes) {
-        
+
         // Dashboard pemilik
         $routes->get('dashboard', 'Dashboard::index');
         $routes->get('dashboard/getWeeklyActivity', 'Dashboard::getWeeklyActivity');
@@ -147,7 +147,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
 // ========== API ROUTES (Tidak dalam group auth karena sudah ada filter sendiri) ==========
 $routes->group('api', ['filter' => 'auth'], function ($routes) {
-    $routes->post('search/produk', 'Api\Search::produk');
+    $routes->get('search/produk', 'Api\Search::produk');
     $routes->get('motif/by-supplier/(:num)', 'Api\Motif::getBySupplier/$1');
     $routes->get('warna/all', 'Api\Warna::all');
     $routes->get('produk/by-motif/(:num)', 'Api\Produk::getByMotif/$1');

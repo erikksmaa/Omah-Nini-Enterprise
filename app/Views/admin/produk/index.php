@@ -2,10 +2,10 @@
 
 <?= $this->section('content') ?>
 
-<div class="container-fluid">
+<div class="container-fluid px-2 px-md-3">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow mb-4">
+            <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap">
                     <a href="<?= base_url('admin/produk/create') ?>" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-circle"></i> Tambah Produk
@@ -119,6 +119,7 @@
                                     <tr>
                                         <th width="5%">No</th>
                                         <th width="15%">SKU</th>
+                                        <th width="15%">Foto</th>
                                         <th>Merk / Brand</th>
                                         <th>Motif</th>
                                         <th>Warna</th>
@@ -134,6 +135,14 @@
                                         <?php foreach ($produk as $row): ?>
                                             <tr>
                                                 <td><?= $no++ ?></td>
+                                                <td class="text-center">
+                                                    <?php if (!empty($row['foto'])): ?>
+                                                        <img src="<?= base_url('uploads/produk/' . $row['foto']) ?>" alt="Foto"
+                                                            style="width: 40px; height: 40px; object-fit: cover;" class="rounded">
+                                                    <?php else: ?>
+                                                        <i class="bi bi-image text-muted fs-5"></i>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><code><?= esc($row['sku']) ?></code></td>
                                                 <td><?= esc($row['nama_supplier']) ?></td>
                                                 <td><?= esc($row['nama_motif']) ?></td>

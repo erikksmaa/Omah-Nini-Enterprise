@@ -7,7 +7,7 @@
     <!-- Welcome Banner -->
     <div class="row">
         <div class="col-12">
-            <div class="card bg-primary text-white shadow">
+            <div class="card" style="background: linear-gradient(135deg, #435ebe 0%, #1a2fa0 100%); border: none;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>

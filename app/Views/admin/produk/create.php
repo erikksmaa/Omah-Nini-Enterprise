@@ -10,14 +10,13 @@
                     <h6 class="m-0 font-weight-bold text-primary"><?= $title ?></h6>
                 </div>
                 <div class="card-body">
-                    <form action="<?= base_url('admin/produk/store') ?>" method="POST">
+                    <form action="<?= base_url('admin/produk/store') ?>" method="POST" enctype="multipart/form-data">
                         <?= csrf_field() ?>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Merk / Brand <span
-                                            class="text-danger">*</span></label>
+                                    <label class="form-label">Merk / Brand <span class="text-danger">*</span></label>
                                     <select name="id_supplier" id="id_supplier" class="form-control" required>
                                         <option value="">-- Pilih Merk --</option>
                                         <?php foreach ($suppliers as $sup): ?>
@@ -80,6 +79,18 @@
                                     <input type="number" name="min_stok" class="form-control"
                                         value="<?= old('min_stok') ?? 0 ?>" min="0">
                                     <small class="text-muted">Jika stok <= nilai ini, akan muncul peringatan</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Foto Produk</label>
+                                <input type="file" name="foto" id="foto" class="form-control" accept="image/*"
+                                    onchange="previewImage()">
+                                <small class="text-muted">Format: JPG, PNG, WebP | Maks 5MB | Rasio akan disesuaikan
+                                    menjadi 800x800px</small>
+                                <div class="mt-2">
+                                    <img id="preview" src="#" alt="Preview" style="max-width: 200px; display: none;"
+                                        class="img-thumbnail">
                                 </div>
                             </div>
                         </div>
@@ -227,6 +238,22 @@
                 btnGenerateSku.innerHTML = 'Generate';
             }
         });
+    }
+</script>
+
+<script>
+    function previewImage() {
+        const file = document.getElementById('foto').files[0];
+        const preview = document.getElementById('preview');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
     }
 </script>
 

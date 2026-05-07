@@ -19,7 +19,7 @@ class Warna extends BaseController
         $keyword = $this->request->getGet('keyword');
         $perPage = 10;
         
-        $builder = $this->warnaModel->orderBy('nama_warna', 'ASC');
+        $builder = $this->warnaModel->orderBy('id', 'ASC');
         
         if (!empty($keyword)) {
             $builder->like('nama_warna', $keyword);

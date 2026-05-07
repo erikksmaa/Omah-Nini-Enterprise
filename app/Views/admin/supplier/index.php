@@ -1,7 +1,7 @@
 <?= $this->extend('layout/main') ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid">
+<div class="container-fluid px-2 px-md-3">
     <!-- FORM TAMBAH SUPPLIER -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">

@@ -31,7 +31,7 @@ class DetailPembelianModel extends Model
      */
     public function getWithProductInfo($pembelianId)
     {
-        return $this->select('detail_pembelian.*, produk.sku, motif.nama_motif, warna.nama_warna')
+        return $this->select('detail_pembelian.*, produk.sku, produk.foto, motif.nama_motif, warna.nama_warna')
             ->join('produk', 'produk.id = detail_pembelian.id_produk')
             ->join('motif', 'motif.id = produk.id_motif')
             ->join('warna', 'warna.id = produk.id_warna')

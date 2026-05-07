@@ -13,11 +13,11 @@ class Pembelian extends BaseController
     public function index()
     {
         $pembelianModel = new PembelianModel();
-        $supplierModel  = new SupplierModel();
+        $supplierModel = new SupplierModel();
 
         $tanggalMulai = $this->request->getGet('tanggal_mulai');
         $tanggalAkhir = $this->request->getGet('tanggal_akhir');
-        $supplierId   = $this->request->getGet('supplier');
+        $supplierId = $this->request->getGet('supplier');
 
         $builder = $pembelianModel
             ->select('pembelian.*, supplier.nama as supplier_nama')
@@ -34,12 +34,12 @@ class Pembelian extends BaseController
         }
 
         $data = [
-            'title'            => 'Riwayat Barang Masuk',
-            'pembelian'        => $builder->orderBy('pembelian.id', 'DESC')->paginate(10),
-            'pager'            => $pembelianModel->pager,
-            'suppliers'        => $supplierModel->findAll(),
-            'tanggalMulai'     => $tanggalMulai,
-            'tanggalAkhir'     => $tanggalAkhir,
+            'title' => 'Riwayat Barang Masuk',
+            'pembelian' => $builder->orderBy('pembelian.id', 'DESC')->paginate(10),
+            'pager' => $pembelianModel->pager,
+            'suppliers' => $supplierModel->findAll(),
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalAkhir' => $tanggalAkhir,
             'selectedSupplier' => $supplierId,
         ];
 
@@ -52,10 +52,10 @@ class Pembelian extends BaseController
         $produkModel = new ProdukModel();
 
         return view('karyawan/pembelian/create', [
-            'title'         => 'Tambah Barang Masuk',
-            'suppliers'     => $supplierModel->findAll(),
-            'produk_list'   => $produkModel->getAllForDropdown(),
-            'no_invoice'    => (new PembelianModel())->generateNoInvoice(),
+            'title' => 'Tambah Barang Masuk',
+            'suppliers' => $supplierModel->findAll(),
+            'produk_list' => $produkModel->getAllForDropdown(),
+            'no_invoice' => (new PembelianModel())->generateNoInvoice(),
         ]);
     }
 
@@ -104,9 +104,9 @@ class Pembelian extends BaseController
             $namaProduk = $produk['sku'] . ' - ' . $produk['nama_motif'] . ' ' . $produk['nama_warna'];
 
             $itemsFormatted[] = [
-                'id_produk'   => $idProduk,
+                'id_produk' => $idProduk,
                 'nama_produk' => $namaProduk,
-                'jumlah'      => $jumlah
+                'jumlah' => $jumlah
             ];
         }
 
@@ -138,6 +138,7 @@ class Pembelian extends BaseController
             return redirect()->to('/karyawan/pembelian')->with('error', 'Data pembelian tidak ditemukan.');
         }
 
+        // Ambil items dengan informasi produk termasuk foto
         $items = $detailPembelianModel->getWithProductInfo($id);
 
         $data = [

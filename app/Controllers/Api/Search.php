@@ -8,24 +8,40 @@ use App\Models\ProdukModel;
 class Search extends BaseController
 {
     public function produk()
-    {
-        $keyword = $this->request->getPost('keyword');
-        if (empty($keyword)) {
-            return $this->response->setJSON([]);
-        }
-
-        $produkModel = new ProdukModel();
-        $results = $produkModel->search($keyword, 20);
-
-        $data = [];
-        foreach ($results as $row) {
-            $data[] = [
-                'id'   => $row['id'],
-                'text' => $row['sku'] . ' - ' . $row['nama_motif'] . ' ' . $row['nama_warna'] . ' (Stok: ' . $row['stok'] . ')',
-                'stok' => $row['stok']
-            ];
-        }
-
-        return $this->response->setJSON($data);
+{
+    $keyword = $this->request->getGet('keyword');
+    
+    if (empty($keyword) || strlen($keyword) < 2) {
+        return $this->response->setJSON([]);
     }
+
+    $produkModel = new ProdukModel();
+    
+    $results = $produkModel->select('produk.id, produk.sku, produk.foto, produk.stok, motif.nama_motif, warna.nama_warna')
+        ->join('motif', 'motif.id = produk.id_motif')
+        ->join('warna', 'warna.id = produk.id_warna')
+        ->groupStart()
+            ->like('produk.sku', $keyword)
+            ->orLike('motif.nama_motif', $keyword)
+            ->orLike('warna.nama_warna', $keyword)
+        ->groupEnd()
+        ->where('produk.stok >', 0)
+        ->limit(20)
+        ->findAll();
+
+    $data = [];
+    foreach ($results as $row) {
+        // Buat URL lengkap untuk foto
+        $fotoUrl = !empty($row['foto']) ? base_url('uploads/produk/' . $row['foto']) : base_url('assets/img/no-image.png');
+        
+        $data[] = [
+            'id'   => $row['id'],
+            'text' => $row['sku'] . ' - ' . $row['nama_motif'] . ' ' . $row['nama_warna'] . ' (Stok: ' . $row['stok'] . ')',
+            'stok' => $row['stok'],
+            'foto' => $fotoUrl
+        ];
+    }
+
+    return $this->response->setJSON($data);
+}
 }

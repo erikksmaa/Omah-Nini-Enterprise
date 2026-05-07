@@ -7,7 +7,6 @@
         <div class="col-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h6 class="m-0 font-weight-bold text-primary"><?= $title ?></h6>
                     <a href="<?= base_url('karyawan/pembelian/create') ?>" class="btn btn-primary btn-sm">
                         <i class="bi bi-plus-circle"></i> Tambah Barang Masuk
                     </a>

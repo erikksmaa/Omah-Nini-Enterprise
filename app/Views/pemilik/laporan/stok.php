@@ -195,6 +195,13 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <div class="mt-3">
+                            <?php if (isset($pager) && $pager): ?>
+                                <?= $pager->links('default', 'bootstrap_pagination') ?>
+                            <?php endif; ?>
+                        </div>
+
                     </div>
 
                     <!-- ========== CARD VIEW (Mobile) ========== -->
@@ -252,7 +259,8 @@
 
                                             <div class="col-4 text-muted">Update:</div>
                                             <div class="col-8">
-                                                <small><?= date('d/m/Y H:i', strtotime($row['updated_at'])) ?></small></div>
+                                                <small><?= date('d/m/Y H:i', strtotime($row['updated_at'])) ?></small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -263,6 +271,10 @@
                                 <p class="text-muted mt-2 mb-0">Tidak ada data stok yang sesuai filter</p>
                             </div>
                         <?php endif; ?>
+
+                        <div class="mt-3">
+                            <?= $pager ? $pager->links('default', 'bootstrap_pagination') : '' ?>
+                        </div>
                     </div>
                 </div>
             </div>

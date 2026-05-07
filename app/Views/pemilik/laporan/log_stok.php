@@ -5,7 +5,7 @@
 <div class="container-fluid px-2 px-md-3">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow mb-4">
+            <div class="card shadow">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary"><?= $title ?></h6>
                 </div>
@@ -60,8 +60,8 @@
                     </div>
 
                     <!-- Summary Cards -->
-                    <div class="row mb-3">
-                        <div class="col-md-4 col-6 mb-2">
+                    <div class="row mb-0">
+                        <div class="col-md-6 col-6 mb-2">
                             <div class="card bg-success text-white">
                                 <div class="card-body py-2">
                                     <h6 class="mb-0">Pembelian (Stok +)</h6>
@@ -74,7 +74,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 col-6 mb-2">
+                        <div class="col-md-6 col-6">
                             <div class="card bg-danger text-white">
                                 <div class="card-body py-2">
                                     <h6 class="mb-0">Penjualan (Stok -)</h6>
@@ -84,19 +84,6 @@
                                             $total_jual = abs($s['total_perubahan']);
                                     endforeach; ?>
                                     <h5 class="mb-0">- <?= number_format($total_jual) ?></h5>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 col-6 mb-2">
-                            <div class="card bg-info text-white">
-                                <div class="card-body py-2">
-                                    <h6 class="mb-0">Penyesuaian</h6>
-                                    <?php $total_adj = 0;
-                                    foreach ($summary as $s):
-                                        if ($s['tipe_ref'] == 'penyesuaian')
-                                            $total_adj = $s['total_perubahan'];
-                                    endforeach; ?>
-                                    <h5 class="mb-0"><?= number_format($total_adj) ?></h5>
                                 </div>
                             </div>
                         </div>
@@ -135,8 +122,8 @@
                                                 <td><?= esc($log['nama_motif']) ?> - <?= esc($log['nama_warna']) ?></td>
                                                 <td><span class="badge <?= $badgeClass ?>"><?= $log['tipe_ref'] ?></span></td>
                                                 <td class="text-center"><?= number_format($log['jumlah_sebelum']) ?></td>
-                                                <td 
-                                                    class="text-center <?= str_contains((string)$log['jumlah_perubahan'], '-') || $log['tipe_ref'] == 'penjualan' ? 'text-danger' : 'text-success' ?>">
+                                                <td
+                                                    class="text-center <?= str_contains((string) $log['jumlah_perubahan'], '-') || $log['tipe_ref'] == 'penjualan' ? 'text-danger' : 'text-success' ?>">
                                                     <?php if ($log['tipe_ref'] == 'pembelian'): ?>
                                                         + <?= number_format($log['jumlah_perubahan']) ?>
                                                     <?php elseif ($log['tipe_ref'] == 'penjualan'): ?>
@@ -145,7 +132,7 @@
                                                         <?= $log['jumlah_perubahan'] > 0 ? '+' : '' ?>
                                                         <?= number_format($log['jumlah_perubahan']) ?>
                                                     <?php endif; ?>
-                                                    </td>
+                                                </td>
                                                 <td class="text-center"><?= number_format($log['jumlah_sesudah']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -156,6 +143,11 @@
                                     <?php endif; ?>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="mt-3">
+                            <?php if (isset($pager) && $pager): ?>
+                                <?= $pager->links('default', 'bootstrap_pagination') ?>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -218,6 +210,10 @@
                                 <p class="text-muted mt-2 mb-0">Tidak ada data log stok</p>
                             </div>
                         <?php endif; ?>
+
+                        <div class="mt-3">
+                            <?= $pager ? $pager->links('default', 'bootstrap_pagination') : '' ?>
+                        </div>
                     </div>
                 </div>
             </div>

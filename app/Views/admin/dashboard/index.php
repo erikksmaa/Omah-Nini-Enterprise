@@ -125,7 +125,7 @@
                 <!-- Stok Habis -->
                 <div class="col-6 col-md-4 mb-3">
                     <div class="card h-100">
-                        <div class="card-body d-flex align-items-center py-3 px-3">
+                        <div class="card-body d-flex align-items-center justify-content-center m py-3 px-3">
                             <div class="stats-icon bg-secondary bg-opacity-10 rounded-3 me-3 d-flex align-items-center justify-content-center"
                                 style="width:48px;height:48px;flex-shrink:0;">
                                 <i class="bi bi-x-circle text-secondary fs-5"></i>
@@ -163,32 +163,32 @@
                                 <i class="bi bi-lightning-charge me-2 text-primary"></i>Aksi Cepat
                             </h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body justtify-content-center align-items-center d-flex">
                             <div class="row g-2">
                                 <div class="col-6">
                                     <a href="<?= base_url('admin/produk/create') ?>"
-                                        class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
+                                        class="btn btn-primary w-100  py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
                                         <i class="bi bi-plus-circle fs-4 mb-3"></i>
                                         <small class="fw-semibold">Tambah Produk</small>
                                     </a>
                                 </div>
                                 <div class="col-6">
                                     <a href="<?= base_url('karyawan/pembelian/create') ?>"
-                                        class="btn btn-success w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
+                                        class="btn btn-success w-100  py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
                                         <i class="bi bi-box-seam fs-4 mb-3"></i>
                                         <small class="fw-semibold">Barang Masuk</small>
                                     </a>
                                 </div>
                                 <div class="col-6">
                                     <a href="<?= base_url('karyawan/penjualan/create') ?>"
-                                        class="btn btn-info w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
+                                        class="btn btn-info w-100  py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
                                         <i class="bi bi-cart-plus fs-4 mb-3"></i>
                                         <small class="fw-semibold">Barang Keluar</small>
                                     </a>
                                 </div>
                                 <div class="col-6">
                                     <a href="<?= base_url('admin/laporan/stok') ?>"
-                                        class="btn btn-warning w-100 py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
+                                        class="btn btn-warning w-100  py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
                                         <i class="bi bi-file-earmark-bar-graph fs-4 mb-3"></i>
                                         <small class="fw-semibold">Laporan Stok</small>
                                     </a>

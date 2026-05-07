@@ -29,17 +29,23 @@ class WarnaModel extends Model
 
     protected $validationMessages = [
         'nama_warna' => [
-            'required'   => 'Nama warna wajib diisi.',
+            'required' => 'Nama warna wajib diisi.',
             'min_length' => 'Nama warna minimal 3 karakter.',
             'max_length' => 'Nama warna maksimal 50 karakter.',
-            'is_unique'  => 'Nama warna sudah terdaftar.'
+            'is_unique' => 'Nama warna sudah terdaftar.'
         ],
     ];
 
-    public function getTotalWarna()
+    public function isUsed($id)
 {
-    return $this->countAllResults();
+    $produkModel = new ProdukModel();
+    return $produkModel->where('id_warna', $id)->countAllResults() > 0;
 }
+
+    public function getTotalWarna()
+    {
+        return $this->countAllResults();
+    }
 
     /**
      * Get all warna with pagination
@@ -63,8 +69,8 @@ class WarnaModel extends Model
     public function getOptions()
     {
         return $this->select('id, nama_warna')
-                    ->orderBy('nama_warna', 'ASC')
-                    ->findAll();
+            ->orderBy('nama_warna', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -104,8 +110,8 @@ class WarnaModel extends Model
     public function search($keyword, $limit = 10)
     {
         return $this->like('nama_warna', $keyword)
-                    ->limit($limit)
-                    ->findAll();
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -114,10 +120,10 @@ class WarnaModel extends Model
     public function getWithProductCount()
     {
         return $this->select('warna.*, COUNT(produk.id) as total_produk')
-                    ->join('produk', 'produk.id_warna = warna.id', 'left')
-                    ->groupBy('warna.id')
-                    ->orderBy('warna.nama_warna', 'ASC')
-                    ->findAll();
+            ->join('produk', 'produk.id_warna = warna.id', 'left')
+            ->groupBy('warna.id')
+            ->orderBy('warna.nama_warna', 'ASC')
+            ->findAll();
     }
 
     /**
@@ -126,11 +132,11 @@ class WarnaModel extends Model
     public function getMostUsedColors($limit = 5)
     {
         return $this->select('warna.nama_warna, COUNT(produk.id) as total_produk')
-                    ->join('produk', 'produk.id_warna = warna.id', 'inner')
-                    ->groupBy('warna.id')
-                    ->orderBy('total_produk', 'DESC')
-                    ->limit($limit)
-                    ->findAll();
+            ->join('produk', 'produk.id_warna = warna.id', 'inner')
+            ->groupBy('warna.id')
+            ->orderBy('total_produk', 'DESC')
+            ->limit($limit)
+            ->findAll();
     }
 
     /**
@@ -160,17 +166,17 @@ class WarnaModel extends Model
         if (empty($data)) {
             return false;
         }
-        
+
         $insertData = [];
         $now = date('Y-m-d H:i:s');
-        
+
         foreach ($data as $item) {
             $insertData[] = [
-                'nama_warna'  => $item['nama_warna'],
-                'created_at'  => $now
+                'nama_warna' => $item['nama_warna'],
+                'created_at' => $now
             ];
         }
-        
+
         return $this->db->table($this->table)->insertBatch($insertData);
     }
 

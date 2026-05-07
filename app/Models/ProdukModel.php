@@ -20,6 +20,7 @@ class ProdukModel extends Model
         'stok',
         'min_stok',
         'keterangan',
+        'foto',
         'created_at',
         'updated_at'
     ];
@@ -36,7 +37,8 @@ class ProdukModel extends Model
         'id_motif' => 'required|numeric|is_not_unique[motif.id]',
         'id_warna' => 'required|numeric|is_not_unique[warna.id]',
         'stok' => 'required|numeric|greater_than_equal_to[0]',
-        'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]'
+        'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]',
+        'foto' => 'if_exist|is_image[foto]|max_size[foto,5120]'
     ];
 
     protected $validationMessages = [
@@ -81,12 +83,62 @@ class ProdukModel extends Model
             ->where('produk.stok <= produk.min_stok')
             ->where('produk.stok >', 0)
             ->orderBy('produk.stok', 'ASC');
-        
+
         if ($limit) {
             $builder->limit($limit);
         }
-        
+
         return $builder->findAll();
+    }
+
+    /**
+     * Get stock report with pagination
+     */
+    public function getStockReportWithFiltersPaginated($perPage = 15, $start_date = null, $end_date = null, $keyword = null, $supplier_id = null, $motif_id = null, $warna_id = null, $stok_status = null)
+    {
+        $builder = $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna');
+
+        if (!empty($start_date)) {
+            $builder->where('DATE(produk.updated_at) >=', $start_date);
+        }
+        if (!empty($end_date)) {
+            $builder->where('DATE(produk.updated_at) <=', $end_date);
+        }
+        if (!empty($keyword)) {
+            $builder->groupStart()
+                ->like('produk.sku', $keyword)
+                ->orLike('motif.nama_motif', $keyword)
+                ->orLike('warna.nama_warna', $keyword)
+                ->orLike('supplier.nama', $keyword)
+                ->groupEnd();
+        }
+        if (!empty($supplier_id)) {
+            $builder->where('produk.id_supplier', $supplier_id);
+        }
+        if (!empty($motif_id)) {
+            $builder->where('produk.id_motif', $motif_id);
+        }
+        if (!empty($warna_id)) {
+            $builder->where('produk.id_warna', $warna_id);
+        }
+        if (!empty($stok_status)) {
+            switch ($stok_status) {
+                case 'menipis':
+                    $builder->where('produk.stok <= produk.min_stok')->where('produk.stok >', 0);
+                    break;
+                case 'habis':
+                    $builder->where('produk.stok', 0);
+                    break;
+                case 'aman':
+                    $builder->where('produk.stok > produk.min_stok');
+                    break;
+            }
+        }
+
+        return $builder->orderBy('produk.updated_at', 'DESC')->paginate($perPage);
     }
 
     /**
@@ -132,12 +184,12 @@ class ProdukModel extends Model
             ->groupBy('produk.id')
             ->orderBy('total_terjual', 'DESC')
             ->limit($limit);
-        
+
         if ($startDate && $endDate) {
             $builder->where('detail_transaksi.created_at >=', $startDate)
-                    ->where('detail_transaksi.created_at <=', $endDate);
+                ->where('detail_transaksi.created_at <=', $endDate);
         }
-        
+
         return $builder->get()->getResultArray();
     }
 
@@ -231,9 +283,27 @@ class ProdukModel extends Model
             ->join('motif', 'motif.id = produk.id_motif')
             ->join('warna', 'warna.id = produk.id_warna')
             ->groupStart()
-                ->like('produk.sku', $keyword)
-                ->orLike('motif.nama_motif', $keyword)
-                ->orLike('warna.nama_warna', $keyword)
+            ->like('produk.sku', $keyword)
+            ->orLike('motif.nama_motif', $keyword)
+            ->orLike('warna.nama_warna', $keyword)
+            ->groupEnd()
+            ->where('produk.stok >', 0)
+            ->limit($limit)
+            ->findAll();
+    }
+
+    /**
+     * Search produk for POS with foto
+     */
+    public function searchForPos($keyword, $limit = 20)
+    {
+        return $this->select('produk.id, produk.sku, produk.foto, motif.nama_motif, warna.nama_warna, produk.stok')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->groupStart()
+            ->like('produk.sku', $keyword)
+            ->orLike('motif.nama_motif', $keyword)
+            ->orLike('warna.nama_warna', $keyword)
             ->groupEnd()
             ->where('produk.stok >', 0)
             ->limit($limit)

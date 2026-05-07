@@ -20,30 +20,38 @@ class Motif extends BaseController
     public function index()
     {
         $keyword = $this->request->getGet('keyword');
+        $filter_supplier = $this->request->getGet('filter_supplier');
         $perPage = 10;
-
+        
         $builder = $this->motifModel->select('motif.*, supplier.nama as nama_supplier')
-            ->join('supplier', 'supplier.id = motif.id_supplier')
-            ->orderBy('motif.id', 'DESC');
-
+                                    ->join('supplier', 'supplier.id = motif.id_supplier')
+                                    ->orderBy('motif.id', 'DESC');
+        
+        // Filter berdasarkan keyword
         if (!empty($keyword)) {
             $builder->groupStart()
                 ->like('motif.nama_motif', $keyword)
                 ->orLike('supplier.nama', $keyword)
                 ->groupEnd();
         }
-
+        
+        // Filter berdasarkan supplier
+        if (!empty($filter_supplier)) {
+            $builder->where('motif.id_supplier', $filter_supplier);
+        }
+        
         $motif = $builder->paginate($perPage);
         $pager = $this->motifModel->pager;
-
+        
         $data = [
             'title' => 'Kelola Data Motif',
             'motif' => $motif,
-            'suppliers' => $this->supplierModel->getOptions(),
             'pager' => $pager,
-            'keyword' => $keyword
+            'keyword' => $keyword,
+            'filter_supplier' => $filter_supplier,
+            'suppliers' => $this->supplierModel->getOptions(),
         ];
-
+        
         return view('admin/motif/index', $data);
     }
 

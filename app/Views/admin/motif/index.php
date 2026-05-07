@@ -7,26 +7,46 @@
         <div class="col-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addModal">
                         <i class="bi bi-plus-circle"></i> Tambah Motif
                     </button>
                 </div>
                 <div class="card-body">
-                    <!-- Search Form -->
-                    <form method="GET" class="mb-3">
-                        <div class="input-group">
-                            <input type="text" name="keyword" class="form-control" 
-                                   placeholder="Cari motif atau supplier..." value="<?= $keyword ?? '' ?>">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="bi bi-search"></i> Cari
-                            </button>
-                            <?php if (!empty($keyword)): ?>
-                                <a href="<?= base_url('admin/motif') ?>" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i> Reset
-                                </a>
-                            <?php endif; ?>
+                    <!-- ========== FILTER CARD ========== -->
+                    <div class="card mb-3">
+                        <div class="card-body p-2 p-md-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-funnel fs-6 me-1 text-primary"></i>
+                                <h6 class="font-weight-bold mb-0 text-primary">Filter Data</h6>
+                            </div>
+                            <form method="GET" class="row g-2">
+                                <div class="col-md-4 col-6">
+                                    <input type="text" name="keyword" class="form-control form-control-sm"
+                                        placeholder="Cari motif atau supplier..." value="<?= $keyword ?? '' ?>">
+                                </div>
+                                <div class="col-md-4 col-6">
+                                    <select name="filter_supplier" class="form-select form-select-sm">
+                                        <option value="">-- Semua Supplier --</option>
+                                        <?php foreach ($suppliers as $sup): ?>
+                                            <option value="<?= $sup['id'] ?>" <?= ($filter_supplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
+                                                <?= esc($sup['nama']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i class="bi bi-search"></i> Filter
+                                    </button>
+                                    <a href="<?= base_url('admin/motif') ?>"
+                                        class="btn btn-outline-secondary btn-sm flex-grow-1">
+                                        <i class="bi bi-arrow-repeat"></i> Reset
+                                    </a>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
 
                     <!-- Table -->
                     <div class="table-responsive">
@@ -50,16 +70,14 @@
                                             <td><?= esc($row['nama_motif']) ?></td>
                                             <td><?= esc($row['keterangan'] ?? '-') ?></td>
                                             <td class="text-center">
-                                                <button class="btn btn-warning btn-sm btn-edit" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-id_supplier="<?= $row['id_supplier'] ?>"
-                                                        data-nama_motif="<?= esc($row['nama_motif']) ?>"
-                                                        data-keterangan="<?= esc($row['keterangan'] ?? '') ?>">
+                                                <button class="btn btn-warning btn-sm btn-edit" data-id="<?= $row['id'] ?>"
+                                                    data-id_supplier="<?= $row['id_supplier'] ?>"
+                                                    data-nama_motif="<?= esc($row['nama_motif']) ?>"
+                                                    data-keterangan="<?= esc($row['keterangan'] ?? '') ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-danger btn-sm btn-delete" 
-                                                        data-id="<?= $row['id'] ?>"
-                                                        data-nama_motif="<?= esc($row['nama_motif']) ?>">
+                                                <button class="btn btn-danger btn-sm btn-delete" data-id="<?= $row['id'] ?>"
+                                                    data-nama_motif="<?= esc($row['nama_motif']) ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -161,29 +179,29 @@
 <script>
     // Edit button handler
     document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const id_supplier = this.dataset.id_supplier;
             const nama_motif = this.dataset.nama_motif;
             const keterangan = this.dataset.keterangan;
-            
+
             document.getElementById('edit_id_supplier').value = id_supplier;
             document.getElementById('edit_nama_motif').value = nama_motif;
             document.getElementById('edit_keterangan').value = keterangan;
-            
+
             const form = document.getElementById('editForm');
             form.action = `<?= base_url('admin/motif/update') ?>/${id}`;
-            
+
             new bootstrap.Modal(document.getElementById('editModal')).show();
         });
     });
 
     // Delete button handler
     document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const id = this.dataset.id;
             const nama_motif = this.dataset.nama_motif;
-            
+
             Swal.fire({
                 title: 'Yakin hapus?',
                 text: `Motif "${nama_motif}" akan dihapus permanen!`,

@@ -7,6 +7,8 @@ use App\Models\ProdukModel;
 use App\Models\SupplierModel;
 use App\Models\MotifModel;
 use App\Models\WarnaModel;
+use App\Models\DetailPembelianModel;
+use App\Models\DetailTransaksiModel;
 
 class Produk extends BaseController
 {
@@ -17,6 +19,7 @@ class Produk extends BaseController
 
     public function __construct()
     {
+        helper("image");
         $this->produkModel = new ProdukModel();
         $this->supplierModel = new SupplierModel();
         $this->motifModel = new MotifModel();
@@ -152,6 +155,13 @@ class Produk extends BaseController
                 ->with('errors', $this->validator->getErrors());
         }
 
+        $fotoName = null;
+        $fotoFile = $this->request->getFile('foto');
+        if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
+            $fotoName = uploadAndResizeImage($fotoFile);
+        }
+
+
         try {
             $this->produkModel->save([
                 'sku' => $sku,
@@ -161,6 +171,7 @@ class Produk extends BaseController
                 'stok' => $this->request->getPost('stok') ?? 0,
                 'min_stok' => $this->request->getPost('min_stok') ?? 0,
                 'keterangan' => $this->request->getPost('keterangan'),
+                'foto' => $fotoName,
             ]);
 
             return redirect()->to('/admin/produk')
@@ -220,7 +231,8 @@ class Produk extends BaseController
             'id_motif' => 'required|numeric',
             'id_warna' => 'required|numeric',
             'stok' => 'required|numeric|greater_than_equal_to[0]',
-            'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]'
+            'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]',
+            'foto' => 'permit_empty|is_image[foto]|max_size[foto,5120]'
         ];
 
         $messages = [
@@ -232,6 +244,7 @@ class Produk extends BaseController
                 'greater_than_equal_to' => 'Stok tidak boleh negatif.'
             ]
         ];
+
 
         if (!$this->validate($rules, $messages)) {
             return redirect()->back()
@@ -246,16 +259,29 @@ class Produk extends BaseController
                 ->with('error', $error);
         }
 
+
+        $updateData = [
+            'sku' => $this->request->getPost('sku'),
+            'id_supplier' => $this->request->getPost('id_supplier'),
+            'id_motif' => $this->request->getPost('id_motif'),
+            'id_warna' => $this->request->getPost('id_warna'),
+            'stok' => $this->request->getPost('stok') ?? 0,
+            'min_stok' => $this->request->getPost('min_stok') ?? 0,
+            'keterangan' => $this->request->getPost('keterangan'),
+        ];
+
+        // Upload gambar baru jika ada
+        $fotoFile = $this->request->getFile('foto');
+        if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
+            $fotoName = uploadAndResizeImage($fotoFile, $produk['foto']);
+            if ($fotoName) {
+                $updateData['foto'] = $fotoName;
+            }
+        }
+
+
         try {
-            $this->produkModel->update($id, [
-                'sku' => $newSku,
-                'id_supplier' => $this->request->getPost('id_supplier'),
-                'id_motif' => $this->request->getPost('id_motif'),
-                'id_warna' => $this->request->getPost('id_warna'),
-                'stok' => $this->request->getPost('stok') ?? 0,
-                'min_stok' => $this->request->getPost('min_stok') ?? 0,
-                'keterangan' => $this->request->getPost('keterangan'),
-            ]);
+            $this->produkModel->update($id, $updateData);
 
             return redirect()->to('/admin/produk')
                 ->with('success', 'Produk berhasil diperbarui.');
@@ -276,8 +302,8 @@ class Produk extends BaseController
         }
 
         // Cek apakah produk memiliki relasi di detail_pembelian atau detail_transaksi
-        $detailPembelianModel = new \App\Models\DetailPembelianModel();
-        $detailTransaksiModel = new \App\Models\DetailTransaksiModel();
+        $detailPembelianModel = new DetailPembelianModel();
+        $detailTransaksiModel = new DetailTransaksiModel();
 
         $pembelianCount = $detailPembelianModel->where('id_produk', $id)->countAllResults();
         $transaksiCount = $detailTransaksiModel->where('id_produk', $id)->countAllResults();
@@ -285,6 +311,11 @@ class Produk extends BaseController
         if ($pembelianCount > 0 || $transaksiCount > 0) {
             return redirect()->back()
                 ->with('error', "Produk tidak bisa dihapus karena sudah memiliki riwayat transaksi.");
+        }
+
+        // Hapus file foto jika ada
+        if (!empty($produk['foto'])) {
+            deleteImage($produk['foto']);
         }
 
         try {

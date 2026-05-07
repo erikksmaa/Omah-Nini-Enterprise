@@ -182,5 +182,5 @@ class PembelianModel extends Model
     /**
      * Get count pembelian this month
      */
-   
+
 }

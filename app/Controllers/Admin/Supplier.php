@@ -18,7 +18,7 @@ class Supplier extends BaseController
         $keyword = $this->request->getGet('keyword');
         $perPage = 10;
         
-        $builder = $this->supplierModel->orderBy('id', 'DESC');
+        $builder = $this->supplierModel->orderBy('id', 'asc');
         
         if (!empty($keyword)) {
             $builder->groupStart()

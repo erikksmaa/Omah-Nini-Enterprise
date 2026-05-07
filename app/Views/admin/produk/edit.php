@@ -10,9 +10,9 @@
                     <h6 class="m-0 font-weight-bold text-primary"><?= $title ?></h6>
                 </div>
                 <div class="card-body">
-                    <form action="<?= base_url('admin/produk/update/' . $produk['id']) ?>" method="POST">
+                    <form action="<?= base_url('admin/produk/update/' . $produk['id']) ?>" method="POST" enctype="multipart/form-data">
                         <?= csrf_field() ?>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -31,10 +31,13 @@
                                 <div class="mb-3">
                                     <label class="form-label">SKU <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <input type="text" name="sku" id="sku" class="form-control" value="<?= old('sku', $produk['sku']) ?>" required>
-                                        <button type="button" id="btnGenerateSku" class="btn btn-secondary">Generate</button>
+                                        <input type="text" name="sku" id="sku" class="form-control"
+                                            value="<?= old('sku', $produk['sku']) ?>" required>
+                                        <button type="button" id="btnGenerateSku"
+                                            class="btn btn-secondary">Generate</button>
                                     </div>
-                                    <small class="text-muted">Klik Generate untuk membuat SKU otomatis berdasarkan merk, motif, dan warna</small>
+                                    <small class="text-muted">Klik Generate untuk membuat SKU otomatis berdasarkan merk,
+                                        motif, dan warna</small>
                                 </div>
                             </div>
                         </div>
@@ -72,13 +75,15 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Stok</label>
-                                    <input type="number" name="stok" class="form-control" value="<?= old('stok', $produk['stok']) ?>" min="0" required>
+                                    <input type="number" name="stok" class="form-control"
+                                        value="<?= old('stok', $produk['stok']) ?>" min="0" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Stok Minimal (Peringatan)</label>
-                                    <input type="number" name="min_stok" class="form-control" value="<?= old('min_stok', $produk['min_stok']) ?>" min="0">
+                                    <input type="number" name="min_stok" class="form-control"
+                                        value="<?= old('min_stok', $produk['min_stok']) ?>" min="0">
                                     <small class="text-muted">Jika stok <= nilai ini, akan muncul peringatan</small>
                                 </div>
                             </div>
@@ -86,7 +91,27 @@
 
                         <div class="mb-3">
                             <label class="form-label">Keterangan</label>
-                            <textarea name="keterangan" class="form-control" rows="3"><?= old('keterangan', $produk['keterangan']) ?></textarea>
+                            <textarea name="keterangan" class="form-control"
+                                rows="3"><?= old('keterangan', $produk['keterangan']) ?></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Foto Produk</label>
+                            <?php if (!empty($produk['foto'])): ?>
+                                <div class="mb-2">
+                                    <img src="<?= base_url('uploads/produk/' . $produk['foto']) ?>" alt="Foto Produk"
+                                        style="max-width: 150px;" class="img-thumbnail">
+                                    <br><small class="text-muted">Foto saat ini</small>
+                                </div>
+                            <?php endif; ?>
+                            <input type="file" name="foto" id="foto" class="form-control" accept="image/*"
+                                onchange="previewImage()">
+                            <small class="text-muted">Format: JPG, PNG, WebP | Maks 5MB | Kosongkan jika tidak ingin
+                                mengubah</small>
+                            <div class="mt-2">
+                                <img id="preview" src="#" alt="Preview" style="max-width: 200px; display: none;"
+                                    class="img-thumbnail">
+                            </div>
                         </div>
 
                         <div class="mb-3 text-center">
@@ -100,6 +125,23 @@
     </div>
 </div>
 
+
+<script>
+    function previewImage() {
+        const file = document.getElementById('foto').files[0];
+        const preview = document.getElementById('preview');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+
 <script>
     // DOM Elements
     const supplierSelect = document.getElementById('id_supplier');
@@ -107,7 +149,7 @@
     const warnaSelect = document.getElementById('id_warna');
     const btnGenerateSku = document.getElementById('btnGenerateSku');
     const skuInput = document.getElementById('sku');
-    
+
     // Current motif ID for preserving selection
     const currentMotifId = '<?= $produk['id_motif'] ?>';
     const currentWarnaId = '<?= $produk['id_warna'] ?>';
@@ -118,13 +160,13 @@
             motifSelect.innerHTML = '<option value="">-- Pilih Merk Terlebih Dahulu --</option>';
             return;
         }
-        
+
         motifSelect.innerHTML = '<option value="">-- Memuat data motif... --</option>';
-        
+
         try {
             const response = await fetch(`<?= base_url('api/motif/by-supplier') ?>/${supplierId}`);
             const result = await response.json();
-            
+
             if (result.status === 'success' && result.data.length > 0) {
                 let options = '<option value="">-- Pilih Motif --</option>';
                 result.data.forEach(motif => {
@@ -144,7 +186,7 @@
     // Helper function escape HTML
     function escapeHtml(text) {
         if (!text) return '';
-        return text.replace(/[&<>]/g, function(m) {
+        return text.replace(/[&<>]/g, function (m) {
             if (m === '&') return '&amp;';
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
@@ -154,10 +196,10 @@
 
     // Event listener untuk supplier change
     if (supplierSelect) {
-        supplierSelect.addEventListener('change', function() {
+        supplierSelect.addEventListener('change', function () {
             loadMotif(this.value);
         });
-        
+
         // Load motif if supplier already selected
         if (supplierSelect.value) {
             loadMotif(supplierSelect.value);
@@ -166,13 +208,13 @@
 
     // Generate SKU
     if (btnGenerateSku) {
-        btnGenerateSku.addEventListener('click', async function() {
+        btnGenerateSku.addEventListener('click', async function () {
             const supplierId = supplierSelect?.value;
             const motifId = motifSelect?.value;
             const warnaId = warnaSelect?.value;
-            
-            console.log('Generate SKU - Values:', {supplierId, motifId, warnaId});
-            
+
+            console.log('Generate SKU - Values:', { supplierId, motifId, warnaId });
+
             if (!supplierId) {
                 Swal.fire({
                     icon: 'warning',
@@ -181,7 +223,7 @@
                 });
                 return;
             }
-            
+
             if (!motifId) {
                 Swal.fire({
                     icon: 'warning',
@@ -190,7 +232,7 @@
                 });
                 return;
             }
-            
+
             if (!warnaId) {
                 Swal.fire({
                     icon: 'warning',
@@ -199,18 +241,18 @@
                 });
                 return;
             }
-            
+
             // Tampilkan loading
             btnGenerateSku.disabled = true;
             btnGenerateSku.innerHTML = 'Generating...';
-            
+
             try {
                 // Kirim sebagai Form URL Encoded (lebih reliable)
                 const formData = new URLSearchParams();
                 formData.append('id_supplier', supplierId);
                 formData.append('id_motif', motifId);
                 formData.append('id_warna', warnaId);
-                
+
                 const response = await fetch('<?= base_url("admin/produk/generateSku") ?>', {
                     method: 'POST',
                     headers: {
@@ -219,9 +261,9 @@
                     },
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     skuInput.value = data.sku;
                     Swal.fire({
