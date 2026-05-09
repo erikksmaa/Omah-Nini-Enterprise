@@ -28,5 +28,20 @@ class Produk extends BaseController
         ]);
     }
 
-    
+    public function getBySupplier($id_supplier)
+    {
+        $produkModel = new ProdukModel();
+        $produk = $produkModel
+            ->select('produk.id, motif.nama_motif, warna.nama_warna, produk.stok')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->where('produk.id_supplier', $id_supplier)
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->findAll();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $produk
+        ]);
+    }    
 }

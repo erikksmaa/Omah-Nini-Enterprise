@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\ProdukModel;
 
 class PembelianModel extends Model
 {
@@ -31,20 +32,13 @@ class PembelianModel extends Model
         'id_user' => 'required|is_not_unique[users.user_id]',
     ];
 
-
     // ========== QUERY DASHBOARD ==========
 
-    /**
-     * Get count of purchases today
-     */
     public function getCountPembelianHariIni()
     {
         return $this->where('DATE(tanggal_pembelian)', date('Y-m-d'))->countAllResults();
     }
 
-    /**
-     * Get count of purchases this month
-     */
     public function getCountPembelianBulanIni()
     {
         return $this->where('MONTH(tanggal_pembelian)', date('m'))
@@ -52,9 +46,6 @@ class PembelianModel extends Model
             ->countAllResults();
     }
 
-    /**
-     * Get recent purchases
-     */
     public function getRecentPurchases($limit = 10)
     {
         return $this->select('pembelian.*, supplier.nama as supplier_nama')
@@ -64,18 +55,11 @@ class PembelianModel extends Model
             ->findAll();
     }
 
-    /**
-     * Get total count of purchases
-     */
     public function getTotalPembelian()
     {
         return $this->countAllResults();
     }
 
-
-    /**
-     * Get all pembelian with supplier info, paginated
-     */
     public function getAllWithSupplier($perPage = 10)
     {
         return $this->select('pembelian.*, supplier.nama as supplier_nama')
@@ -84,9 +68,6 @@ class PembelianModel extends Model
             ->paginate($perPage);
     }
 
-    /**
-     * Get single pembelian with supplier info
-     */
     public function getByIdWithSupplier($id)
     {
         return $this->select('pembelian.*, supplier.nama as supplier_nama')
@@ -94,9 +75,6 @@ class PembelianModel extends Model
             ->find($id);
     }
 
-    /**
-     * Get detail pembelian (header + supplier)
-     */
     public function getDetail($id)
     {
         return $this->select('pembelian.*, supplier.nama as supplier_nama')
@@ -105,24 +83,34 @@ class PembelianModel extends Model
             ->first();
     }
 
-    /**
-     * Generate nomor invoice: PO-YYMMDD-XXXX
-     */
-    public function generateNoInvoice()
+    // ========== INVOICE GENERATOR (LOCK-SAFE) ==========
+
+    private function _generateNoInvoice()
     {
-        $last = $this->orderBy('id', 'DESC')->first();
-        if ($last && isset($last['no_invoice'])) {
-            $lastNumber = (int) substr($last['no_invoice'], -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        $db = \Config\Database::connect();
+        $todayPrefix = 'PO-' . date('ymd') . '-';
+
+        $builder = $db->table('pembelian');
+        $lastRecord = $builder
+            ->select('no_invoice')
+            ->like('no_invoice', $todayPrefix, 'after')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->getRow();
+
+        if ($lastRecord && isset($lastRecord->no_invoice)) {
+            $lastNumber = (int) substr($lastRecord->no_invoice, -4);
+            $newNumber  = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
             $newNumber = '0001';
         }
-        return 'PO-' . date('ymd') . '-' . $newNumber;
+
+        return $todayPrefix . $newNumber;
     }
 
-    /**
-     * Simpan pembelian beserta detail, update stok, catat log
-     */
+    // ========== SIMPAN PEMBELIAN DENGAN DETAIL ==========
+
     public function savePembelian($data, $items, $userId)
     {
         $db = \Config\Database::connect();
@@ -131,56 +119,67 @@ class PembelianModel extends Model
         $db->transStart();
 
         try {
-            // 1. Insert header pembelian
+            // 1. Generate invoice dengan lock (dalam transaksi)
+            $invoice = $this->_generateNoInvoice();
+            $data['no_invoice'] = $invoice;
+
+            // 2. Insert header
             $db->table('pembelian')->insert($data);
             $pembelianId = $db->insertID();
 
-            // 2. Insert detail & update stok & log
+            // 3. Insert detail, update stok, log
+            $produkModel = new ProdukModel();
             foreach ($items as $item) {
+                // Validasi jumlah
+                if (empty($item['id_produk']) || $item['jumlah'] <= 0) {
+                    throw new \Exception("Jumlah produk harus lebih dari 0.");
+                }
+
+                // Ambil data produk lengkap (supplier, motif, warna)
+                $produk = $produkModel->getFullData($item['id_produk']);
+                if (!$produk) {
+                    throw new \Exception("Produk dengan ID {$item['id_produk']} tidak ditemukan.");
+                }
+
+                // Format baru: "merek - motif - warna"
+                $namaProduk = $produk['nama_supplier'] . ' - ' . $produk['nama_motif'] . ' ' . $produk['nama_warna'];
+
                 // Insert detail
                 $db->table('detail_pembelian')->insert([
                     'id_pembelian' => $pembelianId,
-                    'id_produk' => $item['id_produk'],
-                    'nama_produk' => $item['nama_produk'],
-                    'jumlah' => $item['jumlah']
+                    'id_produk'    => $item['id_produk'],
+                    'nama_produk'  => $namaProduk,
+                    'jumlah'       => $item['jumlah']
                 ]);
 
-                // Ambil stok sekarang
-                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
+                // Update stok
                 $stokLama = $produk['stok'];
                 $stokBaru = $stokLama + $item['jumlah'];
-
-                // Update stok produk
                 $db->table('produk')->where('id', $item['id_produk'])->update(['stok' => $stokBaru]);
 
-                // Catat log stok
+                // Log stok
                 $db->table('log_stok')->insert([
-                    'id_produk' => $item['id_produk'],
-                    'id_user' => $userId,
-                    'tipe_ref' => 'pembelian',
-                    'id_ref' => $pembelianId,
-                    'jumlah_sebelum' => $stokLama,
+                    'id_produk'        => $item['id_produk'],
+                    'id_user'          => $userId,
+                    'tipe_ref'         => 'pembelian',
+                    'id_ref'           => $pembelianId,
+                    'jumlah_sebelum'   => $stokLama,
                     'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah' => $stokBaru,
-                    'created_at' => $now
+                    'jumlah_sesudah'   => $stokBaru,
+                    'created_at'       => $now
                 ]);
             }
 
             $db->transComplete();
 
             if ($db->transStatus() === false) {
-                throw new \Exception('Transaksi gagal');
+                throw new \Exception('Transaksi gagal.');
             }
 
-            return ['success' => true, 'id' => $pembelianId];
+            return ['success' => true, 'id' => $pembelianId, 'no_invoice' => $invoice];
         } catch (\Exception $e) {
             $db->transRollback();
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-
-    /**
-     * Get count pembelian this month
-     */
-
 }

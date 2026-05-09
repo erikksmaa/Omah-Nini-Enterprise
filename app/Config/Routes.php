@@ -159,4 +159,5 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('motif/by-supplier/(:num)', 'Api\Motif::getBySupplier/$1');
     $routes->get('warna/all', 'Api\Warna::all');
     $routes->get('produk/by-motif/(:num)', 'Api\Produk::getByMotif/$1');
+    $routes->get('produk/by-supplier/(:num)', 'Api\Produk::getBySupplier/$1'); 
 });

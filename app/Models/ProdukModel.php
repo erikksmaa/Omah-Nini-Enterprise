@@ -266,15 +266,17 @@ class ProdukModel extends Model
      */
     public function getAvailableProducts()
     {
-        return $this->select('produk.id, produk.sku, motif.nama_motif, warna.nama_warna, produk.stok')
+        return $this->select('produk.id, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna, produk.stok')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
             ->join('motif', 'motif.id = produk.id_motif')
             ->join('warna', 'warna.id = produk.id_warna')
             ->where('produk.stok >', 0)
+            ->orderBy('supplier.nama', 'ASC')
             ->orderBy('motif.nama_motif', 'ASC')
             ->findAll();
     }
 
-    /**
+        /**
      * Search produk by keyword (motif name, warna name, or sku)
      */
     public function search($keyword, $limit = 10)

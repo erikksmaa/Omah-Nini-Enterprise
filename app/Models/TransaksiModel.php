@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\ProdukModel;
 
 class TransaksiModel extends Model
 {
@@ -81,16 +82,36 @@ class TransaksiModel extends Model
 }
 
     // ========== INVOICE GENERATOR ==========
-    public function generateNoInvoice()
+    // public function generateNoInvoice()
+    // {
+    //     $last = $this->orderBy('id', 'DESC')->first();
+    //     if ($last && isset($last['no_invoice'])) {
+    //         $lastNumber = (int) substr($last['no_invoice'], -4);
+    //         $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    //     } else {
+    //         $newNumber = '0001';
+    //     }
+    //     return 'INV-' . date('ymd') . '-' . $newNumber;
+    // }
+
+    private function _generateNoInvoice()
     {
-        $last = $this->orderBy('id', 'DESC')->first();
-        if ($last && isset($last['no_invoice'])) {
-            $lastNumber = (int) substr($last['no_invoice'], -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        $db = \Config\Database::connect();
+        $prefix = 'INV-' . date('ymd') . '-';
+        $last = $db->table('transaksi')
+                   ->select('no_invoice')
+                   ->like('no_invoice', $prefix, 'after')
+                   ->orderBy('id', 'DESC')
+                   ->limit(1)
+                   ->get()
+                   ->getRow();
+        if ($last && isset($last->no_invoice)) {
+            $num = (int) substr($last->no_invoice, -4);
+            $new = str_pad($num + 1, 4, '0', STR_PAD_LEFT);
         } else {
-            $newNumber = '0001';
+            $new = '0001';
         }
-        return 'INV-' . date('ymd') . '-' . $newNumber;
+        return $prefix . $new;
     }
 
     // ========== GET ALL WITH PAGINATION ==========
@@ -118,38 +139,45 @@ class TransaksiModel extends Model
         $now = date('Y-m-d H:i:s');
 
         $db->transStart();
-
         try {
-            // 1. Insert header transaksi
+            $invoice = $this->_generateNoInvoice();
+            $headerData['no_invoice'] = $invoice;
             $db->table('transaksi')->insert($headerData);
             $transaksiId = $db->insertID();
 
+            $produkModel = new ProdukModel();
             foreach ($items as $item) {
-                // 2. Insert detail transaksi
+                // validasi jumlah
+                if ($item['jumlah'] <= 0) {
+                    throw new \Exception("Jumlah harus lebih dari 0.");
+                }
+
+                $produk = $produkModel->getFullData($item['id_produk']);
+                if (!$produk) {
+                    throw new \Exception("Produk ID {$item['id_produk']} tidak ditemukan.");
+                }
+
+                // Format nama_produk baru
+                $namaProduk = $produk['nama_supplier'] . ' - ' . $produk['nama_motif'] . ' ' . $produk['nama_warna'];
+
+                // Insert detail dengan harga_satuan
                 $db->table('detail_transaksi')->insert([
                     'id_transaksi' => $transaksiId,
                     'id_produk'    => $item['id_produk'],
-                    'nama_produk'  => $item['nama_produk'],
-                    'jumlah'       => $item['jumlah']
+                    'nama_produk'  => $namaProduk,
+                    'jumlah'       => $item['jumlah'],
+                    'harga_satuan' => $item['harga_satuan'] ?? 0
                 ]);
 
-                // 3. Ambil stok sekarang
-                $produk = $db->table('produk')->where('id', $item['id_produk'])->get()->getRowArray();
-                if (!$produk) {
-                    throw new \Exception("Produk dengan ID {$item['id_produk']} tidak ditemukan.");
-                }
-
+                // Kurangi stok
                 $stokLama = $produk['stok'];
                 if ($stokLama < $item['jumlah']) {
-                    throw new \Exception("Stok tidak mencukupi untuk produk {$item['nama_produk']}. Stok tersedia: {$stokLama}, diminta: {$item['jumlah']}");
+                    throw new \Exception("Stok tidak cukup untuk produk {$namaProduk}. Tersedia: {$stokLama}");
                 }
-
                 $stokBaru = $stokLama - $item['jumlah'];
-
-                // 4. Update stok
                 $db->table('produk')->where('id', $item['id_produk'])->update(['stok' => $stokBaru]);
 
-                // 5. Catat log stok
+                // Log stok
                 $db->table('log_stok')->insert([
                     'id_produk'        => $item['id_produk'],
                     'id_user'          => $userId,
@@ -163,13 +191,10 @@ class TransaksiModel extends Model
             }
 
             $db->transComplete();
-
             if ($db->transStatus() === false) {
-                throw new \Exception('Transaksi gagal disimpan.');
+                throw new \Exception('Transaksi gagal.');
             }
-
-            return ['success' => true, 'id' => $transaksiId];
-
+            return ['success' => true, 'id' => $transaksiId, 'no_invoice' => $invoice];
         } catch (\Exception $e) {
             $db->transRollback();
             return ['success' => false, 'error' => $e->getMessage()];
