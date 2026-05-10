@@ -93,7 +93,7 @@
                                                 <td class="text-center fw-bold"> <?= $pemb['total_items'] ?> </td>
                                                 <td>
                                                     <?php if (!empty($pemb['items'])): ?>
-                                                        <ul class="list-unstyled mb-0">
+                                                        <ul class="mb-0">
                                                             <?php foreach ($pemb['items'] as $item): ?>
                                                                 <li><?= esc($item['nama_produk']) ?> (<?= $item['jumlah'] ?> pcs)</li>
                                                             <?php endforeach; ?>

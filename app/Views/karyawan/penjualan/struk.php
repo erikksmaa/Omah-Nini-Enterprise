@@ -2,15 +2,14 @@
 
 <?= $this->section('content') ?>
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h4>Struk Penjualan</h4>
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap p-3">
         <div>
             <a href="<?= base_url('karyawan/penjualan') ?>" class="btn btn-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Kembali
             </a>
-            <button onclick="window.print()" class="btn btn-primary btn-sm">
-                <i class="bi bi-printer"></i> Cetak
-            </button>
+             <a href="<?= base_url('karyawan/penjualan/cetakStruk/' . $header['id']) ?>" target="_blank" class="btn btn-primary btn-sm">
+                <i class="bi bi-receipt"></i> Cetak Struk
+            </a>
         </div>
     </div>
     <div class="card-body p-2 p-md-3" id="struk-print">

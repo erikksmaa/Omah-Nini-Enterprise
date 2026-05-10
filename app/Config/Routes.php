@@ -143,6 +143,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('penjualan/create', 'Penjualan::create');
         $routes->post('penjualan/store', 'Penjualan::store');
         $routes->get('penjualan/struk/(:num)', 'Penjualan::struk/$1');
+        $routes->get('penjualan/cetakStruk/(:num)', 'Penjualan::cetakStruk/$1');
 
         // Manajemen Stok
         $routes->get('stok', 'Stok::index');

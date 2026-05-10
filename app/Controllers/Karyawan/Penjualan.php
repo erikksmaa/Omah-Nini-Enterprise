@@ -153,29 +153,70 @@ class Penjualan extends BaseController
     public function struk($id)
     {
         $transaksiModel = new TransaksiModel();
-        $detailModel = new DetailTransaksiModel();
+        $detailTransaksiModel = new DetailTransaksiModel();
 
-        $header = $transaksiModel->getDetail($id);
+        $header = $transaksiModel->select('transaksi.*, pelanggan.nama as nama_pelanggan')
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->where('transaksi.id', $id)
+            ->first();
+
         if (!$header) {
             return redirect()->to('/karyawan/penjualan')->with('error', 'Transaksi tidak ditemukan.');
         }
 
-        $items = $detailModel->getWithProductInfo($id);
+        $items = $detailTransaksiModel->select('detail_transaksi.*, produk.foto')
+            ->join('produk', 'produk.id = detail_transaksi.id_produk')
+            ->where('detail_transaksi.id_transaksi', $id)
+            ->findAll();
 
-        // Hitung total keseluruhan
-        $totalKeseluruhan = 0;
+        // Hitung total
+        $total = 0;
         foreach ($items as $item) {
-            $subtotal = $item['harga_satuan'] * $item['jumlah'];
-            $totalKeseluruhan += $subtotal;
+            $total += $item['jumlah'] * ($item['harga_satuan'] ?? 0);
         }
 
         $data = [
-            'title' => 'Struk Penjualan #' . $header['no_invoice'],
+            'title' => 'Struk Penjualan',
             'header' => $header,
             'items' => $items,
-            'total' => $totalKeseluruhan,
+            'total' => $total,
         ];
 
         return view('karyawan/penjualan/struk', $data);
+    }
+
+    /**
+     * Cetak Struk Thermal (format 58mm)
+     */
+    public function cetakStruk($id)
+    {
+        $transaksiModel = new TransaksiModel();
+        $detailTransaksiModel = new DetailTransaksiModel();
+
+        $header = $transaksiModel->select('transaksi.*, pelanggan.nama as nama_pelanggan')
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->where('transaksi.id', $id)
+            ->first();
+
+        if (!$header) {
+            return redirect()->to('/karyawan/penjualan')->with('error', 'Transaksi tidak ditemukan.');
+        }
+
+        $items = $detailTransaksiModel->select('detail_transaksi.*')
+            ->where('id_transaksi', $id)
+            ->findAll();
+
+        $total = 0;
+        foreach ($items as $item) {
+            $total += $item['jumlah'] * ($item['harga_satuan'] ?? 0);
+        }
+
+        $data = [
+            'header' => $header,
+            'items' => $items,
+            'total' => $total,
+        ];
+
+        return view('karyawan/penjualan/cetak_struk', $data);
     }
 }

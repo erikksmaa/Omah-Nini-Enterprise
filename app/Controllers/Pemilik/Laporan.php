@@ -30,6 +30,9 @@ class Laporan extends BaseController
     protected $supplierModel;
     protected $motifModel;
     protected $warnaModel;
+    protected $detailPembelianModel;
+    protected $detailTransaksiModel;
+    protected $pelangganModel;
 
     public function __construct()
     {
@@ -40,6 +43,10 @@ class Laporan extends BaseController
         $this->supplierModel = new SupplierModel();
         $this->motifModel = new MotifModel();
         $this->warnaModel = new WarnaModel();
+        $this->detailPembelianModel = new DetailPembelianModel();
+        $this->detailTransaksiModel = new DetailTransaksiModel();
+        $this->pelangganModel = new PelangganModel();
+
     }
 
     // ========== LAPORAN STOK ==========
@@ -454,6 +461,300 @@ class Laporan extends BaseController
         exit();
     }
 
+    /**
+     * Export Barang Masuk ke Excel
+     */
+    public function exportBarangMasukExcel()
+    {
+        $tanggalMulai = $this->request->getGet('tanggal_mulai');
+        $tanggalAkhir = $this->request->getGet('tanggal_akhir');
+        $supplierId = $this->request->getGet('supplier');
+
+        // Ambil data pembelian
+        $builder = $this->pembelianModel
+            ->select('pembelian.*, supplier.nama as nama_supplier')
+            ->join('supplier', 'supplier.id = pembelian.id_supplier')
+            ->orderBy('pembelian.id', 'DESC');
+
+        if (!empty($tanggalMulai)) {
+            $builder->where('pembelian.tanggal_pembelian >=', $tanggalMulai);
+        }
+        if (!empty($tanggalAkhir)) {
+            $builder->where('pembelian.tanggal_pembelian <=', $tanggalAkhir);
+        }
+        if (!empty($supplierId)) {
+            $builder->where('pembelian.id_supplier', $supplierId);
+        }
+
+        $pembelian = $builder->findAll();
+
+        // Ambil detail items untuk setiap pembelian
+        $detailModel = new \App\Models\DetailPembelianModel();
+
+        // Gunakan reference dengan hati-hati
+        $dataPembelian = [];
+        foreach ($pembelian as $pemb) {
+            $items = $detailModel->where('id_pembelian', $pemb['id'])->findAll();
+            $dataPembelian[] = [
+                'id' => $pemb['id'],
+                'no_invoice' => $pemb['no_invoice'],
+                'nama_supplier' => $pemb['nama_supplier'],
+                'tanggal_pembelian' => $pemb['tanggal_pembelian'],
+                'catatan' => $pemb['catatan'] ?? '-',
+                'items' => $items,
+                'total_items' => count($items)
+            ];
+        }
+
+        // Nama supplier untuk filter
+        $supplier_nama = '';
+        if ($supplierId) {
+            $sup = $this->supplierModel->find($supplierId);
+            $supplier_nama = $sup['nama'] ?? '';
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // === JUDUL ===
+        $sheet->setCellValue('A1', 'LAPORAN BARANG MASUK');
+        $sheet->mergeCells('A1:G1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // === INFO FILTER ===
+        $row = 3;
+        $sheet->setCellValue("A{$row}", 'Periode:');
+        $sheet->setCellValue("B{$row}", (!empty($tanggalMulai) ? date('d/m/Y', strtotime($tanggalMulai)) : 'Semua') . ' s.d ' . (!empty($tanggalAkhir) ? date('d/m/Y', strtotime($tanggalAkhir)) : 'Semua'));
+        $sheet->mergeCells("B{$row}:G{$row}");
+        $row++;
+
+        if (!empty($supplierId)) {
+            $sheet->setCellValue("A{$row}", 'Supplier:');
+            $sheet->setCellValue("B{$row}", $supplier_nama);
+            $sheet->mergeCells("B{$row}:G{$row}");
+            $row++;
+        }
+        $row++;
+
+        // === HEADER TABEL ===
+        $headers = ['No', 'No. Invoice', 'Supplier', 'Tanggal', 'Jumlah Item', 'Detail Item', 'Catatan'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . $row, $header);
+            $sheet->getStyle($col . $row)->getFont()->setBold(true);
+            $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
+            $col++;
+        }
+        $row++;
+
+        // === DATA ===
+        $no = 1;
+        foreach ($dataPembelian as $pemb) {
+            $col = 'A';
+            $sheet->setCellValue($col++ . $row, $no++);
+            $sheet->setCellValue($col++ . $row, $pemb['no_invoice']);
+            $sheet->setCellValue($col++ . $row, $pemb['nama_supplier']);
+            $sheet->setCellValue($col++ . $row, date('d/m/Y', strtotime($pemb['tanggal_pembelian'])));
+            $sheet->setCellValue($col++ . $row, $pemb['total_items']);
+
+            // Detail item
+            $detailText = '';
+            if (!empty($pemb['items'])) {
+                $details = [];
+                foreach ($pemb['items'] as $item) {
+                    $details[] = $item['nama_produk'] . ' (x' . $item['jumlah'] . ')';
+                }
+                $detailText = implode("\n", $details);
+            }
+            $sheet->setCellValue($col++ . $row, $detailText);
+            $sheet->setCellValue($col++ . $row, $pemb['catatan']);
+
+            $row++;
+        }
+
+        // Auto width
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Border
+        $lastRow = $row - 1;
+        if ($lastRow >= 4) {
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000'],
+                    ],
+                ],
+            ];
+            $sheet->getStyle('A3:G' . $lastRow)->applyFromArray($styleArray);
+        }
+
+        // Output file
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'Laporan_Barang_Masuk_' . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit();
+    }
+
+    /**
+     * Export Barang Keluar ke Excel
+     */
+    public function exportBarangKeluarExcel()
+    {
+        $tanggalMulai = $this->request->getGet('tanggal_mulai');
+        $tanggalAkhir = $this->request->getGet('tanggal_akhir');
+        $pelangganId = $this->request->getGet('pelanggan');
+
+        // Ambil data transaksi
+        $builder = $this->transaksiModel
+            ->select('transaksi.*, pelanggan.nama as nama_pelanggan')
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->orderBy('transaksi.id', 'DESC');
+
+        if (!empty($tanggalMulai)) {
+            $builder->where('DATE(transaksi.tanggal_transaksi) >=', $tanggalMulai);
+        }
+        if (!empty($tanggalAkhir)) {
+            $builder->where('DATE(transaksi.tanggal_transaksi) <=', $tanggalAkhir);
+        }
+        if (!empty($pelangganId)) {
+            $builder->where('transaksi.id_pelanggan', $pelangganId);
+        }
+
+        $transaksi = $builder->findAll();
+
+        // Ambil detail items untuk setiap transaksi
+        $detailModel = new \App\Models\DetailTransaksiModel();
+
+        // Gunakan array baru untuk menyimpan data
+        $dataTransaksi = [];
+        foreach ($transaksi as $trx) {
+            $items = $detailModel->where('id_transaksi', $trx['id'])->findAll();
+            $totalBayar = 0;
+            foreach ($items as $item) {
+                $totalBayar += $item['jumlah'] * ($item['harga_satuan'] ?? 0);
+            }
+
+            $dataTransaksi[] = [
+                'id' => $trx['id'],
+                'no_invoice' => $trx['no_invoice'],
+                'nama_pembeli' => $trx['nama_pembeli'],
+                'nama_pelanggan' => $trx['nama_pelanggan'] ?? '-',
+                'tanggal_transaksi' => $trx['tanggal_transaksi'],
+                'catatan' => $trx['catatan'] ?? '-',
+                'items' => $items,
+                'total_items' => count($items),
+                'total_bayar' => $totalBayar
+            ];
+        }
+
+        // Nama pelanggan untuk filter
+        $pelanggan_nama = '';
+        if ($pelangganId) {
+            $pel = $this->pelangganModel->find($pelangganId);
+            $pelanggan_nama = $pel['nama'] ?? '';
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // === JUDUL ===
+        $sheet->setCellValue('A1', 'LAPORAN BARANG KELUAR');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // === INFO FILTER ===
+        $row = 3;
+        $sheet->setCellValue("A{$row}", 'Periode:');
+        $sheet->setCellValue("B{$row}", (!empty($tanggalMulai) ? date('d/m/Y', strtotime($tanggalMulai)) : 'Semua') . ' s.d ' . (!empty($tanggalAkhir) ? date('d/m/Y', strtotime($tanggalAkhir)) : 'Semua'));
+        $sheet->mergeCells("B{$row}:H{$row}");
+        $row++;
+
+        if (!empty($pelangganId)) {
+            $sheet->setCellValue("A{$row}", 'Pelanggan:');
+            $sheet->setCellValue("B{$row}", $pelanggan_nama);
+            $sheet->mergeCells("B{$row}:H{$row}");
+            $row++;
+        }
+        $row++;
+
+        // === HEADER TABEL ===
+        $headers = ['No', 'No. Invoice', 'Pembeli', 'Pelanggan', 'Tanggal', 'Jumlah Item', 'Detail Item', 'Catatan'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . $row, $header);
+            $sheet->getStyle($col . $row)->getFont()->setBold(true);
+            $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
+            $col++;
+        }
+        $row++;
+
+        // === DATA ===
+        $no = 1;
+        foreach ($dataTransaksi as $trx) {
+            $col = 'A';
+            $sheet->setCellValue($col++ . $row, $no++);
+            $sheet->setCellValue($col++ . $row, $trx['no_invoice']);
+            $sheet->setCellValue($col++ . $row, $trx['nama_pembeli']);
+            $sheet->setCellValue($col++ . $row, $trx['nama_pelanggan']);
+            $sheet->setCellValue($col++ . $row, date('d/m/Y H:i', strtotime($trx['tanggal_transaksi'])));
+            $sheet->setCellValue($col++ . $row, $trx['total_items']);
+
+            // Detail item
+            $detailText = '';
+            if (!empty($trx['items'])) {
+                $details = [];
+                foreach ($trx['items'] as $item) {
+                    $details[] = $item['nama_produk'] . ' (x' . $item['jumlah'] . ')';
+                }
+                $detailText = implode("\n", $details);
+            }
+            $sheet->setCellValue($col++ . $row, $detailText);
+            $sheet->setCellValue($col++ . $row, $trx['catatan']);
+
+            $row++;
+        }
+
+        // Auto width
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Border
+        $lastRow = $row - 1;
+        if ($lastRow >= 4) {
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000'],
+                    ],
+                ],
+            ];
+            $sheet->getStyle('A3:H' . $lastRow)->applyFromArray($styleArray);
+        }
+
+        // Output file
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'Laporan_Barang_Keluar_' . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit();
+    }
+
     public function barangMasuk()
     {
         $pembelianModel = new PembelianModel();
@@ -463,6 +764,13 @@ class Laporan extends BaseController
         $tanggalMulai = $this->request->getGet('tanggal_mulai');
         $tanggalAkhir = $this->request->getGet('tanggal_akhir');
         $supplierId = $this->request->getGet('supplier');
+
+        // Default: 30 hari terakhir jika kosong
+        if (empty($tanggalMulai) && empty($tanggalAkhir)) {
+            $tanggalMulai = date('Y-m-d', strtotime('-30 days'));
+            $tanggalAkhir = date('Y-m-d');
+        }
+
 
         $builder = $pembelianModel
             ->select('pembelian.*, supplier.nama as nama_supplier')
@@ -510,6 +818,12 @@ class Laporan extends BaseController
         $tanggalMulai = $this->request->getGet('tanggal_mulai');
         $tanggalAkhir = $this->request->getGet('tanggal_akhir');
         $pelangganId = $this->request->getGet('pelanggan');
+
+        // Default: 30 hari terakhir jika kosong
+        if (empty($tanggalMulai) && empty($tanggalAkhir)) {
+            $tanggalMulai = date('Y-m-d', strtotime('-30 days'));
+            $tanggalAkhir = date('Y-m-d');
+        }
 
         $builder = $transaksiModel
             ->select('transaksi.*, pelanggan.nama as nama_pelanggan')

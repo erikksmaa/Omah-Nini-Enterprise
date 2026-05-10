@@ -78,8 +78,8 @@
                                         <th>Pelanggan</th>
                                         <th>Tanggal</th>
                                         <th class="text-center">Jumlah Item</th>
-                                        <th>Detail Item</th>
-                                        <th width="20%">Catatan</th>
+                                        <th width="25%">Detail Item</th>
+                                        <th>Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -95,7 +95,7 @@
                                                 <td class="text-center"><?= $trx['total_items'] ?? 0 ?></td>
                                                 <td>
                                                     <?php if (!empty($trx['items'])): ?>
-                                                        <ul class="list-unstyled mb-0">
+                                                        <ul class=" mb-0">
                                                             <?php foreach ($trx['items'] as $item): ?>
                                                                 <li><?= esc($item['nama_produk']) ?> (<?= $item['jumlah'] ?> pcs)</li>
                                                             <?php endforeach; ?>
