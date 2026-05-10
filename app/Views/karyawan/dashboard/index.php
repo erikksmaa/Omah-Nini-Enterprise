@@ -11,11 +11,11 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="mb-1">Selamat Datang, <?= $username ?>!</h4>
-                            <p class="mb-0 opacity-75">📅 <?= date('l, d F Y') ?></p>
+                            <h4 class="mb-1 text-white">Selamat Datang, <?= $username ?>!</h4>
+                            <p class="mb-0 text-white">📅 <?= date('l, d F Y') ?></p>
                         </div>
                         <div class="text-end">
-                            <h5 class="mb-1">Role: <span class="badge bg-light text-dark"><?= $role ?></span></h5>
+                            <h5 class="mb-1 text-white">Role: <span class="badge bg-light text-dark"><?= $role ?></span></h5>
                         </div>
                     </div>
                 </div>

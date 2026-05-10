@@ -6,7 +6,6 @@
         <div class="col-12">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h6 class="m-0 font-weight-bold text-primary">Riwayat Penjualan</h6>
                     <a href="<?= base_url('karyawan/penjualan/create') ?>" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Barang Keluar (POS)</a>
                 </div>
                 <div class="card-body p-2 p-md-3">
@@ -22,7 +21,7 @@
                         </div>
                         <div class="col-md-2 col-6">
                             <label class="form-label small mb-0">Merek</label>
-                            <select name="supplier" class="form-select form-select-sm">
+                            <select name="supplier" onchange="this.form.submit()" class="form-select form-select-sm">
                                 <option value="">-- Semua --</option>
                                 <?php foreach ($suppliers as $sup): ?>
                                     <option value="<?= $sup['id'] ?>" <?= ($selectedSupplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
@@ -33,7 +32,7 @@
                         </div>
                         <div class="col-md-2 col-6">
                             <label class="form-label small mb-0">User</label>
-                            <select name="user" class="form-select form-select-sm">
+                            <select name="user" onchange="this.form.submit()" class="form-select form-select-sm">
                                 <option value="">-- Semua --</option>
                                 <?php foreach ($users as $u): ?>
                                     <option value="<?= $u['user_id'] ?>" <?= ($selectedUser ?? '') == $u['user_id'] ? 'selected' : '' ?>>
@@ -44,7 +43,7 @@
                         </div>
                         <div class="col-md-2 col-6">
                             <label class="form-label small mb-0">Nama Pembeli</label>
-                            <input type="text" name="nama_pembeli" class="form-control form-control-sm"
+                            <input type="text" name="nama_pembeli" onchange="this.form.submit()" class="form-control form-control-sm"
                                 placeholder="Cari nama..." value="<?= esc($namaPembeli ?? '') ?>">
                         </div>
                         <div class="col-md-2 d-flex align-items-end gap-2">

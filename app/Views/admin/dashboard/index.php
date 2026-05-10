@@ -125,7 +125,7 @@
                 <!-- Stok Habis -->
                 <div class="col-6 col-md-4 mb-3">
                     <div class="card h-100">
-                        <div class="card-body d-flex align-items-center justify-content-center m py-3 px-3">
+                        <div class="card-body d-flex py-3 align-items-center px-3">
                             <div class="stats-icon bg-secondary bg-opacity-10 rounded-3 me-3 d-flex align-items-center justify-content-center"
                                 style="width:48px;height:48px;flex-shrink:0;">
                                 <i class="bi bi-x-circle text-secondary fs-5"></i>
@@ -187,7 +187,7 @@
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="<?= base_url('admin/laporan/stok') ?>"
+                                    <a href="<?= base_url('pemilik/laporan/stok') ?>"
                                         class="btn btn-warning w-100  py-3 d-flex flex-column align-items-center justify-content-center gap-1 text-decoration-none">
                                         <i class="bi bi-file-earmark-bar-graph fs-4 mb-3"></i>
                                         <small class="fw-semibold">Laporan Stok</small>
@@ -270,27 +270,41 @@
                                 <i class="bi bi-clock-history me-2 text-primary"></i>Aktivitas Terbaru
                             </h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-0">
                             <?php if (!empty($aktivitas_terbaru)): ?>
-                                <div class="d-flex flex-column gap-3">
+                                <div class="list-group list-group-flush">
                                     <?php foreach ($aktivitas_terbaru as $aktivitas): ?>
-                                        <div class="d-flex align-items-start gap-3">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                                style="width:36px;height:36px;background:<?= $aktivitas['tipe'] == 'pembelian' ? 'rgba(40,199,111,0.15)' : 'rgba(0,207,232,0.15)' ?>">
-                                                <i
-                                                    class="<?= $aktivitas['tipe'] == 'pembelian' ? 'bi bi-truck text-success' : 'bi bi-receipt text-info' ?>"></i>
-                                            </div>
-                                            <div class="flex-grow-1 overflow-hidden">
-                                                <p class="mb-0 fw-semibold text-truncate small">
-                                                    <?= esc($aktivitas['deskripsi']) ?>
-                                                </p>
-                                                <div class="d-flex align-items-center gap-2 mt-1">
-                                                    <span class="text-muted" style="font-size:0.72rem;">
-                                                        <i
-                                                            class="bi bi-calendar3 me-1"></i><?= date('d/m/Y H:i', strtotime($aktivitas['tanggal'])) ?>
-                                                    </span>
-                                                    <span class="badge bg-light text-secondary border"
-                                                        style="font-size:0.65rem;"><?= esc($aktivitas['ref']) ?></span>
+                                        <div class="list-group-item px-3 py-3 border-0 border-bottom">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <!-- Icon berdasarkan tipe -->
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                                    style="width:40px;height:40px;background:<?= $aktivitas['tipe'] == 'pembelian' ? 'rgba(40,199,111,0.15)' : 'rgba(0,207,232,0.15)' ?>">
+                                                    <i
+                                                        class="<?= $aktivitas['tipe'] == 'pembelian' ? 'bi bi-truck text-success' : 'bi bi-receipt text-info' ?> fs-5"></i>
+                                                </div>
+
+                                                <!-- Konten -->
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+                                                        <p class="mb-0 fw-semibold small">
+                                                            <?= esc($aktivitas['deskripsi']) ?>
+                                                        </p>
+                                                        <span class="badge bg-light text-secondary border"
+                                                            style="font-size:0.65rem;">
+                                                            <?= esc($aktivitas['ref']) ?>
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-3 mt-1">
+                                                        <span class="text-muted" style="font-size:0.7rem;">
+                                                            <i
+                                                                class="bi bi-calendar3 me-1"></i><?= date('d/m/Y H:i', strtotime($aktivitas['tanggal'])) ?>
+                                                        </span>
+                                                        <span class="text-muted" style="font-size:0.7rem;">
+                                                            <i
+                                                                class="bi bi-person-circle me-1"></i><?= esc($aktivitas['user']) ?>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

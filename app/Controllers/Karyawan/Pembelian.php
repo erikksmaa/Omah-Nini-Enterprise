@@ -14,13 +14,13 @@ class Pembelian extends BaseController
     public function index()
     {
         $pembelianModel = new PembelianModel();
-        $supplierModel  = new SupplierModel();
-        $userModel      = new UserModel();
+        $supplierModel = new SupplierModel();
+        $userModel = new UserModel();
 
-        $tanggalMulai  = $this->request->getGet('tanggal_mulai');
-        $tanggalAkhir  = $this->request->getGet('tanggal_akhir');
-        $supplierId    = $this->request->getGet('supplier');
-        $userIdFilter  = $this->request->getGet('user');
+        $tanggalMulai = $this->request->getGet('tanggal_mulai');
+        $tanggalAkhir = $this->request->getGet('tanggal_akhir');
+        $supplierId = $this->request->getGet('supplier');
+        $userIdFilter = $this->request->getGet('user');
 
         $builder = $pembelianModel
             ->select('pembelian.*, supplier.nama as supplier_nama, users.username as user_username')
@@ -28,21 +28,25 @@ class Pembelian extends BaseController
             ->join('users', 'users.user_id = pembelian.id_user')
             ->orderBy('pembelian.id', 'DESC');
 
-        if (!empty($tanggalMulai))   $builder->where('tanggal_pembelian >=', $tanggalMulai);
-        if (!empty($tanggalAkhir))   $builder->where('tanggal_pembelian <=', $tanggalAkhir);
-        if (!empty($supplierId))     $builder->where('pembelian.id_supplier', $supplierId);
-        if (!empty($userIdFilter))   $builder->where('pembelian.id_user', $userIdFilter);
+        if (!empty($tanggalMulai))
+            $builder->where('tanggal_pembelian >=', $tanggalMulai);
+        if (!empty($tanggalAkhir))
+            $builder->where('tanggal_pembelian <=', $tanggalAkhir);
+        if (!empty($supplierId))
+            $builder->where('pembelian.id_supplier', $supplierId);
+        if (!empty($userIdFilter))
+            $builder->where('pembelian.id_user', $userIdFilter);
 
         $data = [
-            'title'            => 'Riwayat Barang Masuk',
-            'pembelian'        => $builder->paginate(10),
-            'pager'            => $pembelianModel->pager,
-            'suppliers'        => $supplierModel->findAll(),
-            'users'            => $userModel->findAll(),
-            'tanggalMulai'     => $tanggalMulai,
-            'tanggalAkhir'     => $tanggalAkhir,
+            'title' => 'Riwayat Barang Masuk',
+            'pembelian' => $builder->paginate(10),
+            'pager' => $pembelianModel->pager,
+            'suppliers' => $supplierModel->findAll(),
+            'users' => $userModel->findAll(),
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalAkhir' => $tanggalAkhir,
             'selectedSupplier' => $supplierId,
-            'selectedUser'     => $userIdFilter,
+            'selectedUser' => $userIdFilter,
         ];
 
         return view('karyawan/pembelian/index', $data);
@@ -52,7 +56,7 @@ class Pembelian extends BaseController
     {
         $supplierModel = new SupplierModel();
         return view('karyawan/pembelian/create', [
-            'title'     => 'Tambah Barang Masuk',
+            'title' => 'Tambah Barang Masuk',
             'suppliers' => $supplierModel->findAll(),
             // tidak perlu no_invoice, akan digenerate saat simpan di model
         ]);
@@ -64,7 +68,7 @@ class Pembelian extends BaseController
         $userId = session()->get('user_id');
 
         $rules = [
-            'id_supplier'       => 'required|is_not_unique[supplier.id]',
+            'id_supplier' => 'required|is_not_unique[supplier.id]',
             'tanggal_pembelian' => 'required|valid_date',
         ];
         if (!$this->validate($rules)) {
@@ -81,27 +85,27 @@ class Pembelian extends BaseController
         $produkModel = new ProdukModel();
         foreach ($items as $i => $item) {
             $idProduk = $item['id_produk'] ?? null;
-            $jumlah   = $item['jumlah'] ?? 0;
+            $jumlah = $item['jumlah'] ?? 0;
 
             if (empty($idProduk)) {
-                return redirect()->back()->withInput()->with('error', "Item ke-".($i+1).": produk harus dipilih.");
+                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": produk harus dipilih.");
             }
             // Jumlah akan divalidasi di model (<=0), divalidasi juga di sini untuk umpan balik cepat
             if ($jumlah <= 0) {
-                return redirect()->back()->withInput()->with('error', "Item ke-".($i+1).": jumlah harus lebih dari 0.");
+                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": jumlah harus lebih dari 0.");
             }
 
             $itemsFormatted[] = [
                 'id_produk' => $idProduk,
-                'jumlah'    => $jumlah
+                'jumlah' => $jumlah
             ];
         }
 
         $headerData = [
-            'id_supplier'       => $this->request->getPost('id_supplier'),
-            'id_user'           => $userId,
+            'id_supplier' => $this->request->getPost('id_supplier'),
+            'id_user' => $userId,
             'tanggal_pembelian' => $this->request->getPost('tanggal_pembelian'),
-            'catatan'           => $this->request->getPost('catatan'),
+            'catatan' => $this->request->getPost('catatan'),
         ];
 
         $result = $pembelianModel->savePembelian($headerData, $itemsFormatted, $userId);
@@ -124,13 +128,13 @@ class Pembelian extends BaseController
             return redirect()->to('/karyawan/pembelian')->with('error', 'Data tidak ditemukan.');
         }
 
-        // Ambil items dari detail_pembelian, nama_produk sudah tersimpan dengan format baru
-        $items = $detailModel->getByPembelianId($id);
+        // Gunakan method getWithProductInfo untuk ambil foto
+        $items = $detailModel->getWithProductInfo($id);
 
         $data = [
-            'title'  => 'Detail Barang Masuk #' . $header['no_invoice'],
+            'title' => 'Detail Barang Masuk #' . $header['no_invoice'],
             'header' => $header,
-            'items'  => $items,
+            'items' => $items,
         ];
 
         return view('karyawan/pembelian/detail', $data);

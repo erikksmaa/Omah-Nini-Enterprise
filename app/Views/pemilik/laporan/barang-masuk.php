@@ -27,7 +27,7 @@
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <label class="form-label small mb-0">Merk / Brand</label>
-                                    <select name="supplier" class="form-select form-select-sm">
+                                    <select onchange="this.form.submit()" name="supplier" class="form-select form-select-sm">
                                         <option value="">-- Semua Merk --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= ($selectedSupplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
@@ -78,7 +78,7 @@
                                         <th>Tanggal</th>
                                         <th class="text-center">Jumlah Item</th>
                                         <th>Detail Item</th>
-                                        <th>Catatan</th>
+                                        <th width="20%">Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody>

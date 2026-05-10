@@ -27,12 +27,12 @@ class DetailTransaksiModel extends Model
 
     public function getWithProductInfo($transaksiId)
     {
-        return $this->select('detail_transaksi.*, produk.sku, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-                    ->join('produk', 'produk.id = detail_transaksi.id_produk')
-                    ->join('supplier', 'supplier.id = produk.id_supplier')
-                    ->join('motif', 'motif.id = produk.id_motif')
-                    ->join('warna', 'warna.id = produk.id_warna')
-                    ->where('detail_transaksi.id_transaksi', $transaksiId)
-                    ->findAll();
+        return $this->select('detail_transaksi.*, produk.sku, produk.foto, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+            ->join('produk', 'produk.id = detail_transaksi.id_produk')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->where('detail_transaksi.id_transaksi', $transaksiId)
+            ->findAll();
     }
 }

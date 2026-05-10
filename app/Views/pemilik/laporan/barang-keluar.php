@@ -27,7 +27,7 @@
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <label class="form-label small mb-0">Pelanggan</label>
-                                    <select name="pelanggan" class="form-select form-select-sm">
+                                    <select onchange="this.form.submit()" name="pelanggan" class="form-select form-select-sm">
                                         <option value="">-- Semua Pelanggan --</option>
                                         <?php foreach ($pelanggan_list as $pel): ?>
                                             <option value="<?= $pel['id'] ?>" <?= ($selectedPelanggan ?? '') == $pel['id'] ? 'selected' : '' ?>>
@@ -79,7 +79,7 @@
                                         <th>Tanggal</th>
                                         <th class="text-center">Jumlah Item</th>
                                         <th>Detail Item</th>
-                                        <th>Catatan</th>
+                                        <th width="20%">Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -87,16 +87,12 @@
                                         <?php $no = 1 + (($pager->getCurrentPage() - 1) * $pager->getPerPage()); ?>
                                         <?php foreach ($transaksi as $trx): ?>
                                             <tr>
-                                                <td class="text-center"><?= $no++ ?></td>
+                                                <td class="text-center fw-bold"><?= $no++ ?></td>
                                                 <td><code><?= esc($trx['no_invoice']) ?></code></td>
                                                 <td><?= esc($trx['nama_pembeli']) ?></td>
                                                 <td><?= esc($trx['nama_pelanggan'] ?? '-') ?></td>
                                                 <td><?= date('d/m/Y H:i', strtotime($trx['tanggal_transaksi'])) ?></td>
-                                                <td class="text-center">
-                                                    <?
-                                                    $trx['total_items'] ?? 0;
-                                                    ?>
-                                                </td>
+                                                <td class="text-center"><?= $trx['total_items'] ?? 0 ?></td>
                                                 <td>
                                                     <?php if (!empty($trx['items'])): ?>
                                                         <ul class="list-unstyled mb-0">

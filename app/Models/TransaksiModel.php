@@ -23,7 +23,7 @@ class TransaksiModel extends Model
     ];
 
     // ========== QUERY DASHBOARD ==========
-    
+
     /**
      * Get count of transactions today
      */
@@ -38,8 +38,8 @@ class TransaksiModel extends Model
     public function getCountTransactionsThisMonth()
     {
         return $this->where('MONTH(tanggal_transaksi)', date('m'))
-                    ->where('YEAR(tanggal_transaksi)', date('Y'))
-                    ->countAllResults();
+            ->where('YEAR(tanggal_transaksi)', date('Y'))
+            ->countAllResults();
     }
 
     /**
@@ -65,21 +65,21 @@ class TransaksiModel extends Model
     public function getRecentTransactions($limit = 10)
     {
         return $this->select('transaksi.*, pelanggan.nama as nama_pelanggan')
-                    ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
-                    ->orderBy('transaksi.id', 'DESC')
-                    ->limit($limit)
-                    ->findAll();
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->orderBy('transaksi.id', 'DESC')
+            ->limit($limit)
+            ->findAll();
     }
 
     public function getCountTransactionsLastMonth()
-{
-    $lastMonth = date('m', strtotime('-1 month'));
-    $year = date('Y', strtotime('-1 month'));
-    
-    return $this->where('MONTH(tanggal_transaksi)', $lastMonth)
-                ->where('YEAR(tanggal_transaksi)', $year)
-                ->countAllResults();
-}
+    {
+        $lastMonth = date('m', strtotime('-1 month'));
+        $year = date('Y', strtotime('-1 month'));
+
+        return $this->where('MONTH(tanggal_transaksi)', $lastMonth)
+            ->where('YEAR(tanggal_transaksi)', $year)
+            ->countAllResults();
+    }
 
     // ========== INVOICE GENERATOR ==========
     // public function generateNoInvoice()
@@ -99,12 +99,12 @@ class TransaksiModel extends Model
         $db = \Config\Database::connect();
         $prefix = 'INV-' . date('ymd') . '-';
         $last = $db->table('transaksi')
-                   ->select('no_invoice')
-                   ->like('no_invoice', $prefix, 'after')
-                   ->orderBy('id', 'DESC')
-                   ->limit(1)
-                   ->get()
-                   ->getRow();
+            ->select('no_invoice')
+            ->like('no_invoice', $prefix, 'after')
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->getRow();
         if ($last && isset($last->no_invoice)) {
             $num = (int) substr($last->no_invoice, -4);
             $new = str_pad($num + 1, 4, '0', STR_PAD_LEFT);
@@ -118,18 +118,18 @@ class TransaksiModel extends Model
     public function getAllWithPelanggan($perPage = 10)
     {
         return $this->select('transaksi.*, pelanggan.nama as nama_pelanggan')
-                    ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
-                    ->orderBy('transaksi.id', 'DESC')
-                    ->paginate($perPage);
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->orderBy('transaksi.id', 'DESC')
+            ->paginate($perPage);
     }
 
     // ========== GET SINGLE FOR STRUK / DETAIL ==========
     public function getDetail($id)
     {
         return $this->select('transaksi.*, pelanggan.nama as nama_pelanggan')
-                    ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
-                    ->where('transaksi.id', $id)
-                    ->first();
+            ->join('pelanggan', 'pelanggan.id = transaksi.id_pelanggan', 'left')
+            ->where('transaksi.id', $id)
+            ->first();
     }
 
     // ========== SAVE TRANSAKSI + DETAIL + UPDATE STOK + LOG ==========
@@ -163,9 +163,9 @@ class TransaksiModel extends Model
                 // Insert detail dengan harga_satuan
                 $db->table('detail_transaksi')->insert([
                     'id_transaksi' => $transaksiId,
-                    'id_produk'    => $item['id_produk'],
-                    'nama_produk'  => $namaProduk,
-                    'jumlah'       => $item['jumlah'],
+                    'id_produk' => $item['id_produk'],
+                    'nama_produk' => $namaProduk,
+                    'jumlah' => $item['jumlah'],
                     'harga_satuan' => $item['harga_satuan'] ?? 0
                 ]);
 
@@ -179,14 +179,14 @@ class TransaksiModel extends Model
 
                 // Log stok
                 $db->table('log_stok')->insert([
-                    'id_produk'        => $item['id_produk'],
-                    'id_user'          => $userId,
-                    'tipe_ref'         => 'penjualan',
-                    'id_ref'           => $transaksiId,
-                    'jumlah_sebelum'   => $stokLama,
+                    'id_produk' => $item['id_produk'],
+                    'id_user' => $userId,
+                    'tipe_ref' => 'penjualan',
+                    'id_ref' => $transaksiId,
+                    'jumlah_sebelum' => $stokLama,
                     'jumlah_perubahan' => $item['jumlah'],
-                    'jumlah_sesudah'   => $stokBaru,
-                    'created_at'       => $now
+                    'jumlah_sesudah' => $stokBaru,
+                    'created_at' => $now
                 ]);
             }
 
@@ -199,5 +199,61 @@ class TransaksiModel extends Model
             $db->transRollback();
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Get top selling products
+     */
+    public function getTopProducts($limit = 5)
+    {
+        return $this->db->table('detail_transaksi')
+            ->select('motif.nama_motif, warna.nama_warna, SUM(detail_transaksi.jumlah) as total_terjual')
+            ->join('produk', 'produk.id = detail_transaksi.id_produk')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->groupBy('produk.id')
+            ->orderBy('total_terjual', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
+     * Get recent activities
+     */
+    /**
+     * Get recent activities with user info
+     */
+    public function getRecentActivities($limit = 10)
+    {
+        // Ambil 10 pembelian terbaru
+        $pembelian = $this->db->table('pembelian')
+            ->select("'pembelian' as tipe, pembelian.no_invoice as ref, pembelian.tanggal_pembelian as tanggal, CONCAT('Pembelian dari ', supplier.nama) as deskripsi, users.username as user, 'masuk' as icon")
+            ->join('supplier', 'supplier.id = pembelian.id_supplier')
+            ->join('users', 'users.user_id = pembelian.id_user')
+            ->orderBy('pembelian.tanggal_pembelian', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->getResultArray();
+
+        // Ambil 10 penjualan terbaru
+        $penjualan = $this->db->table('transaksi')
+            ->select("'penjualan' as tipe, transaksi.no_invoice as ref, transaksi.tanggal_transaksi as tanggal, CONCAT('Penjualan ke ', transaksi.nama_pembeli) as deskripsi, users.username as user, 'keluar' as icon")
+            ->join('users', 'users.user_id = transaksi.id_user')
+            ->orderBy('transaksi.tanggal_transaksi', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->getResultArray();
+
+        // Gabungkan dan urutkan
+        $activities = array_merge($pembelian, $penjualan);
+
+        // Urutkan berdasarkan tanggal
+        usort($activities, function ($a, $b) {
+            return strtotime($b['tanggal']) - strtotime($a['tanggal']);
+        });
+
+        // Ambil $limit teratas
+        return array_slice($activities, 0, $limit);
     }
 }

@@ -24,8 +24,8 @@
                                         value="<?= $end_date ?>">
                                 </div>
                                 <div class="col-md-3 col-6">
-                                    <select name="id_produk" class="form-select form-select-sm">
-                                        <option value="">Semua Produk</option>
+                                    <select onchange="this.form.submit()" name="id_produk" class="form-select form-select-sm">
+                                        <option value="">-- Semua Produk --</option>
                                         <?php foreach ($produk_list as $p): ?>
                                             <option value="<?= $p['id'] ?>" <?= ($filter_produk ?? '') == $p['id'] ? 'selected' : '' ?>>
                                                 <?= esc($p['nama_motif'] ?? $p['nama_produk']) ?> -
@@ -35,8 +35,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3 col-6">
-                                    <select name="tipe_ref" class="form-select form-select-sm">
-                                        <option value="">Semua Tipe</option>
+                                    <select onchange="this.form.submit()" name="tipe_ref" class="form-select form-select-sm">
+                                        <option value="">-- Semua Tipe --</option>
                                         <option value="pembelian" <?= ($filter_tipe ?? '') == 'pembelian' ? 'selected' : '' ?>>Pembelian (Stok +)</option>
                                         <option value="penjualan" <?= ($filter_tipe ?? '') == 'penjualan' ? 'selected' : '' ?>>Penjualan (Stok -)</option>
                                         <option value="penyesuaian" <?= ($filter_tipe ?? '') == 'penyesuaian' ? 'selected' : '' ?>>Penyesuaian (Opname)</option>

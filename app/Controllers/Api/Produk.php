@@ -28,20 +28,37 @@ class Produk extends BaseController
         ]);
     }
 
-    public function getBySupplier($id_supplier)
+
+    /**
+     * Get produk by supplier ID (untuk dropdown pembelian)
+     */
+    public function getBySupplier($supplierId)
     {
-        $produkModel = new ProdukModel();
-        $produk = $produkModel
-            ->select('produk.id, motif.nama_motif, warna.nama_warna, produk.stok')
+        $produk = $this->produkModel->select('produk.id, produk.stok, produk.foto, motif.nama_motif, warna.nama_warna')
             ->join('motif', 'motif.id = produk.id_motif')
             ->join('warna', 'warna.id = produk.id_warna')
-            ->where('produk.id_supplier', $id_supplier)
+            ->where('produk.id_supplier', $supplierId)
             ->orderBy('motif.nama_motif', 'ASC')
             ->findAll();
 
+
+        // Format response dengan URL foto lengkap
+        $data = [];
+        foreach ($produk as $p) {
+            $fotoUrl = !empty($p['foto']) ? base_url('uploads/produk/' . $p['foto']) : base_url('assets/img/no-image.png');
+
+            $data[] = [
+                'id' => $p['id'],
+                'nama_motif' => $p['nama_motif'],
+                'nama_warna' => $p['nama_warna'],
+                'stok' => $p['stok'],
+                'foto' => $fotoUrl
+            ];
+        }
+
         return $this->response->setJSON([
             'status' => 'success',
-            'data'   => $produk
+            'data' => $data
         ]);
-    }    
+    }
 }

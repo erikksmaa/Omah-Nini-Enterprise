@@ -22,7 +22,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label>Nama Merk <span class="text-danger">*</span></label>
-                            <input type="text" name="nama"
+                            <input type="text" name="nama" 
                                 class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
                                 value="<?= old('nama') ?>">
                         </div>

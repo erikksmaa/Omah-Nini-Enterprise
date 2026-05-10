@@ -34,8 +34,8 @@
 
                                 <!-- Baris 2: Dropdown -->
                                 <div class="col-md-3">
-                                    <select name="filter_supplier" class="form-select form-select-sm">
-                                        <option value="">Semua Supplier</option>
+                                    <select onchange="this.form.submit()" name="filter_supplier" class="form-select form-select-sm">
+                                        <option value="">-- Semua Merk/Brand --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= ($filter_supplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
                                                 <?= esc($sup['nama']) ?>
@@ -44,8 +44,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <select name="filter_motif" class="form-select form-select-sm">
-                                        <option value="">Semua Motif</option>
+                                    <select onchange="this.form.submit()" name="filter_motif" class="form-select form-select-sm">
+                                        <option value="">-- Semua Motif --</option>
                                         <?php foreach ($motifs as $mot): ?>
                                             <option value="<?= $mot['id'] ?>" <?= ($filter_motif ?? '') == $mot['id'] ? 'selected' : '' ?>>
                                                 <?= esc($mot['nama_motif']) ?>
@@ -54,8 +54,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <select name="filter_warna" class="form-select form-select-sm">
-                                        <option value="">Semua Warna</option>
+                                    <select onchange="this.form.submit()" name="filter_warna" class="form-select form-select-sm">
+                                        <option value="">-- Semua Warna --</option>
                                         <?php foreach ($warnas as $wrn): ?>
                                             <option value="<?= $wrn['id'] ?>" <?= ($filter_warna ?? '') == $wrn['id'] ? 'selected' : '' ?>>
                                                 <?= esc($wrn['nama_warna']) ?>
@@ -64,8 +64,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <select name="filter_stok" class="form-select form-select-sm">
-                                        <option value="">Semua Stok</option>
+                                    <select onchange="this.form.submit()" name="filter_stok" class="form-select form-select-sm">
+                                        <option value="">-- Semua Stok --</option>
                                         <option value="aman" <?= ($filter_stok ?? '') == 'aman' ? 'selected' : '' ?>>Aman
                                             (Stok > Min)</option>
                                         <option value="menipis" <?= ($filter_stok ?? '') == 'menipis' ? 'selected' : '' ?>>

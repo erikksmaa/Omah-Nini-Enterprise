@@ -25,7 +25,7 @@
                                 </div>
                                 <div class="col-md-2 col-6">
                                     <label class="form-label small mb-0">Merek</label>
-                                    <select name="supplier" class="form-select form-select-sm">
+                                    <select name="supplier" onchange="this.form.submit()" class="form-select form-select-sm">
                                         <option value="">-- Semua --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= ($selectedSupplier ?? '') == $sup['id'] ? 'selected' : '' ?>>
@@ -36,7 +36,7 @@
                                 </div>
                                 <div class="col-md-2 col-6">
                                     <label class="form-label small mb-0">User</label>
-                                    <select name="user" class="form-select form-select-sm">
+                                    <select name="user" onchange="this.form.submit()" class="form-select form-select-sm">
                                         <option value="">-- Semua --</option>
                                         <?php foreach ($users as $u): ?>
                                             <option value="<?= $u['user_id'] ?>" <?= ($selectedUser ?? '') == $u['user_id'] ? 'selected' : '' ?>>

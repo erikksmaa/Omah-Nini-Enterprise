@@ -19,7 +19,7 @@ class SupplierModel extends Model
 
     // ========== VALIDATION RULES ==========
     protected $validationRules = [
-        'nama' => 'required|min_length[3]|max_length[100]',
+        'nama' => 'required|min_length[3]|max_length[100]|',
         'kontak' => 'required|min_length[10]|max_length[15]',
         'email' => 'permit_empty|valid_email'
     ];

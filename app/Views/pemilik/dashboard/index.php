@@ -11,13 +11,13 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="mb-1">Selamat Datang, <?= session()->get('username') ?>!</h4>
-                            <p class="mb-0 opacity-75">📊 Dashboard Monitoring Bisnis Batik</p>
+                            <h4 class="mb-1 text-white">Selamat Datang, <?= session()->get('username') ?>!</h4>
+                            <p class="mb-0 text-white">📊 Dashboard Monitoring Bisnis Batik</p>
                         </div>
                         <div class="text-end">
                             <h5 class="mb-1">Role: <span
                                     class="badge bg-light text-dark"><?= session()->get('role') ?></span></h5>
-                            <small>📅 <?= date('l, d F Y') ?></small>
+                            <small class="text-white">📅 <?= date('l, d F Y') ?></small>
                         </div>
                     </div>
                 </div>

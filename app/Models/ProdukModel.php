@@ -155,19 +155,6 @@ class ProdukModel extends Model
             ->findAll();
     }
 
-    /**
-     * Get produk with highest stock
-     */
-    public function getHighestStockProducts($limit = 10)
-    {
-        return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
-            ->join('supplier', 'supplier.id = produk.id_supplier')
-            ->join('motif', 'motif.id = produk.id_motif')
-            ->join('warna', 'warna.id = produk.id_warna')
-            ->orderBy('produk.stok', 'DESC')
-            ->limit($limit)
-            ->findAll();
-    }
 
     // ========== QUERY UNTUK TOP PRODUK ==========
 
@@ -311,18 +298,7 @@ class ProdukModel extends Model
             ->limit($limit)
             ->findAll();
     }
-
-    /**
-     * Check if SKU exists (for validation)
-     */
-    public function isSkuExists($sku, $excludeId = null)
-    {
-        $query = $this->where('sku', $sku);
-        if ($excludeId) {
-            $query->where('id !=', $excludeId);
-        }
-        return $query->countAllResults() > 0;
-    }
+ 
 
     /**
      * Update stok produk with validation (tidak bisa minus)
@@ -354,7 +330,32 @@ class ProdukModel extends Model
         return ['success' => false, 'message' => 'Gagal update stok'];
     }
 
-    // ========== SKU GENERATOR ==========
+
+    /**
+     * Get produk with highest stock
+     */
+    public function getHighestStockProducts($limit = 10)
+    {
+        return $this->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+            ->join('supplier', 'supplier.id = produk.id_supplier')
+            ->join('motif', 'motif.id = produk.id_motif')
+            ->join('warna', 'warna.id = produk.id_warna')
+            ->orderBy('produk.stok', 'DESC')
+            ->limit($limit)
+            ->findAll();
+    }
+
+    /**
+     * Check if SKU exists (for validation)
+     */
+    public function isSkuExists($sku, $excludeId = null)
+    {
+        $query = $this->where('sku', $sku);
+        if ($excludeId) {
+            $query->where('id !=', $excludeId);
+        }
+        return $query->countAllResults() > 0;
+    }
 
     /**
      * Generate SKU otomatis
@@ -472,6 +473,15 @@ class ProdukModel extends Model
 
     /**
      * Get stock report with advanced filters (including date range and keyword)
+     * 
+     * @param string|null $start_date Filter stok yang diupdate mulai tanggal ini
+     * @param string|null $end_date   Filter stok yang diupdate sampai tanggal ini
+     * @param string|null $keyword    Cari berdasarkan SKU, motif, warna, supplier
+     * @param int|null $supplier_id
+     * @param int|null $motif_id
+     * @param int|null $warna_id
+     * @param string|null $stok_status (aman, menipis, habis)
+     * @return array
      */
     public function getStockReportWithFilters($start_date = null, $end_date = null, $keyword = null, $supplier_id = null, $motif_id = null, $warna_id = null, $stok_status = null)
     {
@@ -480,6 +490,7 @@ class ProdukModel extends Model
             ->join('motif', 'motif.id = produk.id_motif')
             ->join('warna', 'warna.id = produk.id_warna');
 
+        // Filter tanggal (berdasarkan updated_at produk, asumsi stok terakhir diupdate)
         if (!empty($start_date)) {
             $builder->where('DATE(produk.updated_at) >=', $start_date);
         }
@@ -494,15 +505,23 @@ class ProdukModel extends Model
                 ->orLike('supplier.nama', $keyword)
                 ->groupEnd();
         }
+
+        // Filter supplier
         if (!empty($supplier_id)) {
             $builder->where('produk.id_supplier', $supplier_id);
         }
+
+        // Filter motif
         if (!empty($motif_id)) {
             $builder->where('produk.id_motif', $motif_id);
         }
+
+        // Filter warna
         if (!empty($warna_id)) {
             $builder->where('produk.id_warna', $warna_id);
         }
+
+        // Filter status stok
         if (!empty($stok_status)) {
             switch ($stok_status) {
                 case 'menipis':

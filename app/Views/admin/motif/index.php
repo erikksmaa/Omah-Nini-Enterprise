@@ -26,7 +26,7 @@
                                         placeholder="Cari motif atau supplier..." value="<?= $keyword ?? '' ?>">
                                 </div>
                                 <div class="col-md-4 col-6">
-                                    <select name="filter_supplier" class="form-select form-select-sm">
+                                    <select onchange="this.form.submit()" name="filter_supplier" class="form-select form-select-sm">
                                         <option value="">-- Semua Supplier --</option>
                                         <?php foreach ($suppliers as $sup): ?>
                                             <option value="<?= $sup['id'] ?>" <?= ($filter_supplier ?? '') == $sup['id'] ? 'selected' : '' ?>>

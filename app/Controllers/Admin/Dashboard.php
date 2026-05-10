@@ -49,21 +49,19 @@ class Dashboard extends BaseController
             ];
         }
 
-        
+
 
         $data = [
             'title' => 'Dashboard Admin',
 
-            // Statistik Utama
+            // Statistik
             'total_produk' => $this->produkModel->getTotalProduk(),
             'total_supplier' => $this->supplierModel->getTotalSupplier(),
             'total_motif' => $this->motifModel->getTotalMotif(),
             'total_warna' => $this->warnaModel->getTotalWarna(),
             'total_user' => $this->userModel->getTotalUser(),
             'total_pelanggan' => $this->pelangganModel->getTotalPelanggan(),
-
-            // ========== TAMBAHKAN INI ==========
-            'total_stok' => $this->produkModel->getTotalStockQuantity(),  // ← BARIS INI
+            'total_stok' => $this->produkModel->getTotalStockQuantity(),
 
             // Stok
             'stok_menipis' => $stokMenipisData,
@@ -74,6 +72,10 @@ class Dashboard extends BaseController
             'pembelian_hari_ini' => $this->pembelianModel->getCountPembelianHariIni(),
             'transaksi_bulan_ini' => $this->transaksiModel->getCountTransactionsThisMonth(),
             'pembelian_bulan_ini' => $this->pembelianModel->getCountPembelianBulanIni(),
+
+            // Top Produk & Aktivitas (dari model Transaksi)
+            'top_produk' => $this->transaksiModel->getTopProducts(5),
+            'aktivitas_terbaru' => $this->transaksiModel->getRecentActivities(5),
         ];
 
         return view('admin/dashboard/index', $data);
@@ -117,14 +119,14 @@ class Dashboard extends BaseController
     }
 
     public function getWeeklySales()
-{
-    $data = $this->transaksiModel->getWeeklyCount();
-    
-    // Pastikan $data adalah array
-    if (!$data || !is_array($data)) {
-        $data = [];
+    {
+        $data = $this->transaksiModel->getWeeklyCount();
+
+        // Pastikan $data adalah array
+        if (!$data || !is_array($data)) {
+            $data = [];
+        }
+
+        return $this->response->setJSON($data);
     }
-    
-    return $this->response->setJSON($data);
-}
 }

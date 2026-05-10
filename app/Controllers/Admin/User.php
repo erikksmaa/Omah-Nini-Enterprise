@@ -126,7 +126,7 @@ class User extends BaseController
         // 2. Validasi Role (wajib)
         if (empty($role)) {
             $errors['role'] = 'Role wajib dipilih.';
-        } elseif (!in_array($role, ['admin', 'karyawan'])) {
+        } elseif (!in_array($role, ['admin', 'karyawan', 'pemilik'])) {
             $errors['role'] = 'Role tidak valid.';
         } else {
             // Cek jika mengubah role admin terakhir

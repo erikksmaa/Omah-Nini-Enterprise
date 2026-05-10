@@ -47,7 +47,7 @@
                                         <div class="row g-2">
                                             <div class="col-md-3">
                                                 <div class="form-floating">
-                                                    <select name="filter_supplier" id="filter_supplier"
+                                                    <select onchange="this.form.submit()" name="filter_supplier" id="filter_supplier"
                                                         class="form-select">
                                                         <option value="">-- Semua Merk --</option>
                                                         <?php foreach ($suppliers as $sup): ?>
@@ -61,7 +61,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-floating">
-                                                    <select name="filter_motif" id="filter_motif" class="form-select">
+                                                    <select onchange="this.form.submit()"    name="filter_motif" id="filter_motif" class="form-select">
                                                         <option value="">-- Semua Motif --</option>
                                                         <?php if (!empty($filter_supplier) && !empty($motif_by_supplier)): ?>
                                                             <?php foreach ($motif_by_supplier as $mot): ?>
@@ -82,7 +82,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-floating">
-                                                    <select name="filter_warna" class="form-select">
+                                                    <select onchange="this.form.submit()" name="filter_warna" class="form-select">
                                                         <option value="">-- Semua Warna --</option>
                                                         <?php foreach ($warnas as $wrn): ?>
                                                             <option value="<?= $wrn['id'] ?>" <?= ($filter_warna ?? '') == $wrn['id'] ? 'selected' : '' ?>>
@@ -95,7 +95,7 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-floating">
-                                                    <select name="filter_stok" class="form-select">
+                                                    <select onchange="this.form.submit()" name="filter_stok" class="form-select">
                                                         <option value="">-- Semua Stok --</option>
                                                         <option value="aman" <?= ($filter_stok ?? '') == 'aman' ? 'selected' : '' ?>>✅ Aman (Stok > Min)</option>
                                                         <option value="menipis" <?= ($filter_stok ?? '') == 'menipis' ? 'selected' : '' ?>>⚠️ Menipis (Stok ≤ Min, > 0)</option>
@@ -381,7 +381,7 @@
             });
         });
     });
-    </>
+</script>
 
         <style>
         /* Card view styling */

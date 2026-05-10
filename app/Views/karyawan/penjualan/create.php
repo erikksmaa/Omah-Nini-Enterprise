@@ -11,20 +11,23 @@
             <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Tanggal Transaksi</label>
-                    <input type="datetime-local" name="tanggal_transaksi" class="form-control" value="<?= old('tanggal_transaksi', date('Y-m-d\TH:i')) ?>" required>
+                    <input type="datetime-local" name="tanggal_transaksi" class="form-control"
+                        value="<?= old('tanggal_transaksi', date('Y-m-d\TH:i')) ?>" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Pelanggan (opsional)</label>
                     <select name="id_pelanggan" id="pelanggan" class="form-select">
                         <option value="">-- Umum --</option>
                         <?php foreach ($pelanggan_list as $pel): ?>
-                            <option value="<?= $pel['id'] ?>" data-nama="<?= esc($pel['nama']) ?>"><?= esc($pel['nama']) ?></option>
+                            <option value="<?= $pel['id'] ?>" data-nama="<?= esc($pel['nama']) ?>"><?= esc($pel['nama']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nama Pembeli</label>
-                    <input type="text" name="nama_pembeli" id="nama_pembeli" class="form-control" value="<?= old('nama_pembeli') ?>" required>
+                    <input type="text" name="nama_pembeli" id="nama_pembeli" class="form-control"
+                        value="<?= old('nama_pembeli') ?>" required>
                     <small class="text-muted">Jika pelanggan dipilih, nama otomatis terisi.</small>
                 </div>
             </div>
@@ -60,7 +63,7 @@
 
 <!-- Template Baris Item -->
 <template id="itemTemplate">
-    <div class="item-row border rounded p-3 mb-3 bg-light">
+    <div class="item-row border rounded p-3 mb-3">
         <div class="row g-2 align-items-end">
             <div class="col-md-5">
                 <label class="form-label">Produk</label>
@@ -76,13 +79,15 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Jumlah</label>
-                <input type="number" name="items[INDEX][jumlah]" class="form-control jumlah" placeholder="Qty" min="1" required>
+                <input type="number" name="items[INDEX][jumlah]" class="form-control jumlah" placeholder="Qty" min="1"
+                    required>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Harga Satuan</label>
                 <div class="input-group">
                     <span class="input-group-text">Rp</span>
-                    <input type="text" name="items[INDEX][harga_satuan]" class="form-control harga-satuan" placeholder="0" required>
+                    <input id="rupiah" type="text" name="items[INDEX][harga_satuan]" class="form-control harga-satuan"
+                        placeholder="0" required>
                 </div>
             </div>
             <div class="col-md-2">
@@ -111,161 +116,174 @@
     </div>
 </div>
 
+
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('items-container');
-    const template = document.getElementById('itemTemplate');
-    let itemIndex = 0;
-    // Peta untuk menyimpan URL foto berdasarkan id produk
-    const productFotoMap = new Map();
+    $(document).ready(function () {
+        // Mask untuk Rupiah (tanpa Rp di input)
+        $('#rupiah').mask('000.000.000.000', { reverse: true });
+        $('#rupiah').mask("#.##0.000", { reverse: true });
 
-    // ---- Fungsi bantuan ----
-    function formatRupiah(angka) {
-        return 'Rp ' + Number(angka).toLocaleString('id-ID');
-    }
+    });
+</script>
 
-    function hitungSubtotal(row) {
-        const jumlah = row.querySelector('.jumlah')?.value || 0;
-        const harga  = row.querySelector('.harga-satuan')?.value?.replace(/[^0-9]/g, '') || 0;
-        const sub = jumlah * harga;
-        const subtotalInput = row.querySelector('.subtotal');
-        if (subtotalInput) subtotalInput.value = formatRupiah(sub);
-        return sub;
-    }
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('items-container');
+        const template = document.getElementById('itemTemplate');
+        let itemIndex = 0;
+        // Peta untuk menyimpan URL foto berdasarkan id produk
+        const productFotoMap = new Map();
 
-    function hitungTotal() {
-        let total = 0;
-        document.querySelectorAll('.item-row').forEach(row => {
-            total += hitungSubtotal(row);
-        });
-        document.getElementById('totalKeseluruhan').innerText = formatRupiah(total);
-    }
-
-    // ---- Inisialisasi Select2 dengan Ajax ----
-    function initSelect2(element, previewContainer, fotoImg) {
-        $(element).select2({
-            placeholder: "-- Cari Produk (Merek - Motif - Warna) --",
-            allowClear: true,
-            width: '100%',
-            templateResult: function(option) {
-                if (!option.id) return option.text;
-                return option.text;
-            },
-            templateSelection: function(option) {
-                if (!option.id) return option.text;
-                return option.text;
-            },
-            ajax: {
-                url: '<?= base_url("api/search/produk") ?>',
-                dataType: 'json',
-                delay: 300,
-                type: 'GET',
-                data: function(params) {
-                    return { keyword: params.term };
-                },
-                processResults: function(data) {
-                    data.forEach(function(item) {
-                        productFotoMap.set(parseInt(item.id), item.foto);
-                    });
-                    return {
-                        results: data.map(function(item) {
-                            return { id: parseInt(item.id), text: item.text };
-                        })
-                    };
-                }
-            },
-            minimumInputLength: 2
-        });
-
-        // Tampilkan foto saat produk dipilih
-        $(element).on('change', function() {
-            const selectedId = parseInt($(this).val());
-            const foto = productFotoMap.get(selectedId);
-            if (foto && fotoImg && previewContainer) {
-                $(fotoImg).attr('src', foto);
-                $(previewContainer).css('display', 'flex');
-            } else if (previewContainer) {
-                $(previewContainer).hide();
-                $(fotoImg).attr('src', '');
-            }
-        });
-    }
-
-    // ---- Tambah baris item ----
-    function addItem() {
-        const clone = template.content.cloneNode(true);
-        const row = clone.querySelector('.item-row');
-        row.innerHTML = row.innerHTML.replace(/INDEX/g, itemIndex);
-
-        const select = row.querySelector('.produk-select');
-        const previewDiv = row.querySelector('.foto-preview');
-        const fotoImg = row.querySelector('.foto-img');
-
-        container.appendChild(row);
-
-        // Inisialisasi Select2 + preview foto
-        initSelect2(select, previewDiv, fotoImg);
-
-        // Klik gambar untuk zoom
-        $(fotoImg).on('click', function() {
-            const src = $(this).attr('src');
-            if (src && !src.includes('no-image')) {
-                $('#zoomImage').attr('src', src);
-                $('#zoomModal').modal('show');
-            }
-        });
-
-        // Hitung ulang total jika jumlah atau harga berubah
-        row.querySelector('.jumlah').addEventListener('input', hitungTotal);
-        row.querySelector('.harga-satuan').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            hitungTotal();
-        });
-
-        // Tombol hapus baris
-        row.querySelector('.btn-remove-item').addEventListener('click', function() {
-            $(select).select2('destroy');
-            row.remove();
-            hitungTotal();
-        });
-
-        itemIndex++;
-        hitungTotal();
-    }
-
-    // ---- Event tombol tambah ----
-    document.getElementById('btnAddItem').addEventListener('click', addItem);
-
-    // Satu baris awal
-    if (container.children.length === 0) {
-        addItem();
-    }
-
-    // ---- Sinkronisasi pelanggan -> nama pembeli ----
-    const pelangganSelect = document.getElementById('pelanggan');
-    const namaPembeliInput = document.getElementById('nama_pembeli');
-
-    function syncNamaPembeli() {
-        const selectedOption = pelangganSelect.options[pelangganSelect.selectedIndex];
-        const namaPelanggan = selectedOption.getAttribute('data-nama');
-        if (namaPelanggan) {
-            namaPembeliInput.value = namaPelanggan;
-            namaPembeliInput.setAttribute('readonly', true);
-        } else {
-            namaPembeliInput.value = '';
-            namaPembeliInput.removeAttribute('readonly');
+        // ---- Fungsi bantuan ----
+        function formatRupiah(angka) {
+            return 'Rp ' + Number(angka).toLocaleString('id-ID');
         }
-    }
 
-    pelangganSelect.addEventListener('change', syncNamaPembeli);
-    syncNamaPembeli(); // inisialisasi
-});
+        function hitungSubtotal(row) {
+            const jumlah = row.querySelector('.jumlah')?.value || 0;
+            const harga = row.querySelector('.harga-satuan')?.value?.replace(/[^0-9]/g, '') || 0;
+            const sub = jumlah * harga;
+            const subtotalInput = row.querySelector('.subtotal');
+            if (subtotalInput) subtotalInput.value = formatRupiah(sub);
+            return sub;
+        }
+
+        function hitungTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                total += hitungSubtotal(row);
+            });
+            document.getElementById('totalKeseluruhan').innerText = formatRupiah(total);
+        }
+
+        // ---- Inisialisasi Select2 dengan Ajax ----
+        function initSelect2(element, previewContainer, fotoImg) {
+            $(element).select2({
+                placeholder: "-- Cari Produk (Merek - Motif - Warna) --",
+                allowClear: true,
+                width: '100%',
+                templateResult: function (option) {
+                    if (!option.id) return option.text;
+                    return option.text;
+                },
+                templateSelection: function (option) {
+                    if (!option.id) return option.text;
+                    return option.text;
+                },
+                ajax: {
+                    url: '<?= base_url("api/search/produk") ?>',
+                    dataType: 'json',
+                    delay: 300,
+                    type: 'GET',
+                    data: function (params) {
+                        return { keyword: params.term };
+                    },
+                    processResults: function (data) {
+                        data.forEach(function (item) {
+                            productFotoMap.set(parseInt(item.id), item.foto);
+                        });
+                        return {
+                            results: data.map(function (item) {
+                                return { id: parseInt(item.id), text: item.text };
+                            })
+                        };
+                    }
+                },
+                minimumInputLength: 2
+            });
+
+            // Tampilkan foto saat produk dipilih
+            $(element).on('change', function () {
+                const selectedId = parseInt($(this).val());
+                const foto = productFotoMap.get(selectedId);
+                if (foto && fotoImg && previewContainer) {
+                    $(fotoImg).attr('src', foto);
+                    $(previewContainer).css('display', 'flex');
+                } else if (previewContainer) {
+                    $(previewContainer).hide();
+                    $(fotoImg).attr('src', '');
+                }
+            });
+        }
+
+        // ---- Tambah baris item ----
+        function addItem() {
+            const clone = template.content.cloneNode(true);
+            const row = clone.querySelector('.item-row');
+            row.innerHTML = row.innerHTML.replace(/INDEX/g, itemIndex);
+
+            const select = row.querySelector('.produk-select');
+            const previewDiv = row.querySelector('.foto-preview');
+            const fotoImg = row.querySelector('.foto-img');
+
+            container.appendChild(row);
+
+            // Inisialisasi Select2 + preview foto
+            initSelect2(select, previewDiv, fotoImg);
+
+            // Klik gambar untuk zoom
+            $(fotoImg).on('click', function () {
+                const src = $(this).attr('src');
+                if (src && !src.includes('no-image')) {
+                    $('#zoomImage').attr('src', src);
+                    $('#zoomModal').modal('show');
+                }
+            });
+
+            // Hitung ulang total jika jumlah atau harga berubah
+            row.querySelector('.jumlah').addEventListener('input', hitungTotal);
+            row.querySelector('.harga-satuan').addEventListener('input', function (e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                hitungTotal();
+            });
+
+            // Tombol hapus baris
+            row.querySelector('.btn-remove-item').addEventListener('click', function () {
+                $(select).select2('destroy');
+                row.remove();
+                hitungTotal();
+            });
+
+            itemIndex++;
+            hitungTotal();
+        }
+
+        // ---- Event tombol tambah ----
+        document.getElementById('btnAddItem').addEventListener('click', addItem);
+
+        // Satu baris awal
+        if (container.children.length === 0) {
+            addItem();
+        }
+
+        // ---- Sinkronisasi pelanggan -> nama pembeli ----
+        const pelangganSelect = document.getElementById('pelanggan');
+        const namaPembeliInput = document.getElementById('nama_pembeli');
+
+        function syncNamaPembeli() {
+            const selectedOption = pelangganSelect.options[pelangganSelect.selectedIndex];
+            const namaPelanggan = selectedOption.getAttribute('data-nama');
+            if (namaPelanggan) {
+                namaPembeliInput.value = namaPelanggan;
+                namaPembeliInput.setAttribute('readonly', true);
+            } else {
+                namaPembeliInput.value = '';
+                namaPembeliInput.removeAttribute('readonly');
+            }
+        }
+
+        pelangganSelect.addEventListener('change', syncNamaPembeli);
+        syncNamaPembeli(); // inisialisasi
+    });
 </script>
 
 <style>
@@ -275,15 +293,17 @@ document.addEventListener('DOMContentLoaded', function() {
         border-radius: 8px;
         margin-bottom: 10px;
     }
+
     .foto-preview {
         margin-top: 8px;
         display: none;
         align-items: center;
         gap: 8px;
     }
+
     .foto-img {
-        width: 100px;
-        height: 100px;
+        width: 80px;
+        height: 80px;
         object-fit: cover;
         border-radius: 8px;
         border: 1px solid #ddd;
