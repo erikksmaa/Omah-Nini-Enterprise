@@ -32,7 +32,7 @@ class Supplier extends BaseController
         $pager = $this->supplierModel->pager;
         
         $data = [
-            'title' => 'Kelola Data Supplier',
+            'title' => 'Kelola Data Merek',
             'supplier' => $supplier,
             'pager' => $pager,
             'keyword' => $keyword

@@ -1,189 +1,394 @@
 <?= $this->extend('layout/main') ?>
-
 <?= $this->section('content') ?>
-<div class="container-fluid px-2 px-md-3">
-    <!-- FORM TAMBAH SUPPLIER -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-truck"></i> Tambah Merk</h5>
-        </div>
-        <div class="card-body p-3">
-            <?php if (session()->getFlashdata('validation_errors')): ?>
-                <div class="alert alert-danger">
-                    <?php foreach (session()->getFlashdata('validation_errors') as $error): ?>
-                        <p class="mb-0"><?= $error ?></p>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
 
-            <form action="<?= base_url('admin/supplier/store') ?>" method="POST">
-                <?= csrf_field() ?>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label>Nama Merk <span class="text-danger">*</span></label>
-                            <input type="text" name="nama" 
-                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
-                                value="<?= old('nama') ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label>Kontak <span class="text-danger">*</span></label>
-                            <input type="text" name="kontak"
-                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
-                                value="<?= old('kontak') ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label>Email</label>
-                            <input type="email" name="email"
-                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
-                                value="<?= old('email') ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label>Alamat</label>
-                            <input type="text" name="alamat"
-                                class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
-                                value="<?= old('alamat') ?>">
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save"></i> Simpan Merk
-                </button>
-            </form>
+<?php
+// Reopen add modal automatically if there are validation errors
+if (session()->getFlashdata('validation_errors')): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', () =>
+        new bootstrap.Modal(document.getElementById('addModal')).show()
+    );
+</script>
+<?php endif; ?>
+
+<div class="container-fluid px-2 px-md-4">
+
+    <!-- ── Page Header ─────────────────────────────────────────────── -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-tags text-primary me-2"></i>Master Merk
+            </h4>
+            <p class="text-muted small mb-0 mt-1">Kelola data merk &amp; supplier produk</p>
         </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="bi bi-plus-circle me-1"></i> Tambah Merk
+        </button>
     </div>
 
-    <!-- TABEL DAFTAR SUPPLIER -->
-    <div class="card">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Merk</h5>
-            <!-- Form Search -->
-            <form method="GET" class="d-flex">
-                <input type="text" name="keyword" class="form-control form-control-sm me-2" style="width: 250px;"
-                    placeholder="Cari nama/kontak/email..." value="<?= esc($keyword ?? '') ?>">
-                <button type="submit" class="btn btn-light btn-sm">
-                    <i class="bi bi-search"></i>
-                </button>
-                <?php if (!empty($keyword)): ?>
-                    <a href="<?= base_url('admin/kategori') ?>" class="btn btn-outline-light btn-sm ms-2">
-                        <i class="bi bi-x-circle"></i>
+    <!-- ── Main Card ───────────────────────────────────────────────── -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-3 p-md-4">
+
+            <!-- Filter Bar -->
+            <form method="GET" id="filterForm" class="row g-2 align-items-end mb-4">
+                <div class="col-12 col-md-5">
+                    <label class="form-label small fw-semibold text-muted mb-1">Pencarian</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" name="keyword" class="form-control border-start-0 ps-0"
+                            placeholder="Cari nama, kontak, email..."
+                            value="<?= esc($keyword ?? '') ?>">
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-semibold text-muted mb-1">Tampilkan</label>
+                    <select name="per_page" class="form-select">
+                        <?php foreach ([10, 25, 50, 100] as $n): ?>
+                            <option value="<?= $n ?>" <?= (($per_page ?? 10) == $n) ? 'selected' : '' ?>>
+                                <?= $n ?> data
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                    <a href="<?= base_url('admin/supplier') ?>"
+                       class="btn btn-outline-secondary flex-grow-1">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
                     </a>
-                <?php endif; ?>
+                </div>
             </form>
-        </div>
-        <div class="card-body p-3">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th width="5%">No</th>
-                            <th width="25%">Nama Merk</th>
-                            <th width="15%">Kontak</th>
-                            <th width="20%">Email</th>
-                            <th width="20%">Alamat</th>
-                            <th width="15%">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($supplier) && is_array($supplier)): ?>
-                            <?php
-                            $currentPage = $pager->getCurrentPage();
-                            $perPage = 10;
-                            $no = ($currentPage - 1) * $perPage + 1;
-                            ?>
-                            <?php foreach ($supplier as $item): ?>
+
+            <!-- ── Desktop Table ──────────────────────────────────── -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center text-muted small" style="width:5%">#</th>
+                                <th class="sort-header" data-col="1" style="cursor:pointer;user-select:none">
+                                    Nama Merk
+                                    <i class="bi bi-arrow-up-down ms-1 text-muted small sort-icon"></i>
+                                </th>
+                                <th class="sort-header" data-col="2" style="cursor:pointer;user-select:none">
+                                    Kontak
+                                    <i class="bi bi-arrow-up-down ms-1 text-muted small sort-icon"></i>
+                                </th>
+                                <th class="sort-header" data-col="3" style="cursor:pointer;user-select:none">
+                                    Email
+                                    <i class="bi bi-arrow-up-down ms-1 text-muted small sort-icon"></i>
+                                </th>
+                                <th class="sort-header" data-col="4" style="cursor:pointer;user-select:none">
+                                    Alamat
+                                    <i class="bi bi-arrow-up-down ms-1 text-muted small sort-icon"></i>
+                                </th>
+                                <th class="text-center" style="width:12%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainTableBody">
+                            <?php if (!empty($supplier) && is_array($supplier)): ?>
+                                <?php
+                                $currentPage = $pager->getCurrentPage();
+                                $perPage     = $per_page ?? 10;
+                                $no          = ($currentPage - 1) * $perPage + 1;
+                                ?>
+                                <?php foreach ($supplier as $item): ?>
+                                    <tr>
+                                        <td class="text-center text-muted small"><?= $no++ ?></td>
+                                        <td class="fw-semibold"><?= esc($item['nama']) ?></td>
+                                        <td>
+                                            <?php if (!empty($item['kontak'])): ?>
+                                                <i class="bi bi-telephone text-muted me-1 small"></i><?= esc($item['kontak']) ?>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="small">
+                                            <?php if (!empty($item['email'])): ?>
+                                                <i class="bi bi-envelope text-muted me-1 small"></i><?= esc($item['email']) ?>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="small text-muted"><?= esc($item['alamat']) ?: '-' ?></td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button class="btn btn-sm btn-warning btn-edit"
+                                                    data-id="<?= $item['id'] ?>"
+                                                    data-nama="<?= esc($item['nama']) ?>"
+                                                    data-kontak="<?= esc($item['kontak']) ?>"
+                                                    data-email="<?= esc($item['email']) ?>"
+                                                    data-alamat="<?= esc($item['alamat']) ?>"
+                                                    title="Edit Merk">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <a href="#" class="btn btn-sm btn-danger"
+                                                    onclick="return confirmDelete('<?= base_url('admin/supplier/delete/' . $item['id']) ?>', '<?= esc($item['nama']) ?>', 'Merk')"
+                                                    title="Hapus Merk">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><?= $no++ ?></td>
-                                    <td><strong><?= esc($item['nama']) ?></strong></td>
-                                    <td><?= esc($item['kontak']) ?></td>
-                                    <td><?= esc($item['email']) ?: '-' ?></td>
-                                    <td><?= esc($item['alamat']) ?: '-' ?></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
-                                            data-bs-target="#editModal<?= $item['id'] ?>">
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
+                                        <?= !empty($keyword)
+                                            ? 'Merk "<strong>' . esc($keyword) . '</strong>" tidak ditemukan'
+                                            : 'Belum ada data merk' ?>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer: count + pagination -->
+                <?php if (isset($pager) && $pager && $pager->getTotal() > 0): ?>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            Menampilkan <strong><?= count($supplier) ?></strong>
+                            dari <strong><?= $pager->getTotal() ?></strong> data
+                        </small>
+                        <div><?= $pager->links('default', 'bootstrap_pagination') ?></div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- ── Mobile Cards ────────────────────────────────────── -->
+            <div class="d-md-none">
+                <?php if (!empty($supplier) && is_array($supplier)): ?>
+                    <?php foreach ($supplier as $item): ?>
+                        <div class="card border mb-2">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="flex-grow-1 min-w-0">
+                                        <p class="fw-bold mb-1 text-truncate"><?= esc($item['nama']) ?></p>
+                                        <?php if (!empty($item['kontak'])): ?>
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-telephone me-1"></i><?= esc($item['kontak']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['email'])): ?>
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-envelope me-1"></i><?= esc($item['email']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($item['alamat'])): ?>
+                                            <p class="text-muted small mb-0">
+                                                <i class="bi bi-geo-alt me-1"></i><?= esc($item['alamat']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="d-flex gap-1 flex-shrink-0">
+                                        <button class="btn btn-sm btn-warning btn-edit"
+                                            data-id="<?= $item['id'] ?>"
+                                            data-nama="<?= esc($item['nama']) ?>"
+                                            data-kontak="<?= esc($item['kontak']) ?>"
+                                            data-email="<?= esc($item['email']) ?>"
+                                            data-alamat="<?= esc($item['alamat']) ?>">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <a href="#" class="btn btn-sm btn-danger"
-                                            onclick="return confirmDelete('<?= base_url('admin/supplier/delete/' . $item['id']) ?>', '<?= esc($item['nama']) ?>', 'Supplier')">
+                                            onclick="return confirmDelete('<?= base_url('admin/supplier/delete/' . $item['id']) ?>', '<?= esc($item['nama']) ?>', 'Merk')">
                                             <i class="bi bi-trash"></i>
                                         </a>
-                                    </td>
-                                </tr>
-
-                                <!-- MODAL EDIT SUPPLIER -->
-                                <div class="modal fade" id="editModal<?= $item['id'] ?>" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-warning">
-                                                <h5 class="modal-title">Edit Merk: <?= esc($item['nama']) ?></h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form action="<?= base_url('admin/supplier/update/' . $item['id']) ?>"
-                                                method="POST">
-                                                <?= csrf_field() ?>
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label>Nama Merk <span class="text-danger">*</span></label>
-                                                        <input type="text" name="nama"
-                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['nama'])) ? 'is-invalid' : '' ?>"
-                                                            value="<?= old('nama', esc($item['nama'])) ?>">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label>Kontak <span class="text-danger">*</span></label>
-                                                        <input type="text" name="kontak"
-                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['kontak'])) ? 'is-invalid' : '' ?>"
-                                                            value="<?= old('kontak', esc($item['kontak'])) ?>">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label>Email</label>
-                                                        <input type="email" name="email"
-                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['email'])) ? 'is-invalid' : '' ?>"
-                                                            value="<?= old('email', esc($item['email'])) ?>">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label>Alamat</label>
-                                                        <textarea name="alamat"
-                                                            class="form-control <?= (session()->getFlashdata('validation_errors') && isset(session()->getFlashdata('validation_errors')['alamat'])) ? 'is-invalid' : '' ?>"
-                                                            rows="2"><?= old('alamat', esc($item['alamat'])) ?></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                    <button type="submit" class="btn btn-warning">Update</button>
-                                                </div>
-                                            </form>
-                                        </div>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center">
-                                    <?= !empty($keyword) ? 'Merk "' . esc($keyword) . '" tidak ditemukan' : 'Belum ada data merk' ?>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-3 d-block mb-2 opacity-50"></i>
+                        <?= !empty($keyword) ? 'Tidak ada hasil untuk "' . esc($keyword) . '"' : 'Belum ada data merk' ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($pager) && $pager && $pager->getTotal() > 0): ?>
+                    <div class="d-flex justify-content-center mt-3 pt-2 border-top">
+                        <?= $pager->links('default', 'bootstrap_pagination') ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <!-- Pagination -->
-            <?php if (isset($pager) && $pager && $pager->getTotal() > 0): ?>
-                <div class="mt-4 d-flex justify-content-center">
-                    <?= $pager->links('default', 'bootstrap_pagination') ?>
+        </div><!-- /card-body -->
+    </div><!-- /card -->
+</div><!-- /container -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL: Tambah Merk
+═══════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-primary text-white rounded-top">
+                <h5 class="modal-title fw-semibold" id="addModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Tambah Merk Baru
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="<?= base_url('admin/supplier/store') ?>" method="POST">
+                <?= csrf_field() ?>
+                <div class="modal-body p-4">
+
+                    <?php if (session()->getFlashdata('validation_errors')): ?>
+                        <div class="alert alert-danger py-2 small">
+                            <?php foreach (session()->getFlashdata('validation_errors') as $err): ?>
+                                <div><i class="bi bi-exclamation-circle me-1"></i><?= $err ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">
+                            Nama Merk <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="nama" class="form-control"
+                            placeholder="Contoh: Batik Keris, Danar Hadi..."
+                            value="<?= old('nama') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">
+                            Kontak <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="kontak" class="form-control"
+                            placeholder="08xxxxxxxxxx"
+                            value="<?= old('kontak') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Email</label>
+                        <input type="email" name="email" class="form-control"
+                            placeholder="email@domain.com"
+                            value="<?= old('email') ?>">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold small">Alamat</label>
+                        <textarea name="alamat" class="form-control" rows="2"
+                            placeholder="Alamat lengkap..."><?= old('alamat') ?></textarea>
+                    </div>
+
                 </div>
-                <div class="text-center text-muted small mt-2">
-                    Menampilkan <?= count($supplier) ?> dari <?= $pager->getTotal() ?> data
+                <div class="modal-footer bg-light rounded-bottom">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Simpan Merk
+                    </button>
                 </div>
-            <?php endif; ?>
+            </form>
+
         </div>
     </div>
 </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL: Edit Merk (single shared modal, populated via JS)
+═══════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-warning rounded-top">
+                <h5 class="modal-title fw-semibold" id="editModalLabel">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Merk
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="editForm" method="POST">
+                <?= csrf_field() ?>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">
+                            Nama Merk <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="nama" id="edit_nama" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">
+                            Kontak <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="kontak" id="edit_kontak" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Email</label>
+                        <input type="email" name="email" id="edit_email" class="form-control">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold small">Alamat</label>
+                        <textarea name="alamat" id="edit_alamat" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light rounded-bottom">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Batal
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save me-1"></i>Update Merk
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // ── Edit Modal Handler ──────────────────────────────────────────
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_nama').value    = this.dataset.nama    ?? '';
+            document.getElementById('edit_kontak').value  = this.dataset.kontak  ?? '';
+            document.getElementById('edit_email').value   = this.dataset.email   ?? '';
+            document.getElementById('edit_alamat').value  = this.dataset.alamat  ?? '';
+            document.getElementById('editForm').action    =
+                `<?= base_url('admin/supplier/update') ?>/${this.dataset.id}`;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        });
+    });
+
+    // ── Client-side Table Sort ──────────────────────────────────────
+    document.querySelectorAll('.sort-header').forEach(th => {
+        th.addEventListener('click', function () {
+            const col   = parseInt(this.dataset.col);
+            const tbody = document.getElementById('mainTableBody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const asc  = this.dataset.order !== 'asc';
+            this.dataset.order = asc ? 'asc' : 'desc';
+
+            // Reset all sort icons
+            document.querySelectorAll('.sort-header').forEach(t => {
+                t.querySelector('.sort-icon').className =
+                    'bi bi-arrow-up-down ms-1 text-muted small sort-icon';
+            });
+            this.querySelector('.sort-icon').className =
+                `bi bi-arrow-${asc ? 'up' : 'down'} ms-1 text-primary small sort-icon`;
+
+            rows.sort((a, b) => {
+                const av = (a.cells[col]?.textContent ?? '').trim();
+                const bv = (b.cells[col]?.textContent ?? '').trim();
+                return asc
+                    ? av.localeCompare(bv, 'id', { sensitivity: 'base' })
+                    : bv.localeCompare(av, 'id', { sensitivity: 'base' });
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        });
+    });
+</script>
+
 <?= $this->endSection() ?>

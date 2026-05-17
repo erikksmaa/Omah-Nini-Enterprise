@@ -20,95 +20,73 @@ class Produk extends BaseController
     public function __construct()
     {
         helper("image");
-        $this->produkModel = new ProdukModel();
+        $this->produkModel   = new ProdukModel();
         $this->supplierModel = new SupplierModel();
-        $this->motifModel = new MotifModel();
-        $this->warnaModel = new WarnaModel();
+        $this->motifModel    = new MotifModel();
+        $this->warnaModel    = new WarnaModel();
     }
 
+    // =========================================================
+    //  INDEX — Tabel flat + paginasi + filter server-side
+    // =========================================================
     public function index()
     {
-        // Ambil parameter filter dari GET
-        $keyword = $this->request->getGet('keyword');
-        $filter_supplier = $this->request->getGet('filter_supplier');
-        $filter_motif = $this->request->getGet('filter_motif');
-        $filter_warna = $this->request->getGet('filter_warna');
-        $filter_stok = $this->request->getGet('filter_stok');
+        $supplierId = $this->request->getGet('supplier');
+        $keyword    = $this->request->getGet('keyword');
 
-        $perPage = 10;
-
-        $builder = $this->produkModel->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+        // ── Query utama (paginasi) ──────────────────────────
+        $builder = $this->produkModel
+            ->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id,
+                      motif.nama_motif, motif.id as motif_id,
+                      warna.nama_warna, warna.id as warna_id')
             ->join('supplier', 'supplier.id = produk.id_supplier')
-            ->join('motif', 'motif.id = produk.id_motif')
-            ->join('warna', 'warna.id = produk.id_warna')
-            ->orderBy('produk.id', 'DESC');
+            ->join('motif',    'motif.id    = produk.id_motif')
+            ->join('warna',    'warna.id    = produk.id_warna');
 
-        // Filter berdasarkan keyword (search)
+        if (!empty($supplierId)) {
+            $builder->where('produk.id_supplier', $supplierId);
+        }
+
         if (!empty($keyword)) {
             $builder->groupStart()
-                ->like('produk.sku', $keyword)
+                ->like('produk.sku',         $keyword)
                 ->orLike('motif.nama_motif', $keyword)
                 ->orLike('warna.nama_warna', $keyword)
-                ->orLike('supplier.nama', $keyword)
-                ->groupEnd();
+                ->orLike('supplier.nama',    $keyword)
+            ->groupEnd();
         }
 
-        // Filter berdasarkan supplier
-        if (!empty($filter_supplier)) {
-            $builder->where('produk.id_supplier', $filter_supplier);
-        }
+        $produk = $builder
+            ->orderBy('supplier.nama',    'ASC')
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->orderBy('warna.nama_warna', 'ASC')
+            ->paginate(15);
 
-        // Filter berdasarkan motif
-        if (!empty($filter_motif)) {
-            $builder->where('produk.id_motif', $filter_motif);
-        }
+        // ── Summary global (tidak terpengaruh filter) ───────
+        $allProducts = $this->produkModel
+            ->select('produk.id, produk.stok, produk.id_supplier, produk.id_motif')
+            ->findAll();
 
-        // Filter berdasarkan warna
-        if (!empty($filter_warna)) {
-            $builder->where('produk.id_warna', $filter_warna);
-        }
-
-        // Filter berdasarkan status stok
-        if (!empty($filter_stok)) {
-            switch ($filter_stok) {
-                case 'menipis':
-                    $builder->where('produk.stok <= produk.min_stok')
-                        ->where('produk.stok >', 0);
-                    break;
-                case 'habis':
-                    $builder->where('produk.stok', 0);
-                    break;
-                case 'aman':
-                    $builder->where('produk.stok > produk.min_stok');
-                    break;
-            }
-        }
-
-        $produk = $builder->paginate($perPage);
-        $pager = $this->produkModel->pager;
-
-        // Data untuk dropdown filter
         $data = [
-            'title' => 'Kelola Data Produk',
-            'produk' => $produk,
-            'pager' => $pager,
-            'keyword' => $keyword,
-            'filter_supplier' => $filter_supplier,
-            'filter_motif' => $filter_motif,
-            'filter_warna' => $filter_warna,
-            'filter_stok' => $filter_stok,
-            'suppliers' => $this->supplierModel->getOptions(),
-            'motifs' => $this->motifModel->getOptions(),
-            'warnas' => $this->warnaModel->getOptions(),
-            'motif_by_supplier' => $this->getMotifBySupplierForFilter($filter_supplier)
+            'title'            => 'Master Produk',
+            'produk'           => $produk,
+            'pager'            => $this->produkModel->pager,
+            'suppliers'        => $this->supplierModel->findAll(),
+            'selectedSupplier' => $supplierId,
+            'keyword'          => $keyword,
+            'total_merek'      => count(array_unique(array_column($allProducts, 'id_supplier'))),
+            'total_motif'      => count(array_unique(array_column($allProducts, 'id_motif'))),
+            'total_sku'        => count($allProducts),
+            'total_stok'       => (int) array_sum(array_column($allProducts, 'stok')),
         ];
 
         return view('admin/produk/index', $data);
     }
 
-    /**
-     * Get motif by supplier untuk dropdown filter (AJAX & direct)
-     */
+    // =========================================================
+    //  Selebihnya tidak berubah
+    // =========================================================
+
     private function getMotifBySupplierForFilter($id_supplier)
     {
         if (empty($id_supplier)) {
@@ -120,10 +98,10 @@ class Produk extends BaseController
     public function create()
     {
         $data = [
-            'title' => 'Tambah Produk Baru',
+            'title'     => 'Tambah Produk Baru',
             'suppliers' => $this->supplierModel->getOptions(),
-            'motifs' => $this->motifModel->getOptions(),
-            'warnas' => $this->warnaModel->getOptions()
+            'motifs'    => $this->motifModel->getOptions(),
+            'warnas'    => $this->warnaModel->getOptions(),
         ];
 
         return view('admin/produk/create', $data);
@@ -131,24 +109,20 @@ class Produk extends BaseController
 
     public function store()
     {
-        // Ambil SKU dari input
         $sku = $this->request->getPost('sku');
 
-        // Generate SKU jika tidak diisi
         if (empty($sku)) {
             $id_supplier = $this->request->getPost('id_supplier');
-            $id_motif = $this->request->getPost('id_motif');
-            $id_warna = $this->request->getPost('id_warna');
+            $id_motif    = $this->request->getPost('id_motif');
+            $id_warna    = $this->request->getPost('id_warna');
 
             if (!empty($id_supplier) && !empty($id_motif) && !empty($id_warna)) {
                 $sku = $this->produkModel->generateSku($id_supplier, $id_motif, $id_warna);
             }
         }
 
-        // Set SKU ke request agar tervalidasi
         $_POST['sku'] = $sku;
 
-        // Validasi menggunakan rules dari model
         if (!$this->validate($this->produkModel->validationRules, $this->produkModel->validationMessages)) {
             return redirect()->back()
                 ->withInput()
@@ -161,22 +135,20 @@ class Produk extends BaseController
             $fotoName = uploadAndResizeImage($fotoFile);
         }
 
-
         try {
             $this->produkModel->save([
-                'sku' => $sku,
+                'sku'         => $sku,
                 'id_supplier' => $this->request->getPost('id_supplier'),
-                'id_motif' => $this->request->getPost('id_motif'),
-                'id_warna' => $this->request->getPost('id_warna'),
-                'stok' => $this->request->getPost('stok') ?? 0,
-                'min_stok' => $this->request->getPost('min_stok') ?? 0,
-                'keterangan' => $this->request->getPost('keterangan'),
-                'foto' => $fotoName,
+                'id_motif'    => $this->request->getPost('id_motif'),
+                'id_warna'    => $this->request->getPost('id_warna'),
+                'stok'        => $this->request->getPost('stok') ?? 0,
+                'min_stok'    => $this->request->getPost('min_stok') ?? 0,
+                'keterangan'  => $this->request->getPost('keterangan'),
+                'foto'        => $fotoName,
             ]);
 
             return redirect()->to('/admin/produk')
                 ->with('success', 'Produk berhasil ditambahkan.');
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -193,11 +165,11 @@ class Produk extends BaseController
         }
 
         $data = [
-            'title' => 'Edit Produk',
-            'produk' => $produk,
+            'title'     => 'Edit Produk',
+            'produk'    => $produk,
             'suppliers' => $this->supplierModel->getOptions(),
-            'motifs' => $this->motifModel->getOptions(),
-            'warnas' => $this->warnaModel->getOptions()
+            'motifs'    => $this->motifModel->getOptions(),
+            'warnas'    => $this->warnaModel->getOptions(),
         ];
 
         return view('admin/produk/edit', $data);
@@ -205,18 +177,15 @@ class Produk extends BaseController
 
     public function update($id)
     {
-        // Cek apakah produk ada
         $produk = $this->produkModel->find($id);
         if (!$produk) {
             return redirect()->back()
                 ->with('error', 'Data produk tidak ditemukan.');
         }
 
-        // Ambil SKU dari form
         $newSku = trim($this->request->getPost('sku'));
         $oldSku = trim($produk['sku']);
 
-        // Validasi SKU: cek unique jika diubah
         $error = null;
         if ($newSku !== $oldSku) {
             $existing = $this->produkModel->where('sku', $newSku)->where('id !=', $id)->first();
@@ -225,26 +194,24 @@ class Produk extends BaseController
             }
         }
 
-        // Validasi field lainnya (tanpa SKU)
         $rules = [
             'id_supplier' => 'required|numeric',
-            'id_motif' => 'required|numeric',
-            'id_warna' => 'required|numeric',
-            'stok' => 'required|numeric|greater_than_equal_to[0]',
-            'min_stok' => 'permit_empty|numeric|greater_than_equal_to[0]',
-            'foto' => 'permit_empty|is_image[foto]|max_size[foto,5120]'
+            'id_motif'    => 'required|numeric',
+            'id_warna'    => 'required|numeric',
+            'stok'        => 'required|numeric|greater_than_equal_to[0]',
+            'min_stok'    => 'permit_empty|numeric|greater_than_equal_to[0]',
+            'foto'        => 'permit_empty|is_image[foto]|max_size[foto,5120]',
         ];
 
         $messages = [
             'id_supplier' => ['required' => 'Supplier wajib dipilih.'],
-            'id_motif' => ['required' => 'Motif wajib dipilih.'],
-            'id_warna' => ['required' => 'Warna wajib dipilih.'],
-            'stok' => [
-                'required' => 'Stok wajib diisi.',
-                'greater_than_equal_to' => 'Stok tidak boleh negatif.'
-            ]
+            'id_motif'    => ['required' => 'Motif wajib dipilih.'],
+            'id_warna'    => ['required' => 'Warna wajib dipilih.'],
+            'stok'        => [
+                'required'              => 'Stok wajib diisi.',
+                'greater_than_equal_to' => 'Stok tidak boleh negatif.',
+            ],
         ];
-
 
         if (!$this->validate($rules, $messages)) {
             return redirect()->back()
@@ -252,25 +219,22 @@ class Produk extends BaseController
                 ->with('errors', $this->validator->getErrors());
         }
 
-        // Jika ada error SKU, kembalikan
         if ($error) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', $error);
         }
 
-
         $updateData = [
-            'sku' => $this->request->getPost('sku'),
+            'sku'         => $this->request->getPost('sku'),
             'id_supplier' => $this->request->getPost('id_supplier'),
-            'id_motif' => $this->request->getPost('id_motif'),
-            'id_warna' => $this->request->getPost('id_warna'),
-            'stok' => $this->request->getPost('stok') ?? 0,
-            'min_stok' => $this->request->getPost('min_stok') ?? 0,
-            'keterangan' => $this->request->getPost('keterangan'),
+            'id_motif'    => $this->request->getPost('id_motif'),
+            'id_warna'    => $this->request->getPost('id_warna'),
+            'stok'        => $this->request->getPost('stok') ?? 0,
+            'min_stok'    => $this->request->getPost('min_stok') ?? 0,
+            'keterangan'  => $this->request->getPost('keterangan'),
         ];
 
-        // Upload gambar baru jika ada
         $fotoFile = $this->request->getFile('foto');
         if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
             $fotoName = uploadAndResizeImage($fotoFile, $produk['foto']);
@@ -279,13 +243,11 @@ class Produk extends BaseController
             }
         }
 
-
         try {
             $this->produkModel->update($id, $updateData);
 
             return redirect()->to('/admin/produk')
                 ->with('success', 'Produk berhasil diperbarui.');
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -301,7 +263,6 @@ class Produk extends BaseController
                 ->with('error', 'Data produk tidak ditemukan.');
         }
 
-        // Cek apakah produk memiliki relasi di detail_pembelian atau detail_transaksi
         $detailPembelianModel = new DetailPembelianModel();
         $detailTransaksiModel = new DetailTransaksiModel();
 
@@ -310,10 +271,9 @@ class Produk extends BaseController
 
         if ($pembelianCount > 0 || $transaksiCount > 0) {
             return redirect()->back()
-                ->with('error', "Produk tidak bisa dihapus karena sudah memiliki riwayat transaksi.");
+                ->with('error', 'Produk tidak bisa dihapus karena sudah memiliki riwayat transaksi.');
         }
 
-        // Hapus file foto jika ada
         if (!empty($produk['foto'])) {
             deleteImage($produk['foto']);
         }
@@ -322,76 +282,46 @@ class Produk extends BaseController
             $this->produkModel->delete($id);
             return redirect()->to('/admin/produk')
                 ->with('success', 'Produk berhasil dihapus.');
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
         }
     }
 
-    /**
-     * AJAX: Get motif by supplier (untuk filter dan form)
-     */
     public function getMotifBySupplier()
     {
         $id_supplier = $this->request->getPost('id_supplier');
-        $motifs = $this->motifModel->where('id_supplier', $id_supplier)->findAll();
+        $motifs      = $this->motifModel->where('id_supplier', $id_supplier)->findAll();
 
-        return $this->response->setJSON([
-            'status' => 'success',
-            'data' => $motifs
-        ]);
+        return $this->response->setJSON(['status' => 'success', 'data' => $motifs]);
     }
 
-    /**
-     * AJAX: Get motif by supplier untuk filter dropdown
-     */
     public function getMotifBySupplierAjax()
     {
         $id_supplier = $this->request->getGet('id_supplier');
-        $motifs = $this->motifModel->where('id_supplier', $id_supplier)->findAll();
+        $motifs      = $this->motifModel->where('id_supplier', $id_supplier)->findAll();
 
-        return $this->response->setJSON([
-            'status' => 'success',
-            'data' => $motifs
-        ]);
+        return $this->response->setJSON(['status' => 'success', 'data' => $motifs]);
     }
 
-    /**
-     * AJAX: Generate SKU
-     */
     public function generateSku()
     {
         $id_supplier = $this->request->getPost('id_supplier');
-        $id_motif = $this->request->getPost('id_motif');
-        $id_warna = $this->request->getPost('id_warna');
+        $id_motif    = $this->request->getPost('id_motif');
+        $id_warna    = $this->request->getPost('id_warna');
 
         if (empty($id_supplier)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Supplier harus dipilih terlebih dahulu.'
-            ]);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Supplier harus dipilih terlebih dahulu.']);
         }
-
         if (empty($id_motif)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Motif harus dipilih terlebih dahulu.'
-            ]);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Motif harus dipilih terlebih dahulu.']);
         }
-
         if (empty($id_warna)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Warna harus dipilih terlebih dahulu.'
-            ]);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Warna harus dipilih terlebih dahulu.']);
         }
 
         $sku = $this->produkModel->generateSku($id_supplier, $id_motif, $id_warna);
 
-        return $this->response->setJSON([
-            'status' => 'success',
-            'sku' => $sku
-        ]);
+        return $this->response->setJSON(['status' => 'success', 'sku' => $sku]);
     }
 }

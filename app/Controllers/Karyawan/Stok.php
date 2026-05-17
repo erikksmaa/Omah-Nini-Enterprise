@@ -26,60 +26,65 @@ class Stok extends BaseController
         $this->warnaModel    = new WarnaModel();
     }
 
-    /**
-     * Halaman utama manajemen stok
-     * Menampilkan semua produk dengan filter supplier dan status stok
-     */
+    // =========================================================
+    //  INDEX — Tree nested (Brand → Motif → Produk)
+    //  Filter & search ditangani JS di sisi client
+    // =========================================================
     public function index()
     {
-        // Data filter
-        $supplierId = $this->request->getGet('supplier');
-        $status     = $this->request->getGet('status'); // menipis, habis, aman, semua
-
-        // Build query dasar
-        $builder = $this->produkModel
-            ->select('produk.*, supplier.nama as nama_supplier, motif.nama_motif, warna.nama_warna')
+        $allProducts = $this->produkModel
+            ->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id,
+                      motif.nama_motif, motif.id as motif_id,
+                      warna.nama_warna, warna.id as warna_id')
             ->join('supplier', 'supplier.id = produk.id_supplier')
-            ->join('motif', 'motif.id = produk.id_motif')
-            ->join('warna', 'warna.id = produk.id_warna');
+            ->join('motif',    'motif.id    = produk.id_motif')
+            ->join('warna',    'warna.id    = produk.id_warna')
+            ->orderBy('supplier.nama',    'ASC')
+            ->orderBy('motif.nama_motif', 'ASC')
+            ->orderBy('warna.nama_warna', 'ASC')
+            ->findAll();
 
-        // Filter supplier
-        if (!empty($supplierId)) {
-            $builder->where('produk.id_supplier', $supplierId);
+        // ── Bangun struktur tree ────────────────────────────
+        $tree = [];
+        foreach ($allProducts as $p) {
+            $supId   = $p['supplier_id'];
+            $motifId = $p['motif_id'];
+
+            if (!isset($tree[$supId])) {
+                $tree[$supId] = [
+                    'id'         => $supId,
+                    'nama'       => $p['nama_supplier'],
+                    'motif'      => [],
+                    'total_stok' => 0,
+                ];
+            }
+
+            if (!isset($tree[$supId]['motif'][$motifId])) {
+                $tree[$supId]['motif'][$motifId] = [
+                    'id'         => $motifId,
+                    'nama'       => $p['nama_motif'],
+                    'produk'     => [],
+                    'total_stok' => 0,
+                ];
+            }
+
+            $tree[$supId]['motif'][$motifId]['produk'][]         = $p;
+            $tree[$supId]['total_stok']                          += (int) $p['stok'];
+            $tree[$supId]['motif'][$motifId]['total_stok']       += (int) $p['stok'];
         }
 
-        // Filter status
-        if ($status === 'menipis') {
-            $builder->where('produk.stok <= produk.min_stok')
-                    ->where('produk.stok >', 0);
-        } elseif ($status === 'habis') {
-            $builder->where('produk.stok', 0);
-        } elseif ($status === 'aman') {
-            $builder->where('produk.stok > produk.min_stok');
-        }
-        // Jika 'semua' atau kosong, tampilkan semua
-
-        $produk = $builder->orderBy('produk.stok', 'ASC')
-                          ->paginate(15);
-
-        // Data untuk view
         $data = [
-            'title'           => 'Manajemen Stok',
-            'produk'          => $produk,
-            'pager'           => $this->produkModel->pager,
-            'suppliers'       => $this->supplierModel->findAll(),
-            'selectedSupplier'=> $supplierId,
-            'selectedStatus'  => $status,
-            'total_produk'    => $this->produkModel->countAllResults(),
-            'total_stok'      => $this->produkModel->getTotalStockQuantity(),
+            'title' => 'Kelola Stok',
+            'tree'  => $tree,
         ];
 
         return view('karyawan/stok/index', $data);
     }
 
-    /**
-     * Detail stok satu produk, termasuk riwayat perubahannya
-     */
+    // =========================================================
+    //  Selebihnya tidak berubah
+    // =========================================================
+
     public function detail($id)
     {
         $produk = $this->produkModel->getByIdWithRelations($id);
@@ -88,7 +93,6 @@ class Stok extends BaseController
             return redirect()->to('/karyawan/stok')->with('error', 'Produk tidak ditemukan.');
         }
 
-        // Ambil log stok khusus produk ini
         $logStok = $this->logStokModel
             ->select('log_stok.*, users.username')
             ->join('users', 'users.user_id = log_stok.id_user')
@@ -106,9 +110,6 @@ class Stok extends BaseController
         return view('karyawan/stok/detail', $data);
     }
 
-    /**
-     * Form opname (penyesuaian stok)
-     */
     public function opname($id)
     {
         $produk = $this->produkModel->getByIdWithRelations($id);
@@ -125,9 +126,6 @@ class Stok extends BaseController
         return view('karyawan/stok/opname', $data);
     }
 
-    /**
-     * Proses update stok opname
-     */
     public function updateOpname($id)
     {
         $produk = $this->produkModel->find($id);
@@ -136,27 +134,25 @@ class Stok extends BaseController
         }
 
         $rules = [
-            'stok_baru' => 'required|integer|greater_than_equal_to[0]',
-            'keterangan'=> 'permit_empty|max_length[255]',
+            'stok_baru'  => 'required|integer|greater_than_equal_to[0]',
+            'keterangan' => 'permit_empty|max_length[255]',
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $stokBaru    = $this->request->getPost('stok_baru');
-        $stokLama    = $produk['stok'];
-        $perubahan   = $stokBaru - $stokLama;
-        $userId      = session()->get('user_id');
+        $stokBaru  = $this->request->getPost('stok_baru');
+        $stokLama  = $produk['stok'];
+        $perubahan = $stokBaru - $stokLama;
+        $userId    = session()->get('user_id');
 
         $db = \Config\Database::connect();
         $db->transStart();
 
         try {
-            // Update stok produk
             $this->produkModel->update($id, ['stok' => $stokBaru]);
 
-            // Catat di log stok
             $this->logStokModel->insert([
                 'id_produk'        => $id,
                 'id_user'          => $userId,
@@ -182,20 +178,17 @@ class Stok extends BaseController
         }
     }
 
-    /**
-     * Riwayat perubahan stok (semua produk)
-     */
     public function history()
     {
-        $produkId  = $this->request->getGet('produk');
-        $tipeRef   = $this->request->getGet('tipe'); // pembelian, penjualan, penyesuaian
+        $produkId = $this->request->getGet('produk');
+        $tipeRef  = $this->request->getGet('tipe');
 
         $builder = $this->logStokModel
             ->select('log_stok.*, produk.sku, motif.nama_motif, warna.nama_warna, users.username')
             ->join('produk', 'produk.id = log_stok.id_produk')
-            ->join('motif', 'motif.id = produk.id_motif')
-            ->join('warna', 'warna.id = produk.id_warna')
-            ->join('users', 'users.user_id = log_stok.id_user');
+            ->join('motif',  'motif.id  = produk.id_motif')
+            ->join('warna',  'warna.id  = produk.id_warna')
+            ->join('users',  'users.user_id = log_stok.id_user');
 
         if (!empty($produkId)) {
             $builder->where('log_stok.id_produk', $produkId);
@@ -205,19 +198,16 @@ class Stok extends BaseController
             $builder->where('log_stok.tipe_ref', $tipeRef);
         }
 
-        $logStok = $builder->orderBy('log_stok.id', 'DESC')
-                           ->paginate(15);
-
-        // Ambil daftar produk untuk filter dropdown
+        $logStok    = $builder->orderBy('log_stok.id', 'DESC')->paginate(15);
         $produkList = $this->produkModel->getAllForDropdown();
 
         $data = [
-            'title'           => 'Riwayat Perubahan Stok',
-            'log_stok'        => $logStok,
-            'pager'           => $this->logStokModel->pager,
-            'produk_list'     => $produkList,
-            'selectedProduk'  => $produkId,
-            'selectedTipe'    => $tipeRef,
+            'title'          => 'Riwayat Perubahan Stok',
+            'log_stok'       => $logStok,
+            'pager'          => $this->logStokModel->pager,
+            'produk_list'    => $produkList,
+            'selectedProduk' => $produkId,
+            'selectedTipe'   => $tipeRef,
         ];
 
         return view('karyawan/stok/history', $data);

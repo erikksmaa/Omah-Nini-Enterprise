@@ -77,8 +77,9 @@
                 <h5 class="mb-0"><i class="bi bi-people"></i> Daftar User</h5>
             </div>
             <div class="card-body p-3">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="tableUser">
+                <div class="d-none d-md-block">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="tableUser">
                         <thead >
                             <tr>
                                 <th width="5%">No</th>
@@ -117,7 +118,45 @@
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card Mobile -->
+                <div class="d-md-none">
+                    <?php $no = 1; foreach ($users as $item): ?>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-primary"><?= esc($item['username']) ?></span>
+                                        <small class="text-muted ms-2">
+                                            <?php $roleClass = $item['role'] == 'admin' ? 'primary' : 'secondary'; ?>
+                                            <span class="badge bg-<?= $roleClass ?>"><?= strtoupper($item['role']) ?></span>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-warning btn-edit"
+                                                data-id="<?= $item['user_id'] ?>"
+                                                data-username="<?= esc($item['username']) ?>"
+                                                data-role="<?= $item['role'] ?>"
+                                                aria-label="Edit <?= esc($item['username']) ?>">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <?php if (session()->get('user_id') != $item['user_id']): ?>
+                                            <a href="#" class="btn btn-sm btn-outline-danger btn-delete"
+                                                data-id="<?= $item['user_id'] ?>"
+                                                data-username="<?= esc($item['username']) ?>"
+                                                aria-label="Hapus <?= esc($item['username']) ?>">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
