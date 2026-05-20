@@ -16,7 +16,11 @@ class Supplier extends BaseController
     public function index()
     {
         $keyword = $this->request->getGet('keyword');
-        $perPage = 10;
+        $allowedPerPage = [10, 25, 50, 100];
+        $perPage = (int)($this->request->getGet('per_page') ?? 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
         
         $builder = $this->supplierModel->orderBy('id', 'asc');
         

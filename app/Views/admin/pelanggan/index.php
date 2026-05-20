@@ -3,14 +3,7 @@
 
 <div class="container-fluid px-2 px-md-4">
 
-    <!-- ── Page Header ─────────────────────────────────────────────── -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">
-                <i class="bi bi-people text-primary me-2"></i>Master Pelanggan
-            </h4>
-            <p class="text-muted small mb-0 mt-1">Kelola data pelanggan toko</p>
-        </div>
+    <div class="mb-3 d-flex gap-2">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
             <i class="bi bi-plus-circle me-1"></i> Tambah Pelanggan
         </button>

@@ -17,24 +17,31 @@ class Warna extends BaseController
     public function index()
     {
         $keyword = $this->request->getGet('keyword');
-        $perPage = 10;
-        
+
+        // Ambil nilai per_page dari query string, validasi agar hanya angka yang diizinkan
+        $allowedPerPage = [10, 25, 50, 100];
+        $perPage = (int)($this->request->getGet('per_page') ?? 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
+
         $builder = $this->warnaModel->orderBy('id', 'ASC');
-        
+
         if (!empty($keyword)) {
             $builder->like('nama_warna', $keyword);
         }
-        
+
         $warna = $builder->paginate($perPage);
         $pager = $this->warnaModel->pager;
-        
+
         $data = [
-            'title' => 'Kelola Data Warna',
-            'warna' => $warna,
-            'pager' => $pager,
-            'keyword' => $keyword
+            'title'   => 'Kelola Data Warna',
+            'warna'   => $warna,
+            'pager'   => $pager,
+            'keyword' => $keyword,
+            'per_page' => $perPage,   // <-- KIRIM KE VIEW
         ];
-        
+
         return view('admin/warna/index', $data);
     }
 
@@ -55,7 +62,6 @@ class Warna extends BaseController
 
             return redirect()->to('/admin/warna')
                 ->with('success', 'Warna berhasil ditambahkan.');
-            
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -74,16 +80,16 @@ class Warna extends BaseController
 
         // Validasi dengan aturan yang sudah disesuaikan untuk update
         $rules = $this->warnaModel->validationRules;
-        
+
         // Modify is_unique rule untuk update (tambahkan pengecualian ID)
         if (isset($rules['nama_warna'])) {
             $rules['nama_warna'] = str_replace(
-                'is_unique[warna.nama_warna]', 
-                'is_unique[warna.nama_warna,id,' . $id . ']', 
+                'is_unique[warna.nama_warna]',
+                'is_unique[warna.nama_warna,id,' . $id . ']',
                 $rules['nama_warna']
             );
         }
-        
+
         if (!$this->validate($rules, $this->warnaModel->validationMessages)) {
             return redirect()->back()
                 ->withInput()
@@ -98,7 +104,6 @@ class Warna extends BaseController
 
             return redirect()->to('/admin/warna')
                 ->with('success', 'Warna berhasil diperbarui.');
-            
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -125,7 +130,6 @@ class Warna extends BaseController
             $this->warnaModel->delete($id);
             return redirect()->to('/admin/warna')
                 ->with('success', 'Warna berhasil dihapus.');
-            
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal menghapus warna: ' . $e->getMessage());
@@ -138,7 +142,7 @@ class Warna extends BaseController
     public function getAll()
     {
         $warna = $this->warnaModel->getOptions();
-        
+
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $warna

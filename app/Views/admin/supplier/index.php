@@ -14,13 +14,7 @@ if (session()->getFlashdata('validation_errors')): ?>
 <div class="container-fluid px-2 px-md-4">
 
     <!-- ── Page Header ─────────────────────────────────────────────── -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">
-                <i class="bi bi-tags text-primary me-2"></i>Master Merk
-            </h4>
-            <p class="text-muted small mb-0 mt-1">Kelola data merk &amp; supplier produk</p>
-        </div>
+    <div class="mb-3 d-flex gap-2">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
             <i class="bi bi-plus-circle me-1"></i> Tambah Merk
         </button>

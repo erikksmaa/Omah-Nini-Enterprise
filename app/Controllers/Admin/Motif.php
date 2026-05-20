@@ -21,7 +21,11 @@ class Motif extends BaseController
     {
         $keyword = $this->request->getGet('keyword');
         $filter_supplier = $this->request->getGet('filter_supplier');
-        $perPage = 10;
+        $allowedPerPage = [10, 25, 50, 100];
+        $perPage = (int)($this->request->getGet('per_page') ?? 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
         
         $builder = $this->motifModel->select('motif.*, supplier.nama as nama_supplier')
                                     ->join('supplier', 'supplier.id = motif.id_supplier')

@@ -34,11 +34,18 @@ class Produk extends BaseController
         $supplierId = $this->request->getGet('supplier');
         $keyword    = $this->request->getGet('keyword');
 
-        // ── Query utama (paginasi) ──────────────────────────
+        // ⬇️ Ambil & validasi per_page
+        $allowedPerPage = [10, 25, 50, 100];
+        $perPage = (int)($this->request->getGet('per_page') ?? 10);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 10;
+        }
+
+        // ── Query utama (paginasi) ──
         $builder = $this->produkModel
             ->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id,
-                      motif.nama_motif, motif.id as motif_id,
-                      warna.nama_warna, warna.id as warna_id')
+                  motif.nama_motif, motif.id as motif_id,
+                  warna.nama_warna, warna.id as warna_id')
             ->join('supplier', 'supplier.id = produk.id_supplier')
             ->join('motif',    'motif.id    = produk.id_motif')
             ->join('warna',    'warna.id    = produk.id_warna');
@@ -53,16 +60,17 @@ class Produk extends BaseController
                 ->orLike('motif.nama_motif', $keyword)
                 ->orLike('warna.nama_warna', $keyword)
                 ->orLike('supplier.nama',    $keyword)
-            ->groupEnd();
+                ->groupEnd();
         }
 
+        // ⬇️ Gunakan $perPage, bukan 15 hardcoded
         $produk = $builder
             ->orderBy('supplier.nama',    'ASC')
             ->orderBy('motif.nama_motif', 'ASC')
             ->orderBy('warna.nama_warna', 'ASC')
-            ->paginate(15);
+            ->paginate($perPage);
 
-        // ── Summary global (tidak terpengaruh filter) ───────
+        // ── Summary global ──
         $allProducts = $this->produkModel
             ->select('produk.id, produk.stok, produk.id_supplier, produk.id_motif')
             ->findAll();
@@ -74,6 +82,7 @@ class Produk extends BaseController
             'suppliers'        => $this->supplierModel->findAll(),
             'selectedSupplier' => $supplierId,
             'keyword'          => $keyword,
+            'per_page'         => $perPage,   // ⬅️ KIRIM KE VIEW
             'total_merek'      => count(array_unique(array_column($allProducts, 'id_supplier'))),
             'total_motif'      => count(array_unique(array_column($allProducts, 'id_motif'))),
             'total_sku'        => count($allProducts),
@@ -82,10 +91,6 @@ class Produk extends BaseController
 
         return view('admin/produk/index', $data);
     }
-
-    // =========================================================
-    //  Selebihnya tidak berubah
-    // =========================================================
 
     private function getMotifBySupplierForFilter($id_supplier)
     {
