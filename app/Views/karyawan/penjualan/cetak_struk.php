@@ -107,24 +107,13 @@
     <!-- Header Struk -->
     <div class="header">
         <h3>SYARIFA BATIK</h3>
-        <p>Jl. Batik No. 123, Pekalongan</p>
-        <p>Telp: 0812-3456-7890</p>
+        <p>Jl. Gatot Subroto, Gg.2A, Banyurip</p>
+        <p>Telp: 0856-4030-3333</p>
         <div class="divider"></div>
         <div class="row">
-            <span><?= date('d/m/Y H:i:s') ?></span>
-            <span>Kasir: <?= session()->get('username') ?></span>
-        </div>
-        <div class="row">
+            <span>Tanggal: <?= date('d/m/Y') ?></span><br>
             <span>Invoice: <?= esc($header['no_invoice']) ?></span>
         </div>
-        <div class="row">
-            <span>Pembeli: <?= esc($header['nama_pembeli']) ?></span>
-        </div>
-        <?php if ($header['nama_pelanggan']): ?>
-            <div class="row">
-                <span>Pelanggan: <?= esc($header['nama_pelanggan']) ?></span>
-            </div>
-        <?php endif; ?>
         <div class="divider"></div>
     </div>
 

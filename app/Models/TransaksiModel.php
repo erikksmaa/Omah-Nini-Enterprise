@@ -158,7 +158,7 @@ class TransaksiModel extends Model
                 }
 
                 // Format nama_produk baru
-                $namaProduk = $produk['nama_supplier'] . ' - ' . $produk['nama_motif'] . ' ' . $produk['nama_warna'];
+                $namaProduk = $produk['nama_supplier'] . ' - ' . $produk['nama_motif'] . ' - ' . $produk['nama_warna'];
 
                 // Insert detail dengan harga_satuan
                 $db->table('detail_transaksi')->insert([

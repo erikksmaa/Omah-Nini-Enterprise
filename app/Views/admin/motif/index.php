@@ -3,14 +3,7 @@
 
 <div class="container-fluid px-2 px-md-4">
 
-    <!-- ── Page Header ─────────────────────────────────────────────── -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-        <div>
-            <h4 class="fw-bold mb-0">
-                <i class="bi bi-palette text-primary me-2"></i>Master Motif
-            </h4>
-            <p class="text-muted small mb-0 mt-1">Kelola data motif berdasarkan merk / brand</p>
-        </div>
+    <div class="mb-3 d-flex gap-2">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
             <i class="bi bi-plus-circle me-1"></i> Tambah Motif
         </button>
@@ -21,9 +14,9 @@
         <div class="card-body p-3 p-md-4">
 
             <!-- Filter Bar -->
-            <form method="GET" id="filterForm" class="row g-2 align-items-end mb-4">
-                <div class="col-12 col-md-4">
-                    <label class="form-label small fw-semibold text-muted mb-1">Pencarian</label>
+            <form method="GET" id="filterForm" class="row g-3 align-items-end mb-4">
+                <div class="col-12 col-lg-4">
+                    <label class="form-label small fw-semibold text-muted mb-2">Pencarian</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0">
                             <i class="bi bi-search text-muted"></i>
@@ -33,20 +26,22 @@
                             value="<?= esc($keyword ?? '') ?>">
                     </div>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label small fw-semibold text-muted mb-1">Merk / Brand</label>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">Merk / Brand</label>
                     <select name="filter_supplier" class="form-select">
                         <option value="">— Semua Merk —</option>
-                        <?php foreach ($suppliers as $sup): ?>
-                            <option value="<?= $sup['id'] ?>"
-                                <?= (($filter_supplier ?? '') == $sup['id']) ? 'selected' : '' ?>>
-                                <?= esc($sup['nama']) ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php if (!empty($suppliers) && is_array($suppliers)): ?>
+                            <?php foreach ($suppliers as $sup): ?>
+                                <option value="<?= isset($sup['id']) ? esc($sup['id']) : '' ?>"
+                                    <?= (($filter_supplier ?? '') == (isset($sup['id']) ? $sup['id'] : '')) ? 'selected' : '' ?>>
+                                    <?= isset($sup['nama']) ? esc($sup['nama']) : 'N/A' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label small fw-semibold text-muted mb-1">Tampilkan</label>
+                <div class="col-12 col-sm-6 col-lg-2">
+                    <label class="form-label small fw-semibold text-muted mb-2">Tampilkan</label>
                     <select name="per_page" class="form-select">
                         <?php foreach ([10, 25, 50, 100] as $n): ?>
                             <option value="<?= $n ?>" <?= (($per_page ?? 10) == $n) ? 'selected' : '' ?>>
@@ -55,12 +50,12 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-6 col-md-3 d-flex gap-2">
+                <div class="col-12 col-lg-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1">
                         <i class="bi bi-funnel me-1"></i>Filter
                     </button>
                     <a href="<?= base_url('admin/motif') ?>"
-                       class="btn btn-outline-secondary flex-grow-1">
+                        class="btn btn-outline-secondary flex-grow-1">
                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
                     </a>
                 </div>
@@ -319,10 +314,10 @@
 <script>
     // ── Edit Modal Handler ──────────────────────────────────────────
     document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function() {
             document.getElementById('edit_id_supplier').value = this.dataset.id_supplier ?? '';
-            document.getElementById('edit_nama_motif').value  = this.dataset.nama_motif  ?? '';
-            document.getElementById('edit_keterangan').value  = this.dataset.keterangan  ?? '';
+            document.getElementById('edit_nama_motif').value = this.dataset.nama_motif ?? '';
+            document.getElementById('edit_keterangan').value = this.dataset.keterangan ?? '';
             document.getElementById('editForm').action =
                 `<?= base_url('admin/motif/update') ?>/${this.dataset.id}`;
             new bootstrap.Modal(document.getElementById('editModal')).show();
@@ -331,8 +326,8 @@
 
     // ── Delete Handler ──────────────────────────────────────────────
     document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const id         = this.dataset.id;
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
             const nama_motif = this.dataset.nama_motif;
             Swal.fire({
                 title: 'Hapus Motif?',
@@ -340,9 +335,9 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
-                cancelButtonColor:  '#6c757d',
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: '<i class="bi bi-trash me-1"></i>Ya, Hapus!',
-                cancelButtonText:  'Batal'
+                cancelButtonText: 'Batal'
             }).then(result => {
                 if (result.isConfirmed)
                     window.location.href = `<?= base_url('admin/motif/delete') ?>/${id}`;
@@ -352,12 +347,12 @@
 
     // ── Client-side Table Sort ──────────────────────────────────────
     document.querySelectorAll('.sort-header').forEach(th => {
-        th.addEventListener('click', function () {
-            const col   = parseInt(this.dataset.col);
+        th.addEventListener('click', function() {
+            const col = parseInt(this.dataset.col);
             const tbody = document.getElementById('mainTableBody');
             if (!tbody) return;
             const rows = Array.from(tbody.querySelectorAll('tr'));
-            const asc  = this.dataset.order !== 'asc';
+            const asc = this.dataset.order !== 'asc';
             this.dataset.order = asc ? 'asc' : 'desc';
 
             document.querySelectorAll('.sort-header').forEach(t => {
@@ -370,9 +365,13 @@
             rows.sort((a, b) => {
                 const av = (a.cells[col]?.textContent ?? '').trim();
                 const bv = (b.cells[col]?.textContent ?? '').trim();
-                return asc
-                    ? av.localeCompare(bv, 'id', { sensitivity: 'base' })
-                    : bv.localeCompare(av, 'id', { sensitivity: 'base' });
+                return asc ?
+                    av.localeCompare(bv, 'id', {
+                        sensitivity: 'base'
+                    }) :
+                    bv.localeCompare(av, 'id', {
+                        sensitivity: 'base'
+                    });
             });
             rows.forEach(r => tbody.appendChild(r));
         });
