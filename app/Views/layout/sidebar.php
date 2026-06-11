@@ -30,17 +30,17 @@
         <div class="sidebar-menu">
             <ul class="menu">
                 <?php
-                    $role = session()->get('role');
-                    $uri  = uri_string();
+                $role = session()->get('role');
+                $uri = uri_string();
 
-                    // Active state: Master Data (sama untuk admin & karyawan, route identik)
-                    $masterPages         = ['admin/supplier', 'admin/motif', 'admin/warna', 'admin/produk', 'admin/pelanggan'];
-                    $masterPagesAdminOnly = ['admin/user'];
-                    $isMasterActive      = in_array($uri, array_merge($masterPages, $masterPagesAdminOnly));
-                    $isMasterKaryawanActive = in_array($uri, $masterPages);
+                // Active state: Master Data (sama untuk admin & karyawan, route identik)
+                $masterPages = ['admin/supplier', 'admin/motif', 'admin/warna', 'admin/produk', 'admin/pelanggan'];
+                $masterPagesAdminOnly = ['admin/user'];
+                $isMasterActive = in_array($uri, array_merge($masterPages, $masterPagesAdminOnly));
+                $isMasterKaryawanActive = in_array($uri, $masterPages);
 
-                    // Active state: Laporan
-                    $isLaporanActive = str_starts_with($uri, 'pemilik/laporan');
+                // Active state: Laporan
+                $isLaporanActive = str_starts_with($uri, 'pemilik/laporan');
                 ?>
 
                 <?php if ($role === 'admin' || $role === 'karyawan'): ?>
@@ -58,12 +58,14 @@
 
                     <!-- ===== MASTER DATA ===== -->
                     <li class="sidebar-title">Master</li>
-                    <li class="sidebar-item has-sub <?= ($role === 'admin' ? $isMasterActive : $isMasterKaryawanActive) ? 'active' : '' ?>">
+                    <li
+                        class="sidebar-item has-sub <?= ($role === 'admin' ? $isMasterActive : $isMasterKaryawanActive) ? 'active' : '' ?>">
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-database-fill"></i>
                             <span>Master Data</span>
                         </a>
-                        <ul class="submenu <?= ($role === 'admin' ? $isMasterActive : $isMasterKaryawanActive) ? 'active' : '' ?>">
+                        <ul
+                            class="submenu <?= ($role === 'admin' ? $isMasterActive : $isMasterKaryawanActive) ? 'active' : '' ?>">
                             <li class="submenu-item <?= ($uri == 'admin/supplier') ? 'active' : '' ?>">
                                 <a href="<?= base_url('admin/supplier') ?>" class="submenu-link">
                                     <i class="bi bi-building"></i> Merk / Brand
@@ -90,11 +92,11 @@
                                 </a>
                             </li>
                             <?php if ($role === 'admin'): ?>
-                            <li class="submenu-item <?= ($uri == 'admin/user') ? 'active' : '' ?>">
-                                <a href="<?= base_url('admin/user') ?>" class="submenu-link">
-                                    <i class="bi bi-person-badge"></i> Manajemen User
-                                </a>
-                            </li>
+                                <li class="submenu-item <?= ($uri == 'admin/user') ? 'active' : '' ?>">
+                                    <a href="<?= base_url('admin/user') ?>" class="submenu-link">
+                                        <i class="bi bi-person-badge"></i> Manajemen User
+                                    </a>
+                                </li>
                             <?php endif; ?>
                         </ul>
                     </li>
@@ -110,14 +112,16 @@
                     <!-- ===== TRANSAKSI ===== -->
                     <li class="sidebar-title">Transaksi</li>
 
-                    <li class="sidebar-item <?= in_array($uri, ['karyawan/pembelian', 'karyawan/pembelian/create']) ? 'active' : '' ?>">
+                    <li
+                        class="sidebar-item <?= in_array($uri, ['karyawan/pembelian', 'karyawan/pembelian/create']) ? 'active' : '' ?>">
                         <a href="<?= base_url('karyawan/pembelian') ?>" class="sidebar-link">
                             <i class="bi bi-box-seam"></i>
                             <span>Barang Masuk</span>
                         </a>
                     </li>
 
-                    <li class="sidebar-item <?= in_array($uri, ['karyawan/penjualan', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
+                    <li
+                        class="sidebar-item <?= in_array($uri, ['karyawan/penjualan', 'karyawan/penjualan/create']) ? 'active' : '' ?>">
                         <a href="<?= base_url('karyawan/penjualan') ?>" class="sidebar-link">
                             <i class="bi bi-cart-plus"></i>
                             <span>Barang Keluar (POS)</span>
@@ -126,35 +130,35 @@
 
                     <!-- ===== LAPORAN — hanya admin ===== -->
                     <?php if ($role === 'admin'): ?>
-                    <li class="sidebar-title">Laporan</li>
-                    <li class="sidebar-item has-sub <?= $isLaporanActive ? 'active' : '' ?>">
-                        <a href="#" class="sidebar-link">
-                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                            <span>Laporan</span>
-                        </a>
-                        <ul class="submenu <?= $isLaporanActive ? 'active' : '' ?>">
-                            <li class="submenu-item <?= ($uri == 'pemilik/laporan/stok') ? 'active' : '' ?>">
-                                <a href="<?= base_url('pemilik/laporan/stok') ?>" class="submenu-link">
-                                    <i class="bi bi-box-seam"></i> Laporan Stok
-                                </a>
-                            </li>
-                            <li class="submenu-item <?= ($uri == 'pemilik/laporan/log-stok') ? 'active' : '' ?>">
-                                <a href="<?= base_url('pemilik/laporan/log-stok') ?>" class="submenu-link">
-                                    <i class="bi bi-clock-history"></i> Log Stok
-                                </a>
-                            </li>
-                            <li class="submenu-item <?= ($uri == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
-                                <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="submenu-link">
-                                    <i class="bi bi-truck"></i> Laporan Barang Masuk
-                                </a>
-                            </li>
-                            <li class="submenu-item <?= ($uri == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
-                                <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="submenu-link">
-                                    <i class="bi bi-receipt"></i> Laporan Barang Keluar
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                        <li class="sidebar-title">Laporan</li>
+                        <li class="sidebar-item has-sub <?= $isLaporanActive ? 'active' : '' ?>">
+                            <a href="#" class="sidebar-link">
+                                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                                <span>Laporan</span>
+                            </a>
+                            <ul class="submenu <?= $isLaporanActive ? 'active' : '' ?>">
+                                <li class="submenu-item <?= ($uri == 'pemilik/laporan/stok') ? 'active' : '' ?>">
+                                    <a href="<?= base_url('pemilik/laporan/stok') ?>" class="submenu-link">
+                                        <i class="bi bi-box-seam"></i> Laporan Stok
+                                    </a>
+                                </li>
+                                <li class="submenu-item <?= ($uri == 'pemilik/laporan/log-stok') ? 'active' : '' ?>">
+                                    <a href="<?= base_url('pemilik/laporan/log-stok') ?>" class="submenu-link">
+                                        <i class="bi bi-clock-history"></i> Log Stok
+                                    </a>
+                                </li>
+                                <li class="submenu-item <?= ($uri == 'pemilik/laporan/barang-masuk') ? 'active' : '' ?>">
+                                    <a href="<?= base_url('pemilik/laporan/barang-masuk') ?>" class="submenu-link">
+                                        <i class="bi bi-truck"></i> Laporan Barang Masuk
+                                    </a>
+                                </li>
+                                <li class="submenu-item <?= ($uri == 'pemilik/laporan/barang-keluar') ? 'active' : '' ?>">
+                                    <a href="<?= base_url('pemilik/laporan/barang-keluar') ?>" class="submenu-link">
+                                        <i class="bi bi-receipt"></i> Laporan Barang Keluar
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     <?php endif; ?>
 
 
@@ -209,6 +213,15 @@
                         <span>Keluar</span>
                     </a>
                 </li>
+                <?php if ($role === 'admin'): ?>
+                    <li class="sidebar-title">Sistem</li>
+                    <li class="sidebar-item <?= (uri_string() == 'admin/backup') ? 'active' : '' ?>">
+                        <a href="<?= base_url('admin/backup') ?>" class="sidebar-link">
+                            <i class="bi bi-database"></i>
+                            <span>Backup Database</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
 
             </ul>
         </div>

@@ -3,16 +3,8 @@
 <?= $this->section('content') ?>
 <div class="container-fluid px-2 px-md-3">
 
-    <!-- <div class="d-flex justify-content-between align-items-center mb-3"
-         style="flex-wrap:wrap; gap:0.75rem;">
-        <h4 class="mb-0" style="font-size:18px; font-weight:600; display:flex; align-items:center; gap:8px;">
-            <i class="bi bi-box-seam" style="color:#0F6E56;"></i> Kelola Stok
-        </h4>
-    </div> -->
-
     <?php if (!empty($tree)): ?>
 
-        <!-- SUMMARY BAR (dihitung dari $tree di view) -->
         <?php
             $total_merek = count($tree);
             $total_motif = 0;
@@ -42,7 +34,6 @@
             </div>
         </div>
 
-        <!-- SEARCH & FILTER BAR -->
         <div class="d-flex gap-2 mb-3 flex-wrap">
             <div class="search-bar flex-grow-1">
                 <i class="bi bi-search"></i>
@@ -56,14 +47,11 @@
             </select>
         </div>
 
-        <!-- TREE CARDS -->
         <div id="product-tree">
             <?php foreach ($tree as $supplier): ?>
 
-                <!-- ═══ BRAND CARD ═══ -->
                 <div class="brand-card" data-brand-id="<?= $supplier['id'] ?>">
 
-                    <!-- Brand Header -->
                     <div class="brand-header" onclick="toggleBrand(<?= $supplier['id'] ?>)">
                         <i class="bi bi-chevron-right toggle-icon" id="brand-toggle-<?= $supplier['id'] ?>"></i>
                         <span class="brand-name"><?= esc($supplier['nama']) ?></span>
@@ -76,14 +64,11 @@
                         </span>
                     </div>
 
-                    <!-- Brand Body -->
                     <div class="brand-body" id="brand-body-<?= $supplier['id'] ?>">
                         <?php foreach ($supplier['motif'] as $motif): ?>
 
-                            <!-- MOTIF CARD -->
                             <div class="motif-card" data-motif-id="<?= $motif['id'] ?>">
 
-                                <!-- Motif Header -->
                                 <div class="motif-header" onclick="toggleMotif(<?= $motif['id'] ?>)">
                                     <i class="bi bi-chevron-right motif-icon" id="motif-toggle-<?= $motif['id'] ?>"></i>
                                     <span class="motif-name"><?= esc($motif['nama']) ?></span>
@@ -96,43 +81,38 @@
                                     </span>
                                 </div>
 
-                                <!-- Motif Body -->
                                 <div class="motif-body" id="motif-body-<?= $motif['id'] ?>">
                                     <?php foreach ($motif['produk'] as $produk):
                                         $min  = (int) $produk['min_stok'];
                                         $stok = (int) $produk['stok'];
 
-                                        // Status konsisten dengan versi tabel
                                         if ($stok == 0) {
                                             $stok_class = 'stok-danger';
                                             $stok_icon  = '❌ Habis';
                                             $status_key = 'habis';
-                                            $bar_color  = '#A32D2D';
+                                            $bar_color  = '#dc2626';
                                         } elseif ($stok <= $min) {
                                             $stok_class = 'stok-warning';
                                             $stok_icon  = '⚠️ Menipis';
                                             $status_key = 'menipis';
-                                            $bar_color  = '#854F0B';
+                                            $bar_color  = '#d97706';
                                         } else {
                                             $stok_class = 'stok-aman';
                                             $stok_icon  = '';
                                             $status_key = 'aman';
-                                            $bar_color  = '#3B6D11';
+                                            $bar_color  = '#059669';
                                         }
 
                                         $bar_max = max($stok, $min * 2, 1);
                                         $bar_pct = min(100, round($stok / $bar_max * 100));
                                     ?>
 
-                                        <!-- PRODUK ITEM -->
                                         <div class="produk-item"
                                              data-status="<?= $status_key ?>"
                                              onclick="toggleDetail('p<?= $produk['id'] ?>', event)">
 
-                                            <!-- Produk Row -->
                                             <div class="produk-row">
 
-                                                <!-- Foto / Inisial -->
                                                 <?php if ($produk['foto']): ?>
                                                     <img src="<?= base_url('uploads/produk/' . $produk['foto']) ?>"
                                                          class="color-chip"
@@ -144,26 +124,22 @@
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <!-- Info -->
                                                 <div class="produk-info">
                                                     <div class="warna"><?= esc($produk['nama_warna']) ?></div>
                                                     <div class="sku"><?= esc($produk['sku']) ?></div>
                                                 </div>
 
-                                                <!-- Stok Indicator -->
                                                 <div class="stok-indicator">
                                                     <span class="stok-val <?= $stok_class ?>"><?= $stok ?></span>
                                                     <span class="stok-label">potong</span>
                                                 </div>
 
-                                                <!-- Status badge (menipis / habis saja) -->
                                                 <?php if ($stok_icon): ?>
                                                     <span class="status-mini status-mini--<?= $status_key ?>">
                                                         <?= $stok_icon ?>
                                                     </span>
                                                 <?php endif; ?>
 
-                                                <!-- Actions -->
                                                 <div class="produk-actions" onclick="event.stopPropagation()">
                                                     <a href="<?= base_url('karyawan/stok/detail/' . $produk['id']) ?>"
                                                        class="btn-icon btn-detail" title="Detail">
@@ -174,12 +150,10 @@
                                                         <i class="bi bi-pencil-square"></i>
                                                     </a>
                                                 </div>
-                                            </div><!-- /produk-row -->
+                                            </div>
 
-                                            <!-- Detail Panel -->
                                             <div class="produk-detail" id="detail-p<?= $produk['id'] ?>">
 
-                                                <!-- Foto besar -->
                                                 <div class="detail-foto">
                                                     <?php if ($produk['foto']): ?>
                                                         <img src="<?= base_url('uploads/produk/' . $produk['foto']) ?>"
@@ -197,7 +171,6 @@
                                                     <?php endif; ?>
                                                 </div>
 
-                                                <!-- Info Detail -->
                                                 <div class="detail-info">
                                                     <div class="detail-row-item">
                                                         <span class="detail-key">SKU</span>
@@ -228,7 +201,6 @@
                                                         <span class="detail-key">Min. Stok</span>
                                                         <span class="detail-val"><?= $min ?> potong</span>
                                                     </div>
-                                                    <!-- Progress bar stok -->
                                                     <div class="stok-bar-wrap">
                                                         <div class="stok-bar-bg">
                                                             <div class="stok-bar-fill"
@@ -241,7 +213,6 @@
                                                         <span class="detail-val"><?= esc($produk['keterangan'] ?? '—') ?></span>
                                                     </div>
 
-                                                    <!-- Quick action links -->
                                                     <div class="detail-quick-links">
                                                         <a href="<?= base_url('karyawan/stok/detail/' . $produk['id']) ?>"
                                                            class="btn-quick btn-quick--detail">
@@ -252,21 +223,21 @@
                                                             <i class="bi bi-pencil-square"></i> Opname Stok
                                                         </a>
                                                     </div>
-                                                </div><!-- /detail-info -->
-                                            </div><!-- /produk-detail -->
+                                                </div>
+                                            </div>
 
-                                        </div><!-- /produk-item -->
+                                        </div>
 
                                     <?php endforeach; ?>
-                                </div><!-- /motif-body -->
-                            </div><!-- /motif-card -->
+                                </div>
+                            </div>
 
                         <?php endforeach; ?>
-                    </div><!-- /brand-body -->
-                </div><!-- /brand-card -->
+                    </div>
+                </div>
 
             <?php endforeach; ?>
-        </div><!-- /product-tree -->
+        </div>
 
     <?php else: ?>
         <div class="empty-state">
@@ -275,9 +246,8 @@
         </div>
     <?php endif; ?>
 
-</div><!-- /container-fluid -->
+</div>
 
-<!-- ═══ LIGHTBOX ═══ -->
 <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
     <img id="lightbox-img" src="" alt="Foto Produk">
@@ -288,7 +258,6 @@
 
 <?= $this->section('scripts') ?>
 <script>
-// ── TOGGLE BRAND ──
 function toggleBrand(id) {
     const body   = document.getElementById('brand-body-' + id);
     const icon   = document.getElementById('brand-toggle-' + id);
@@ -308,7 +277,6 @@ function toggleBrand(id) {
     }
 }
 
-// ── TOGGLE MOTIF ──
 function toggleMotif(id) {
     const body   = document.getElementById('motif-body-' + id);
     const icon   = document.getElementById('motif-toggle-' + id);
@@ -324,7 +292,6 @@ function toggleMotif(id) {
     }
 }
 
-// ── TOGGLE DETAIL ──
 function toggleDetail(id, e) {
     if (e.target.closest('a') || e.target.closest('button')) return;
     const detail = document.getElementById('detail-' + id);
@@ -333,7 +300,6 @@ function toggleDetail(id, e) {
     detail.closest('.produk-item')?.classList.toggle('active', isOpen);
 }
 
-// ── LIGHTBOX ──
 function openLightbox(src) {
     document.getElementById('lightbox-img').src = src;
     document.getElementById('lightbox').classList.add('show');
@@ -345,7 +311,6 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
-// ── FILTER (teks + status) ──
 function applyFilter() {
     const q      = document.getElementById('searchInput').value.toLowerCase().trim();
     const status = document.getElementById('statusFilter').value;
@@ -372,7 +337,6 @@ function applyFilter() {
                 if (show) anyProdukVisible = true;
             });
 
-            // Motif tampil jika ada produk yang cocok, atau jika match teks tanpa filter status
             const showMotif = anyProdukVisible || (!status && q && (brandMatch || motifMatch));
             motif.style.display = showMotif ? '' : 'none';
             if (showMotif) anyMotifVisible = true;
@@ -408,76 +372,82 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
 
 <style>
 :root {
-    --teal-50:   #E1F5EE;
-    --teal-200:  #5DCAA5;
-    --teal-600:  #0F6E56;
-    --teal-800:  #085041;
-    --amber-50:  #FAEEDA;
-    --amber-200: #EF9F27;
-    --amber-600: #854F0B;
-    --amber-800: #633806;
-    --gray-50:   #F1EFE8;
-    --gray-100:  #D3D1C7;
-    --gray-600:  #5F5E5A;
-    --gray-800:  #444441;
-    --green-50:  #EAF3DE;
-    --green-600: #3B6D11;
-    --green-800: #27500A;
-    --red-50:    #FCEBEB;
-    --red-600:   #A32D2D;
-    --red-800:   #791F1F;
+    --primary:        #4f46e5;
+    --primary-light:  #6366f1;
+    --primary-dark:   #4338ca;
+    --success:        #10b981;
+    --success-light:  #34d399;
+    --success-dark:   #059669;
+    --danger:         #ef4444;
+    --danger-light:   #f87171;
+    --danger-dark:    #dc2626;
+    --warning:        #f59e0b;
+    --warning-light:  #fbbf24;
+    --warning-dark:   #d97706;
+    --info:           #06b6d4;
+    --gray-50:        #f8fafc;
+    --gray-100:       #f1f5f9;
+    --gray-200:       #e2e8f0;
+    --gray-300:       #cbd5e1;
+    --gray-400:       #94a3b8;
+    --gray-500:       #64748b;
+    --gray-600:       #475569;
+    --gray-700:       #334155;
+    --gray-800:       #1e293b;
+    --card-bg:        #ffffff;
+    --card-border:    #e2e8f0;
 }
 
 /* ── SUMMARY BAR ── */
 .summary-bar { display:flex; gap:8px; flex-wrap:wrap; }
 .summary-chip {
-    background:#fff;
-    border:1px solid var(--gray-100);
-    border-radius:8px;
-    padding:8px 14px;
-    font-size:12px;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    color:var(--gray-800);
+    background: var(--card-bg);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gray-700);
 }
-.summary-chip strong { font-size:16px; font-weight:600; color:var(--teal-600); }
-.summary-chip--stok { border-color:#c0dd97; background:var(--green-50); }
-.summary-chip--stok strong { color:var(--green-600); }
-.summary-chip--stok i      { color:var(--green-600); }
+.summary-chip strong { font-size:16px; font-weight:600; color: var(--primary); }
+.summary-chip--stok { border-color:#6ee7b7; background:#ecfdf5; }
+.summary-chip--stok strong { color: var(--success-dark); }
+.summary-chip--stok i      { color: var(--success-dark); }
 
 /* ── SEARCH BAR ── */
 .search-bar { position:relative; }
 .search-bar i {
     position:absolute; left:12px; top:50%;
     transform:translateY(-50%);
-    color:var(--gray-600); font-size:15px; pointer-events:none;
+    color: var(--gray-500); font-size:15px; pointer-events:none;
 }
 .search-bar input {
     width:100%;
     padding:9px 12px 9px 36px;
-    border:1px solid var(--gray-100);
-    border-radius:8px;
-    background:#fff;
+    border:1px solid var(--gray-200);
+    border-radius: 10px;
+    background: var(--card-bg);
     font-size:13px;
-    color:#2c2c2a;
+    color: var(--gray-800);
     outline:none;
     transition:border-color 0.15s;
 }
-.search-bar input:focus { border-color:var(--teal-200); }
-.search-bar input::placeholder { color:var(--gray-600); }
+.search-bar input:focus { border-color: var(--primary-light); }
+.search-bar input::placeholder { color: var(--gray-400); }
 
 /* ── BRAND CARD ── */
 .brand-card {
-    background:#fff;
-    border:1px solid var(--gray-100);
-    border-left:4px solid var(--teal-600);
-    border-radius:10px;
-    margin-bottom:12px;
-    overflow:hidden;
-    transition:box-shadow 0.15s;
+    background: var(--card-bg);
+    border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--primary);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
 }
-.brand-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.07); }
+.brand-card:hover { box-shadow: 0 4px 12px rgba(79,70,229,0.08); }
 
 .brand-header {
     display:flex; align-items:center;
@@ -485,36 +455,40 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
     cursor:pointer; user-select:none;
     gap:10px; flex-wrap:wrap;
 }
-.brand-header:hover { background:var(--teal-50); }
+.brand-header:hover { background: #eef2ff; }
 
-.toggle-icon, .motif-icon {
-    font-size:13px; color:var(--teal-600);
+.toggle-icon {
+    font-size:13px; color: var(--primary);
     transition:transform 0.2s; flex-shrink:0;
 }
-.toggle-icon.open, .motif-icon.open { transform:rotate(90deg); }
-.motif-icon { color:var(--amber-600); }
+.toggle-icon.open { transform:rotate(90deg); }
+.motif-icon {
+    font-size:13px; color: var(--warning-dark);
+    transition:transform 0.2s; flex-shrink:0;
+}
+.motif-icon.open { transform:rotate(90deg); }
 
-.brand-name { font-size:15px; font-weight:600; color:var(--teal-800); flex:1; min-width:120px; }
+.brand-name { font-size:15px; font-weight:600; color: var(--primary-dark); flex:1; min-width:120px; }
 
 .badge-pill {
     display:inline-flex; align-items:center; gap:4px;
     border-radius:20px; padding:3px 10px;
     font-size:12px; font-weight:500; white-space:nowrap;
 }
-.badge-stok       { background:var(--green-50); color:var(--green-800); border:1px solid #c0dd97; }
-.badge-motif-count { background:var(--gray-50); color:var(--gray-800); border:1px solid var(--gray-100); }
+.badge-stok        { background:#ecfdf5; color: var(--success-dark); border:1px solid #6ee7b7; }
+.badge-motif-count { background: var(--gray-100); color: var(--gray-700); border:1px solid var(--gray-200); }
 
 .brand-body { display:none; padding:0 12px 12px; }
 .brand-body.open { display:block; }
 
 /* ── MOTIF CARD ── */
 .motif-card {
-    background:#fafaf8;
-    border:1px solid var(--gray-100);
-    border-left:3px solid var(--amber-200);
-    border-radius:8px;
-    margin-bottom:8px;
-    overflow:hidden;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--warning);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
 }
 .motif-header {
     display:flex; align-items:center;
@@ -522,23 +496,23 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
     cursor:pointer; user-select:none;
     gap:8px; flex-wrap:wrap;
 }
-.motif-header:hover { background:var(--amber-50); }
-.motif-name { font-size:13px; font-weight:600; color:var(--amber-800); flex:1; min-width:100px; }
+.motif-header:hover { background:#fffbeb; }
+.motif-name { font-size:13px; font-weight:600; color: var(--warning-dark); flex:1; min-width:100px; }
 .motif-body { display:none; padding:0 8px 8px; }
 .motif-body.open { display:block; }
 
 /* ── PRODUK ITEM ── */
 .produk-item {
-    background:#fff;
-    border:1px solid var(--gray-100);
-    border-radius:8px;
-    margin-bottom:6px;
-    cursor:pointer;
-    transition:border-color 0.15s;
-    overflow:hidden;
+    background: var(--card-bg);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    overflow: hidden;
 }
-.produk-item:hover  { border-color:var(--gray-600); }
-.produk-item.active { border-color:var(--teal-200); }
+.produk-item:hover  { border-color: var(--gray-500); }
+.produk-item.active { border-color: var(--primary-light); }
 
 .produk-row {
     display:flex; align-items:center;
@@ -547,7 +521,7 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
 
 .color-chip {
     width:32px; height:32px;
-    border-radius:6px;
+    border-radius: 8px;
     border:1px solid rgba(0,0,0,0.08);
     flex-shrink:0;
 }
@@ -555,25 +529,25 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
     display:flex; align-items:center; justify-content:center;
     font-size:12px; font-weight:700;
     color:rgba(255,255,255,0.9);
-    background:var(--gray-600);
+    background: var(--gray-500);
 }
 
 .produk-info      { flex:1; min-width:0; }
 .produk-info .warna {
-    font-size:13px; font-weight:600; color:#2c2c2a;
+    font-size:13px; font-weight:600; color: var(--gray-800);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .produk-info .sku {
-    font-size:11px; color:var(--gray-600);
+    font-size:11px; color: var(--gray-500);
     font-family:'Courier New', monospace; margin-top:1px;
 }
 
 .stok-indicator { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; }
 .stok-val   { font-size:14px; font-weight:600; }
-.stok-label { font-size:10px; color:var(--gray-600); margin-top:1px; }
-.stok-aman    { color:var(--green-600); }
-.stok-warning { color:var(--amber-600); }
-.stok-danger  { color:var(--red-600); }
+.stok-label { font-size:10px; color: var(--gray-400); margin-top:1px; }
+.stok-aman    { color: var(--success-dark); }
+.stok-warning { color: var(--warning-dark); }
+.stok-danger  { color: var(--danger-dark); }
 
 /* Status mini badge */
 .status-mini {
@@ -581,32 +555,32 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
     padding:2px 7px; border-radius:20px;
     white-space:nowrap; flex-shrink:0;
 }
-.status-mini--menipis { background:var(--amber-50); color:var(--amber-800); border:1px solid var(--amber-200); }
-.status-mini--habis   { background:var(--red-50);   color:var(--red-800);   border:1px solid #f09595; }
+.status-mini--menipis { background:#fffbeb; color: var(--warning-dark); border:1px solid var(--warning-light); }
+.status-mini--habis   { background:#fef2f2; color: var(--danger-dark);  border:1px solid var(--danger-light); }
 
 /* ── ACTION BUTTONS ── */
 .produk-actions { display:flex; gap:4px; flex-shrink:0; }
 .btn-icon {
     width:30px; height:30px;
-    border-radius:6px;
-    border:1px solid var(--gray-100);
-    background:#fff;
+    border-radius: 8px;
+    border:1px solid var(--gray-200);
+    background: var(--card-bg);
     display:flex; align-items:center; justify-content:center;
     font-size:13px; cursor:pointer;
     transition:background 0.12s, border-color 0.12s;
     text-decoration:none;
 }
-.btn-detail { color:#0b7eb5; }
-.btn-detail:hover { background:#e8f4fb; border-color:#7dcbef; }
-.btn-opname { color:var(--amber-600); }
-.btn-opname:hover { background:var(--amber-50); border-color:var(--amber-200); }
+.btn-detail { color: var(--info); }
+.btn-detail:hover { background:#ecfeff; border-color: var(--info); }
+.btn-opname { color: var(--warning-dark); }
+.btn-opname:hover { background:#fffbeb; border-color: var(--warning-light); }
 
 /* ── DETAIL PANEL ── */
 .produk-detail {
     display:none;
     padding:12px 14px 14px;
-    border-top:1px solid var(--gray-100);
-    background:var(--gray-50);
+    border-top:1px solid var(--gray-200);
+    background: var(--gray-100);
     gap:14px; flex-wrap:wrap;
 }
 .produk-detail.open { display:flex; }
@@ -617,16 +591,16 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
 }
 .detail-foto__img {
     width:88px; height:88px; object-fit:cover;
-    border-radius:8px; border:1px solid var(--gray-100);
+    border-radius: 10px; border:1px solid var(--gray-200);
     cursor:zoom-in; transition:border-color 0.15s;
 }
-.detail-foto__img:hover { border-color:var(--teal-200); }
-.detail-foto__hint { font-size:10px; color:var(--gray-600); }
+.detail-foto__img:hover { border-color: var(--primary-light); }
+.detail-foto__hint { font-size:10px; color: var(--gray-400); }
 .foto-placeholder {
     width:88px; height:88px;
-    background:var(--gray-100); border-radius:8px;
+    background: var(--gray-200); border-radius: 10px;
     display:flex; align-items:center; justify-content:center;
-    color:var(--gray-600); font-size:28px;
+    color: var(--gray-500); font-size:28px;
 }
 
 .detail-info  { flex:1; min-width:200px; }
@@ -635,38 +609,34 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
     padding:3px 0; border-bottom:1px solid rgba(0,0,0,0.04); gap:8px;
 }
 .detail-row-item:last-child { border-bottom:none; }
-.detail-key { color:var(--gray-600); width:80px; flex-shrink:0; font-weight:500; }
-.detail-val { color:#2c2c2a; }
+.detail-key { color: var(--gray-500); width:80px; flex-shrink:0; font-weight:500; }
+.detail-val { color: var(--gray-800); }
 
 /* Stok progress bar */
 .stok-bar-wrap { padding:4px 0 2px; }
-.stok-bar-bg   { height:5px; background:var(--gray-100); border-radius:10px; overflow:hidden; }
+.stok-bar-bg   { height:5px; background: var(--gray-200); border-radius:10px; overflow:hidden; }
 .stok-bar-fill { height:100%; border-radius:10px; transition:width 0.3s; }
 
-/* Quick action links in detail panel */
+/* Quick action links */
 .detail-quick-links {
     display:flex; gap:8px; flex-wrap:wrap;
     margin-top:10px; padding-top:10px;
-    border-top:1px solid var(--gray-100);
+    border-top:1px solid var(--gray-200);
 }
 .btn-quick {
     display:inline-flex; align-items:center; gap:5px;
-    padding:6px 14px; border-radius:7px;
+    padding:6px 14px; border-radius: 8px;
     font-size:12px; font-weight:500;
     text-decoration:none; transition:background 0.12s;
     border:1px solid transparent;
 }
-.btn-quick--detail {
-    background:#e8f4fb; color:#0b7eb5; border-color:#7dcbef;
-}
-.btn-quick--detail:hover { background:#d2eaf6; }
-.btn-quick--opname {
-    background:var(--amber-50); color:var(--amber-800); border-color:var(--amber-200);
-}
-.btn-quick--opname:hover { background:#f5e3c5; }
+.btn-quick--detail  { background:#ecfeff; color: var(--info); border-color: var(--info); }
+.btn-quick--detail:hover  { background:#cffafe; }
+.btn-quick--opname  { background:#fffbeb; color: var(--warning-dark); border-color: var(--warning-light); }
+.btn-quick--opname:hover  { background:#fef3c7; }
 
 /* ── EMPTY STATE ── */
-.empty-state { text-align:center; padding:3rem 1rem; color:var(--gray-600); }
+.empty-state { text-align:center; padding:3rem 1rem; color: var(--gray-400); }
 .empty-state i { font-size:40px; margin-bottom:12px; display:block; }
 
 /* ── LIGHTBOX ── */
@@ -688,8 +658,8 @@ document.getElementById('statusFilter').addEventListener('change', applyFilter);
 
 /* ── RESPONSIVE ── */
 @media (max-width: 480px) {
-    .stok-indicator  { display:none; }
-    .status-mini     { display:none; }
+    .stok-indicator    { display:none; }
+    .status-mini       { display:none; }
     .badge-motif-count { display:none; }
     .brand-header .badge-stok { display:inline-flex; }
 }

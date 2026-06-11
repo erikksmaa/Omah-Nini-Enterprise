@@ -11,9 +11,9 @@ $routes->get('/', function () {
     if (session()->get('logged_in')) {
         $role = session()->get('role');
         $roleMap = [
-            'admin'    => 'admin',
+            'admin' => 'admin',
             'karyawan' => 'karyawan',
-            'pemilik'  => 'pemilik'
+            'pemilik' => 'pemilik'
         ];
         $segment = $roleMap[$role] ?? 'karyawan';
         return redirect()->to("/{$segment}/dashboard");
@@ -31,9 +31,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('/dashboard', function () {
         $role = session()->get('role');
         $roleMap = [
-            'admin'    => 'admin',
+            'admin' => 'admin',
             'karyawan' => 'karyawan',
-            'pemilik'  => 'pemilik'
+            'pemilik' => 'pemilik'
         ];
         $segment = $roleMap[$role] ?? 'karyawan';
         return redirect()->to("/{$segment}/dashboard");
@@ -54,6 +54,10 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('user/update/(:num)', 'User::update/$1');
         $routes->get('user/delete/(:num)', 'User::delete/$1');
         $routes->get('user/getData/(:num)', 'User::getData/$1');
+
+        // Backup Database
+        $routes->get('backup', 'Backup::index');
+        $routes->post('backup/export', 'Backup::export');
     });
 
     // =====================================================================
@@ -160,5 +164,5 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->get('motif/by-supplier/(:num)', 'Api\Motif::getBySupplier/$1');
     $routes->get('warna/all', 'Api\Warna::all');
     $routes->get('produk/by-motif/(:num)', 'Api\Produk::getByMotif/$1');
-    $routes->get('produk/by-supplier/(:num)', 'Api\Produk::getBySupplier/$1'); 
+    $routes->get('produk/by-supplier/(:num)', 'Api\Produk::getBySupplier/$1');
 });

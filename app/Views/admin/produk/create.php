@@ -198,6 +198,7 @@
                 formData.append('id_supplier', supplierId);
                 formData.append('id_motif', motifId);
                 formData.append('id_warna', warnaId);
+                formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
                 const response = await fetch('<?= base_url("admin/produk/generateSku") ?>', {
                     method: 'POST',

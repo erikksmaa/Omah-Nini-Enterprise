@@ -17,6 +17,11 @@ class Security extends BaseConfig
      */
     public string $csrfProtection = 'cookie';
 
+    public array $except = [
+        'admin/produk/store',        // route tambah produk
+        'admin/backup/export', // route ekspor, sesuaikan
+    ];
+
     /**
      * --------------------------------------------------------------------------
      * CSRF Token Randomization
@@ -71,7 +76,7 @@ class Security extends BaseConfig
      *
      * Regenerate CSRF Token on every submission.
      */
-    public bool $regenerate = true;
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------
