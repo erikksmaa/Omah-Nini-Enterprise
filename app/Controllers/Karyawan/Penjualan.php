@@ -95,41 +95,75 @@ class Penjualan extends BaseController
             return redirect()->back()->withInput()->with('error', 'Minimal satu item produk harus diisi.');
         }
 
+        // Cek limit items (maksimal 50)
+        $MAX_ITEMS = 50;
+        if (count($items) > $MAX_ITEMS) {
+            return redirect()->back()->withInput()->with('error', "Maksimal $MAX_ITEMS item produk per transaksi.");
+        }
+
         $itemsFormatted = [];
         $produkModel = new ProdukModel();
+        $errors = []; // Collect semua error dulu
 
         foreach ($items as $i => $item) {
-            $idProduk = $item['id_produk'] ?? null;
-            $jumlah = $item['jumlah'] ?? 0;
-            $hargaSatuan = $item['harga_satuan'] ?? 0;
+            try {
+                $idProduk = $item['id_produk'] ?? null;
+                $jumlah = isset($item['jumlah']) ? (int)$item['jumlah'] : 0;
+                $hargaSatuan = $item['harga_satuan'] ?? 0;
 
-            // ===== UNFORMAT HARGA (hilangkan titik dan Rp) =====
-            if (is_string($hargaSatuan)) {
-                $hargaSatuan = (int) preg_replace('/[^0-9]/', '', $hargaSatuan);
-            }
-            // =================================================
+                // ===== UNFORMAT HARGA =====
+                if (is_string($hargaSatuan)) {
+                    $hargaSatuan = (int) preg_replace('/[^0-9]/', '', $hargaSatuan);
+                }
+                // =========================
 
-            if (empty($idProduk)) {
-                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": produk harus dipilih.");
-            }
-            if ($jumlah <= 0) {
-                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": jumlah harus lebih dari 0.");
-            }
-            if ($hargaSatuan <= 0) {
-                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": harga harus lebih dari 0.");
-            }
+                // Validasi individual item
+                if (empty($idProduk)) {
+                    $errors[] = "Item ke-" . ($i + 1) . ": Produk harus dipilih.";
+                    continue;
+                }
 
-            // Cek stok
-            $produk = $produkModel->find($idProduk);
-            if ($produk['stok'] < $jumlah) {
-                return redirect()->back()->withInput()->with('error', "Item ke-" . ($i + 1) . ": stok tidak mencukupi.");
-            }
+                if ($jumlah <= 0) {
+                    $errors[] = "Item ke-" . ($i + 1) . ": Jumlah harus lebih dari 0.";
+                    continue;
+                }
 
-            $itemsFormatted[] = [
-                'id_produk' => $idProduk,
-                'jumlah' => $jumlah,
-                'harga_satuan' => $hargaSatuan
-            ];
+                if ($hargaSatuan <= 0) {
+                    $errors[] = "Item ke-" . ($i + 1) . ": Harga harus lebih dari 0.";
+                    continue;
+                }
+
+                // Cek stok
+                $produk = $produkModel->find($idProduk);
+                if (!$produk) {
+                    $errors[] = "Item ke-" . ($i + 1) . ": Produk tidak ditemukan.";
+                    continue;
+                }
+
+                if (!isset($produk['stok']) || $produk['stok'] < $jumlah) {
+                    $stokTersedia = $produk['stok'] ?? 0;
+                    $errors[] = "Item ke-" . ($i + 1) . ": Stok tidak mencukupi (tersedia: $stokTersedia, diminta: $jumlah).";
+                    continue;
+                }
+
+                $itemsFormatted[] = [
+                    'id_produk' => (int)$idProduk,
+                    'jumlah' => $jumlah,
+                    'harga_satuan' => $hargaSatuan
+                ];
+            } catch (\Exception $e) {
+                $errors[] = "Item ke-" . ($i + 1) . ": " . $e->getMessage();
+            }
+        }
+
+        // Jika ada error, return dengan pesan
+        if (!empty($errors)) {
+            return redirect()->back()->withInput()->with('error', implode("\n", $errors));
+        }
+
+        // Double check: minimal ada satu item yang valid
+        if (empty($itemsFormatted)) {
+            return redirect()->back()->withInput()->with('error', 'Tidak ada item yang valid. Silakan periksa kembali.');
         }
 
         $headerData = [
@@ -140,13 +174,17 @@ class Penjualan extends BaseController
             'catatan' => $this->request->getPost('catatan'),
         ];
 
-        $result = $transaksiModel->saveTransaksi($headerData, $itemsFormatted, $userId);
+        try {
+            $result = $transaksiModel->saveTransaksi($headerData, $itemsFormatted, $userId);
 
-        if ($result['success']) {
-            return redirect()->to('/karyawan/penjualan/struk/' . $result['id'])
-                ->with('success', 'Transaksi penjualan berhasil.');
-        } else {
-            return redirect()->back()->withInput()->with('error', $result['error']);
+            if ($result['success']) {
+                return redirect()->to('/karyawan/penjualan/struk/' . $result['id'])
+                    ->with('success', 'Transaksi penjualan berhasil.');
+            } else {
+                return redirect()->back()->withInput()->with('error', $result['error']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage());
         }
     }
 

@@ -43,10 +43,13 @@
             <div id="items-container">
                 <!-- JS akan mengisi baris item -->
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-                <button type="button" id="btnAddItem" class="btn btn-outline-primary">
-                    <i class="bi bi-plus"></i> Tambah Produk
-                </button>
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-3 flex-wrap gap-2">
+                <div>
+                    <button type="button" id="btnAddItem" class="btn btn-outline-primary">
+                        <i class="bi bi-plus"></i> Tambah Produk
+                    </button>
+                    <small id="itemCount" class="text-muted d-block mt-2">Item: <span>0</span></small>
+                </div>
                 <div class="text-end">
                     <small class="text-muted">Total Keseluruhan:</small>
                     <h4 class="mb-0 text-primary" id="totalKeseluruhan">Rp 0,00</h4>
@@ -64,38 +67,55 @@
 <!-- Template Baris Item -->
 <template id="itemTemplate">
     <div class="item-row border rounded p-3 mb-3">
-        <div class="row g-2 align-items-end">
-            <div class="col-md-5">
-                <label class="form-label">Produk</label>
-                <select name="items[INDEX][id_produk]" class="form-select produk-select" required>
-                    <option value="">-- Cari Produk (Merek - Motif - Warna) --</option>
-                    <!-- Opsi default (jika ada) bisa diisi dari server, tapi Ajax akan menggantinya -->
-                </select>
-                <!-- Preview foto produk (jika ada) -->
+        <div class="row g-2">
+            <!-- Kolom Produk + Stok -->
+            <div class="col-lg-6">
+                <div>
+                    <label class="form-label">Produk <span class="text-danger">*</span></label>
+                    <select name="items[INDEX][id_produk]" class="form-select produk-select" required>
+                        <option value="">-- Cari Produk (SKU - Motif - Warna) --</option>
+                    </select>
+                    <!-- Stok Info -->
+                    <div class="stok-info alert alert-info mt-2 mb-0 py-2 px-3" style="display: none;">
+                        <small>
+                            <strong>Stok Tersedia:</strong> <span class="stok-badge badge bg-success">0</span>
+                        </small>
+                    </div>
+                </div>
+                <!-- Preview foto produk -->
                 <div class="mt-2 foto-preview" style="display: none;">
-                    <img class="foto-img" src="" alt="Foto Produk" style="max-height: 80px; cursor: pointer;">
-                    <span class="small text-muted ms-2">Klik gambar untuk memperbesar</span>
+                    <img class="foto-img" src="" alt="Foto Produk" style="max-height: 100px; cursor: pointer;">
+                    <span class="small text-muted ms-2 d-block mt-1">Klik gambar untuk memperbesar</span>
                 </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label">Jumlah</label>
-                <input type="number" name="items[INDEX][jumlah]" class="form-control jumlah" placeholder="Qty" min="1"
-                    required>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Harga Satuan</label>
-                <div class="input-group">
-                    <span class="input-group-text">Rp</span>
-                    <input id="rupiah" type="text" name="items[INDEX][harga_satuan]" class="form-control harga-satuan"
-                        placeholder="0" required>
+            
+            <!-- Kolom Jumlah, Harga, Subtotal, Hapus -->
+            <div class="col-lg-6">
+                <div class="row g-2 align-items-end h-100">
+                    <div class="col-sm-3">
+                        <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                        <input type="number" name="items[INDEX][jumlah]" class="form-control jumlah" 
+                            placeholder="Qty" min="1" required>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label">Harga Satuan <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="text" name="items[INDEX][harga_satuan]" class="form-control harga-satuan"
+                                placeholder="0" required>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label">Subtotal</label>
+                        <input type="text" class="form-control subtotal" readonly>
+                    </div>
+                    <div class="col-sm-1">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-item w-100" 
+                            title="Hapus item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Subtotal</label>
-                <input type="text" class="form-control subtotal" readonly>
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-danger btn-remove-item w-100"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
@@ -124,33 +144,43 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.js"></script>
-
-<script>
-    $(document).ready(function () {
-        // Mask untuk Rupiah (tanpa Rp di input)
-        $('#rupiah').mask('000.000.000.000', { reverse: true });
-        $('#rupiah').mask("#.##0.000", { reverse: true });
-
-    });
-</script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('items-container');
         const template = document.getElementById('itemTemplate');
         let itemIndex = 0;
-        // Peta untuk menyimpan URL foto berdasarkan id produk
-        const productFotoMap = new Map();
+        const MAX_ITEMS = 50; // Maksimal 50 item untuk menghindari error
+        
+        // Peta untuk menyimpan data produk (stok, foto)
+        const productDataMap = new Map();
 
         // ---- Fungsi bantuan ----
         function formatRupiah(angka) {
             return 'Rp ' + Number(angka).toLocaleString('id-ID');
         }
 
+        function parseRupiah(str) {
+            return parseInt((str || '0').replace(/[^0-9]/g, ''), 10) || 0;
+        }
+
+        function updateItemCount() {
+            const count = container.querySelectorAll('.item-row').length;
+            document.querySelector('#itemCount span').textContent = count;
+            
+            // Disable tombol tambah jika sudah mencapai limit
+            const btnAdd = document.getElementById('btnAddItem');
+            if (count >= MAX_ITEMS) {
+                btnAdd.disabled = true;
+                btnAdd.title = `Maksimal ${MAX_ITEMS} item produk`;
+            } else {
+                btnAdd.disabled = false;
+                btnAdd.removeAttribute('title');
+            }
+        }
+
         function hitungSubtotal(row) {
-            const jumlah = row.querySelector('.jumlah')?.value || 0;
-            const harga = row.querySelector('.harga-satuan')?.value?.replace(/[^0-9]/g, '') || 0;
+            const jumlah = parseInt(row.querySelector('.jumlah')?.value || 0, 10);
+            const harga = parseRupiah(row.querySelector('.harga-satuan')?.value || '0');
             const sub = jumlah * harga;
             const subtotalInput = row.querySelector('.subtotal');
             if (subtotalInput) subtotalInput.value = formatRupiah(sub);
@@ -166,11 +196,17 @@
         }
 
         // ---- Inisialisasi Select2 dengan Ajax ----
-        function initSelect2(element, previewContainer, fotoImg) {
+        function initSelect2(element, row) {
+            const stokInfoDiv = row.querySelector('.stok-info');
+            const stokBadge = row.querySelector('.stok-badge');
+            const fotoPreview = row.querySelector('.foto-preview');
+            const fotoImg = row.querySelector('.foto-img');
+
             $(element).select2({
-                placeholder: "-- Cari Produk (Merek - Motif - Warna) --",
+                placeholder: "-- Cari Produk (SKU - Motif - Warna) --",
                 allowClear: true,
                 width: '100%',
+                dropdownCssClass: 'produk-dropdown',
                 templateResult: function (option) {
                     if (!option.id) return option.text;
                     return option.text;
@@ -189,7 +225,11 @@
                     },
                     processResults: function (data) {
                         data.forEach(function (item) {
-                            productFotoMap.set(parseInt(item.id), item.foto);
+                            productDataMap.set(parseInt(item.id), {
+                                stok: item.stok,
+                                foto: item.foto,
+                                text: item.text
+                            });
                         });
                         return {
                             results: data.map(function (item) {
@@ -198,37 +238,53 @@
                         };
                     }
                 },
-                minimumInputLength: 2
+                minimumInputLength: 1
             });
 
-            // Tampilkan foto saat produk dipilih
+            // Tampilkan stok dan foto saat produk dipilih
             $(element).on('change', function () {
                 const selectedId = parseInt($(this).val());
-                const foto = productFotoMap.get(selectedId);
-                if (foto && fotoImg && previewContainer) {
-                    $(fotoImg).attr('src', foto);
-                    $(previewContainer).css('display', 'flex');
-                } else if (previewContainer) {
-                    $(previewContainer).hide();
-                    $(fotoImg).attr('src', '');
+                const produkData = productDataMap.get(selectedId);
+                
+                if (produkData) {
+                    // Tampilkan stok
+                    if (stokBadge) {
+                        stokBadge.textContent = produkData.stok;
+                    }
+                    stokInfoDiv.style.display = 'block';
+                    
+                    // Tampilkan foto
+                    if (produkData.foto && fotoImg) {
+                        $(fotoImg).attr('src', produkData.foto);
+                        $(fotoPreview).css('display', 'block');
+                    }
+                } else {
+                    stokInfoDiv.style.display = 'none';
+                    $(fotoPreview).hide();
                 }
             });
         }
 
         // ---- Tambah baris item ----
         function addItem() {
+            if (container.querySelectorAll('.item-row').length >= MAX_ITEMS) {
+                alert(`Maksimal ${MAX_ITEMS} item produk per transaksi`);
+                return;
+            }
+
             const clone = template.content.cloneNode(true);
             const row = clone.querySelector('.item-row');
             row.innerHTML = row.innerHTML.replace(/INDEX/g, itemIndex);
 
             const select = row.querySelector('.produk-select');
-            const previewDiv = row.querySelector('.foto-preview');
             const fotoImg = row.querySelector('.foto-img');
+            const jumlahInput = row.querySelector('.jumlah');
+            const hargaInput = row.querySelector('.harga-satuan');
 
             container.appendChild(row);
 
-            // Inisialisasi Select2 + preview foto
-            initSelect2(select, previewDiv, fotoImg);
+            // Inisialisasi Select2
+            initSelect2(select, row);
 
             // Klik gambar untuk zoom
             $(fotoImg).on('click', function () {
@@ -240,8 +296,21 @@
             });
 
             // Hitung ulang total jika jumlah atau harga berubah
-            row.querySelector('.jumlah').addEventListener('input', hitungTotal);
-            row.querySelector('.harga-satuan').addEventListener('input', function (e) {
+            jumlahInput.addEventListener('input', function () {
+                // Validasi max jumlah
+                const selectedId = parseInt(select.value);
+                const produkData = productDataMap.get(selectedId);
+                if (produkData) {
+                    const jumlah = parseInt(this.value || 0, 10);
+                    if (jumlah > produkData.stok) {
+                        this.value = produkData.stok;
+                        alert(`Stok hanya tersedia: ${produkData.stok}`);
+                    }
+                }
+                hitungTotal();
+            });
+
+            hargaInput.addEventListener('input', function () {
                 this.value = this.value.replace(/[^0-9]/g, '');
                 hitungTotal();
             });
@@ -250,10 +319,12 @@
             row.querySelector('.btn-remove-item').addEventListener('click', function () {
                 $(select).select2('destroy');
                 row.remove();
+                updateItemCount();
                 hitungTotal();
             });
 
             itemIndex++;
+            updateItemCount();
             hitungTotal();
         }
 
@@ -263,6 +334,8 @@
         // Satu baris awal
         if (container.children.length === 0) {
             addItem();
+        } else {
+            updateItemCount();
         }
 
         // ---- Sinkronisasi pelanggan -> nama pembeli ----
@@ -283,31 +356,165 @@
 
         pelangganSelect.addEventListener('change', syncNamaPembeli);
         syncNamaPembeli(); // inisialisasi
+
+        // Validasi form sebelum submit
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const items = container.querySelectorAll('.item-row');
+            if (items.length === 0) {
+                e.preventDefault();
+                alert('Minimal satu item produk harus ditambahkan');
+                return false;
+            }
+
+            // Cek setiap item
+            let hasError = false;
+            items.forEach((row, index) => {
+                const select = row.querySelector('.produk-select');
+                const jumlah = parseInt(row.querySelector('.jumlah')?.value || 0, 10);
+                const harga = parseRupiah(row.querySelector('.harga-satuan')?.value || '0');
+
+                if (!select.value) {
+                    alert(`Item ${index + 1}: Produk belum dipilih`);
+                    hasError = true;
+                    return;
+                }
+                if (jumlah <= 0) {
+                    alert(`Item ${index + 1}: Jumlah harus lebih dari 0`);
+                    hasError = true;
+                    return;
+                }
+                if (harga <= 0) {
+                    alert(`Item ${index + 1}: Harga harus lebih dari 0`);
+                    hasError = true;
+                    return;
+                }
+            });
+
+            if (hasError) {
+                e.preventDefault();
+                return false;
+            }
+        });
     });
 </script>
 
 <style>
+    /* Styling untuk item row */
     .item-row {
         background-color: #f8f9fc;
-        padding: 10px;
+        padding: 15px;
         border-radius: 8px;
         margin-bottom: 10px;
+        border: 1px solid #e0e4e8;
+        transition: all 0.3s ease;
     }
 
+    .item-row:hover {
+        background-color: #f0f3f7;
+        border-color: #d0d8e0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    /* Styling untuk foto preview */
     .foto-preview {
         margin-top: 8px;
         display: none;
         align-items: center;
         gap: 8px;
+        padding: 8px;
+        background-color: #fff;
+        border-radius: 6px;
+        border: 1px solid #ddd;
     }
 
     .foto-img {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         object-fit: cover;
-        border-radius: 8px;
+        border-radius: 6px;
         border: 1px solid #ddd;
         cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .foto-img:hover {
+        transform: scale(1.05);
+        border-color: #007bff;
+    }
+
+    /* Styling untuk info stok */
+    .stok-info {
+        border-left: 4px solid #28a745 !important;
+        background-color: #f0fdf4 !important;
+        border-color: #28a745 !important;
+    }
+
+    .stok-badge {
+        font-size: 1.1em;
+        padding: 0.4em 0.8em !important;
+    }
+
+    /* Responsif untuk Select2 */
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-container--open .select2-dropdown {
+        z-index: 1050;
+    }
+
+    /* Dropdown styling */
+    .produk-dropdown {
+        min-width: 300px !important;
+    }
+
+    .select2-results__option {
+        padding: 10px 16px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    /* Label dengan required indicator */
+    .form-label .text-danger {
+        margin-left: 2px;
+    }
+
+    /* Button styling */
+    #btnAddItem:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-remove-item {
+        min-width: 36px;
+        padding: 0.375rem 0.5rem;
+    }
+
+    /* Mobile responsif */
+    @media (max-width: 768px) {
+        .item-row {
+            padding: 12px;
+        }
+
+        .foto-preview {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .stok-info {
+            margin-top: 8px !important;
+            margin-bottom: 0 !important;
+        }
+    }
+
+    /* Styling untuk input Rupiah */
+    .harga-satuan {
+        text-align: right;
+    }
+
+    .subtotal {
+        text-align: right;
+        background-color: #f5f5f5;
     }
 </style>
 <?= $this->endSection() ?>
