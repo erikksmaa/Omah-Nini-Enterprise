@@ -49,36 +49,7 @@ body {
     --table-border: #e2e8f0;
 }
 
-body.dark {
-    --primary: #818cf8;
-    --primary-light: #a5b4fc;
-    --primary-dark: #6366f1;
-    --success: #34d399;
-    --danger: #f87171;
-    --warning: #fbbf24;
-    --info: #22d3ee;
-    --gray-50: #1e293b;
-    --gray-100: #334155;
-    --gray-200: #475569;
-    --gray-300: #64748b;
-    --gray-400: #94a3b8;
-    --gray-500: #cbd5e1;
-    --gray-600: #e2e8f0;
-    --gray-700: #f1f5f9;
-    --gray-800: #f8fafc;
-    --gray-900: #ffffff;
-    --sidebar-bg: #1e293b;
-    --sidebar-text: #f1f5f9;
-    --sidebar-active: #818cf8;
-    --card-bg: #1e293b;
-    --card-border: #334155;
-    --input-bg: #334155;
-    --input-border: #475569;
-    --input-focus: #818cf8;
-    --table-header-bg: #334155;
-    --table-border: #475569;
-    background: #0f172a;
-}
+
 
 /* ========== LAYOUT ========== */
 #app {
@@ -161,25 +132,7 @@ body.dark {
     background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%) !important;
 }
 
-body.dark .stat-card.bg-primary {
-    background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%) !important;
-}
 
-body.dark .stat-card.bg-success {
-    background: linear-gradient(135deg, #059669 0%, #34d399 100%) !important;
-}
-
-body.dark .stat-card.bg-danger {
-    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%) !important;
-}
-
-body.dark .stat-card.bg-warning {
-    background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%) !important;
-}
-
-body.dark .stat-card.bg-info {
-    background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%) !important;
-}
 
 .stat-card h6 {
     font-size: 13px;
@@ -314,25 +267,7 @@ label {
     color: #0891b2;
 }
 
-body.dark .alert-success {
-    background: #064e3b;
-    color: #34d399;
-}
 
-body.dark .alert-danger {
-    background: #7f1d1d;
-    color: #f87171;
-}
-
-body.dark .alert-warning {
-    background: #78350f;
-    color: #fbbf24;
-}
-
-body.dark .alert-info {
-    background: #164e63;
-    color: #22d3ee;
-}
 
 /* ========== MODALS ========== */
 .modal-content {
@@ -493,4 +428,60 @@ body.dark .alert-info {
 .card.bg-info small,
 .card.bg-dark small {
     color: #ffffff !important;
+}
+
+/* ========== MOBILE ACTION BUTTONS ========== */
+@media (max-width: 767.98px) {
+    .mobile-action-btns {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        align-items: flex-start;
+    }
+
+    .mobile-action-btns .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 8px;
+        min-width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Card mobile agar konten tidak overflow */
+    .d-md-none .card .card-body {
+        overflow: hidden;
+    }
+
+    .d-md-none .card .card-body .d-flex {
+        flex-wrap: nowrap;
+    }
+
+    .d-md-none .card .card-body .flex-grow-1 {
+        overflow: hidden;
+    }
+}
+
+/* ========== FOOTER RESPONSIVE ========== */
+.footer {
+    padding: 12px 0;
+}
+
+@media (max-width: 576px) {
+    .footer {
+        text-align: center;
+    }
+
+    .footer .float-start,
+    .footer .float-end {
+        float: none !important;
+        width: 100%;
+    }
+
+    .footer p {
+        font-size: 11px;
+        margin-bottom: 2px;
+    }
 }

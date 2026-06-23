@@ -150,7 +150,7 @@
                                             </p>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="d-flex gap-1 flex-shrink-0">
+                                    <div class="mobile-action-btns">
                                         <button class="btn btn-sm btn-warning btn-edit"
                                             data-id="<?= $row['id'] ?>"
                                             data-nama="<?= esc($row['nama']) ?>"

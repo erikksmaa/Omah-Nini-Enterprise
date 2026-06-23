@@ -16,7 +16,7 @@
     <!-- Bootstrap & Icons -->
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/app.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/compiled/css/app-mod.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/compiled/css/app-dark.css') ?>">
+
 
 </head>
 
@@ -53,7 +53,6 @@
                 <?= $this->renderSection('content') ?>
             </div>
 
-            <!-- Ganti footer -->
             <footer>
                 <div class="footer clearfix mb-0 text-muted">
                     <div class="float-start">
@@ -67,7 +66,6 @@
         </div>
     </div>
 
-    <script src="<?= base_url('assets/static/js/components/dark.js') ?>"></script>
     <script src="<?= base_url('assets/extensions/perfect-scrollbar/perfect-scrollbar.min.js') ?>"></script>
     <script src="<?= base_url('assets/compiled/js/app.js') ?>"></script>
 

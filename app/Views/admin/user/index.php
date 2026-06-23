@@ -135,8 +135,8 @@
                                             <span class="badge bg-<?= $roleClass ?>"><?= strtoupper($item['role']) ?></span>
                                         </small>
                                     </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-warning btn-edit"
+                                    <div class="mobile-action-btns">
+                                        <button class="btn btn-sm btn-warning btn-edit"
                                                 data-id="<?= $item['user_id'] ?>"
                                                 data-username="<?= esc($item['username']) ?>"
                                                 data-role="<?= $item['role'] ?>"
@@ -145,7 +145,7 @@
                                         </button>
 
                                         <?php if (session()->get('user_id') != $item['user_id']): ?>
-                                            <a href="#" class="btn btn-sm btn-outline-danger btn-delete"
+                                            <a href="#" class="btn btn-sm btn-danger btn-delete"
                                                 data-id="<?= $item['user_id'] ?>"
                                                 data-username="<?= esc($item['username']) ?>"
                                                 aria-label="Hapus <?= esc($item['username']) ?>">

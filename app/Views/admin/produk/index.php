@@ -232,7 +232,7 @@
                                 <?php endif; ?>
                                 <span class="badge <?= $badgeClass ?>"><?= $statusText ?></span>
                             </div>
-                            <div class="d-flex gap-1">
+                            <div class="mobile-action-btns">
                                 <a href="<?= base_url('admin/produk/edit/' . $row['id']) ?>" class="btn btn-sm btn-warning"
                                     title="Edit">
                                     <i class="bi bi-pencil"></i>

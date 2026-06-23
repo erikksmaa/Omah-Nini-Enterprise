@@ -181,7 +181,7 @@ if (session()->getFlashdata('validation_errors')): ?>
                                             </p>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="d-flex gap-1 flex-shrink-0">
+                                    <div class="mobile-action-btns">
                                         <button class="btn btn-sm btn-warning btn-edit"
                                             data-id="<?= $item['id'] ?>"
                                             data-nama="<?= esc($item['nama']) ?>"

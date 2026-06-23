@@ -129,7 +129,7 @@
                         <div class="card border mb-2">
                             <div class="card-body p-3 d-flex justify-content-between align-items-center">
                                 <span class="fw-semibold"><?= esc($row['nama_warna']) ?></span>
-                                <div class="d-flex gap-1 flex-shrink-0">
+                                <div class="mobile-action-btns">
                                     <button class="btn btn-sm btn-warning btn-edit"
                                         data-id="<?= $row['id'] ?>"
                                         data-nama_warna="<?= esc($row['nama_warna']) ?>"
