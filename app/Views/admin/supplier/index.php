@@ -248,7 +248,7 @@ if (session()->getFlashdata('validation_errors')): ?>
                         <label class="form-label fw-semibold small">
                             Nama Merk <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="nama" class="form-control"
+                        <input type="text" name="nama" required class="form-control"
                             placeholder="Contoh: Batik Keris, Danar Hadi..."
                             value="<?= old('nama') ?>">
                     </div>
@@ -256,7 +256,7 @@ if (session()->getFlashdata('validation_errors')): ?>
                         <label class="form-label fw-semibold small">
                             Kontak <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="kontak" class="form-control"
+                        <input type="text" name="kontak" required class="form-control"
                             placeholder="08xxxxxxxxxx"
                             value="<?= old('kontak') ?>">
                     </div>
@@ -315,7 +315,7 @@ if (session()->getFlashdata('validation_errors')): ?>
                         <label class="form-label fw-semibold small">
                             Kontak <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="kontak" id="edit_kontak" class="form-control">
+                        <input type="text" name="kontak" required id="edit_kontak" class="form-control">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Email</label>

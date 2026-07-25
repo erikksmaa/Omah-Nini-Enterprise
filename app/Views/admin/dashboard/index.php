@@ -332,7 +332,7 @@
                             <div
                                 class="card-header bg-warning bg-opacity-10 border-bottom py-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                                <h6 class="mb-0 fw-semibold text-warning">Peringatan: <?= count($stok_menipis) ?> Produk
+                                <h6 class="mb-0 fw-semibold text-warning">Peringatan: <?= $total_stok_menipis ?> Produk
                                     Stok Menipis</h6>
                             </div>
                             <div class="card-body p-0">
@@ -348,7 +348,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($stok_menipis as $item): ?>
+                                            <?php foreach (array_slice($stok_menipis, 0, 10) as $item): ?>
                                                 <tr>
                                                     <td class="ps-3">
                                                         <code class="text-muted small"><?= esc($item['sku']) ?></code>
@@ -371,6 +371,15 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <?php if ($total_stok_menipis > 10): ?>
+                                    <div class="card-footer text-center py-3 border-top">
+                                        <a href="<?= base_url('pemilik/laporan/stok?stok_status=menipis') ?>"
+                                            class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-arrow-right-circle me-1"></i>Lihat Selengkapnya
+                                            (<?= $total_stok_menipis ?> produk)
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

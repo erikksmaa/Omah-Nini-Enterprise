@@ -32,7 +32,9 @@ class Stok extends BaseController
     // =========================================================
     public function index()
     {
-        $allProducts = $this->produkModel
+        $filter = $this->request->getGet('filter'); // 'menipis'
+        
+        $builder = $this->produkModel
             ->select('produk.*, supplier.nama as nama_supplier, supplier.id as supplier_id,
                       motif.nama_motif, motif.id as motif_id,
                       warna.nama_warna, warna.id as warna_id')
@@ -41,8 +43,14 @@ class Stok extends BaseController
             ->join('warna',    'warna.id    = produk.id_warna')
             ->orderBy('supplier.nama',    'ASC')
             ->orderBy('motif.nama_motif', 'ASC')
-            ->orderBy('warna.nama_warna', 'ASC')
-            ->findAll();
+            ->orderBy('warna.nama_warna', 'ASC');
+
+        if ($filter == 'menipis') {
+            $builder->where('produk.stok <= produk.min_stok')->where('produk.stok >', 0);
+        }
+
+        // Pagination setup - paginate products, then group into tree
+        $allProducts = $builder->findAll();
 
         // ── Bangun struktur tree ────────────────────────────
         $tree = [];
@@ -76,6 +84,7 @@ class Stok extends BaseController
         $data = [
             'title' => 'Kelola Stok',
             'tree'  => $tree,
+            'filter'=> $filter
         ];
 
         return view('karyawan/stok/index', $data);

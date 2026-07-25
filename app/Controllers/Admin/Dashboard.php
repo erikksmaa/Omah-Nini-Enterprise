@@ -37,9 +37,10 @@ class Dashboard extends BaseController
 
     public function index()
     {
-        $stokMenipis = $this->produkModel->getLowStockProducts(10);
+        // Get ALL low stock products for accurate count
+        $allStokMenipis = $this->produkModel->getLowStockProducts();
         $stokMenipisData = [];
-        foreach ($stokMenipis as $item) {
+        foreach ($allStokMenipis as $item) {
             $stokMenipisData[] = [
                 'id' => $item['id'],
                 'nama_produk' => ($item['nama_motif'] ?? '?') . ' - ' . ($item['nama_warna'] ?? '?'),
@@ -48,8 +49,6 @@ class Dashboard extends BaseController
                 'min_stok' => $item['min_stok'],
             ];
         }
-
-
 
         $data = [
             'title' => 'Dashboard Admin',
@@ -63,8 +62,9 @@ class Dashboard extends BaseController
             'total_pelanggan' => $this->pelangganModel->getTotalPelanggan(),
             'total_stok' => $this->produkModel->getTotalStockQuantity(),
 
-            // Stok
+            // Stok — show all for count, but view limits display to 5
             'stok_menipis' => $stokMenipisData,
+            'total_stok_menipis' => count($stokMenipisData),
             'stok_habis' => count($this->produkModel->getOutOfStockProducts()),
 
             // Transaksi
@@ -128,5 +128,59 @@ class Dashboard extends BaseController
         }
 
         return $this->response->setJSON($data);
+    }
+
+    /**
+     * API: Weekly activity (pembelian + penjualan) for grouped bar chart
+     */
+    public function getWeeklyActivity()
+    {
+        $result = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $dateLabel = date('d/m', strtotime($date));
+
+            $penjualan = $this->transaksiModel->where('DATE(tanggal_transaksi)', $date)->countAllResults(false);
+            $pembelian = $this->pembelianModel->where('DATE(tanggal_pembelian)', $date)->countAllResults(false);
+
+            $result[] = [
+                'date' => $dateLabel,
+                'penjualan' => $penjualan,
+                'pembelian' => $pembelian,
+            ];
+        }
+
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * API: Monthly activity (12 months) for grouped bar chart
+     */
+    public function getMonthlyActivity()
+    {
+        $result = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01', strtotime("-$i months"));
+            $monthEnd = date('Y-m-t', strtotime("-$i months"));
+            $monthLabel = date('M Y', strtotime($monthStart));
+
+            $penjualan = $this->transaksiModel
+                ->where('DATE(tanggal_transaksi) >=', $monthStart)
+                ->where('DATE(tanggal_transaksi) <=', $monthEnd)
+                ->countAllResults(false);
+
+            $pembelian = $this->pembelianModel
+                ->where('DATE(tanggal_pembelian) >=', $monthStart)
+                ->where('DATE(tanggal_pembelian) <=', $monthEnd)
+                ->countAllResults(false);
+
+            $result[] = [
+                'date' => $monthLabel,
+                'penjualan' => $penjualan,
+                'pembelian' => $pembelian,
+            ];
+        }
+
+        return $this->response->setJSON($result);
     }
 }

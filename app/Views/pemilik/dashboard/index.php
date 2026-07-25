@@ -221,36 +221,53 @@
     <!-- Peringatan Stok Menipis -->
     <?php if (!empty($stok_menipis)): ?>
         <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card shadow border-left-warning">
-                    <div class="card-header py-3 bg-warning text-white">
-                        <h6 class="m-0"><i class="bi bi-exclamation-triangle"></i> Peringatan Stok Menipis</h6>
+            <div class="col-12">
+                <div class="card border-0"
+                    style="border-left: 4px solid #ff9f43 !important; border-left-width: 4px !important;">
+                    <div class="card-header bg-warning bg-opacity-10 border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
+                            <table class="table table-hover mb-0 align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>SKU</th>
-                                        <th>Nama Produk</th>
-                                        <th>Stok</th>
-                                        <th>Minimal</th>
-                                        <th>Rekomendasi</th>
-                            </table>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($stok_menipis as $item): ?>
-                                    <tr>
-                                        <td><?= esc($item['sku']) ?></td>
-                                        <td><?= esc($item['nama_produk']) ?></td>
-                                        <td><span class="badge bg-warning text-dark"><?= number_format($item['stok']) ?></span>
-                                        </td>
-                                        <td><?= number_format($item['min_stok']) ?></td>
-                                        <td><span class="text-danger">Segera lakukan pembelian</span></td>
+                                        <th class="ps-3 py-3">SKU</th>
+                                        <th class="py-3">Produk</th>
+                                        <th class="py-3 text-center">Stok Saat Ini</th>
+                                        <th class="py-3 text-center">Min. Stok</th>
+                                        <th class="py-3 text-center">Aksi</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_slice($stok_menipis, 0, 10) as $item): ?>
+                                        <tr>
+                                            <td class="ps-3">
+                                                <code class="text-muted small"><?= esc($item['sku']) ?></code>
+                                            </td>
+                                            <td><?= esc($item['nama_produk']) ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger"><?= number_format($item['stok']) ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="text-muted"><?= number_format($item['min_stok']) ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="<?= base_url('admin/produk/edit/' . $item['id']) ?>"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-plus-circle me-1"></i>Tambah Stok
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
                             </table>
+                        </div>
+                        <div class="card-footer text-center py-3 border-top">
+                            <a href="<?= base_url('pemilik/laporan/stok?stok_status=menipis') ?>"
+                                class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-eye me-1"></i>Lihat Semua
+                            </a>
                         </div>
                     </div>
                 </div>

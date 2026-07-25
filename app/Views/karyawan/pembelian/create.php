@@ -15,20 +15,20 @@
                     <select name="id_supplier" id="id_supplier" class="form-select" required>
                         <option value="">-- Pilih Merek --</option>
                         <?php foreach ($suppliers as $sup): ?>
-                            <option value="<?= $sup['id'] ?>"><?= esc($sup['nama']) ?></option>
+                            <option value="<?= $sup['id'] ?>" <?= old('id_supplier') == $sup['id'] ? 'selected' : '' ?>><?= esc($sup['nama']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Tanggal Pembelian</label>
-                    <input type="date" name="tanggal_pembelian" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                    <input type="date" name="tanggal_pembelian" class="form-control" value="<?= old('tanggal_pembelian', date('Y-m-d')) ?>" required>
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Catatan</label>
-                    <textarea name="catatan" class="form-control" rows="2"></textarea>
+                    <textarea name="catatan" class="form-control" rows="2"><?= old('catatan') ?></textarea>
                 </div>
             </div>
 
@@ -272,8 +272,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== TOMBOL TAMBAH =====
     document.getElementById('btnAddItem').addEventListener('click', addItem);
 
-    // Baris pertama
-    addItem();
+    // ===== RESTORE OLD ITEMS SETELAH VALIDASI GAGAL =====
+    <?php $oldItems = old('items'); ?>
+    <?php if (!empty($oldItems)): ?>
+        const oldItems = <?= json_encode($oldItems) ?>;
+        const itemsArray = Array.isArray(oldItems) ? oldItems : Object.values(oldItems);
+        const oldSupplierId = '<?= old('id_supplier') ?>';
+        
+        if (oldSupplierId) {
+            // Load produk dari supplier lama, lalu restore item rows
+            loadProdukBySupplier(oldSupplierId, function(produkList) {
+                itemsArray.forEach(function(item, idx) {
+                    addItem();
+                    const rows = container.querySelectorAll('.item-row');
+                    const lastRow = rows[rows.length - 1];
+                    const sel = lastRow.querySelector('.produk-select');
+                    const jumlahInput = lastRow.querySelector('.jumlah');
+                    
+                    // Set jumlah
+                    if (jumlahInput && item.jumlah) jumlahInput.value = item.jumlah;
+                    
+                    // Set produk via Select2
+                    if (sel && item.id_produk) {
+                        $(sel).val(item.id_produk).trigger('change');
+                    }
+                });
+            });
+        } else {
+            // Tanpa supplier, tambah baris kosong
+            addItem();
+        }
+    <?php else: ?>
+        // Baris pertama default
+        addItem();
+    <?php endif; ?>
 });
 </script>
 

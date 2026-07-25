@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 
 <div class="container-fluid">
-    
+
     <!-- Welcome Banner -->
     <div class="row">
         <div class="col-12">
@@ -15,7 +15,8 @@
                             <p class="mb-0 text-white">📅 <?= date('l, d F Y') ?></p>
                         </div>
                         <div class="text-end">
-                            <h5 class="mb-1 text-white">Role: <span class="badge bg-light text-dark"><?= $role ?></span></h5>
+                            <h5 class="mb-1 text-white">Role: <span class="badge bg-light text-dark"><?= $role ?></span>
+                            </h5>
                         </div>
                     </div>
                 </div>
@@ -31,7 +32,8 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Produk</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_produk) ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_produk) ?>
+                            </div>
                         </div>
                         <div class="col-auto"><i class="bi bi-box-seam fs-2 text-gray-300"></i></div>
                     </div>
@@ -57,7 +59,8 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Transaksi Hari Ini</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($transaksi_hari_ini) ?>x</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= number_format($transaksi_hari_ini) ?>x</div>
                         </div>
                         <div class="col-auto"><i class="bi bi-receipt fs-2 text-gray-300"></i></div>
                     </div>
@@ -71,7 +74,8 @@
         <div class="col-xl-6 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-calendar"></i> Aktivitas Bulan Ini</h6>
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-calendar"></i> Aktivitas Bulan Ini
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
@@ -135,46 +139,61 @@
             </div>
         </div>
     </div>
-
     <!-- Peringatan Stok Menipis -->
     <?php if (!empty($stok_menipis)): ?>
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card shadow border-left-warning">
-                <div class="card-header py-3 bg-warning text-white">
-                    <h6 class="m-0"><i class="bi bi-exclamation-triangle"></i> Peringatan Stok Menipis</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Produk</th>
-                                    <th>Supplier</th>
-                                    <th>Stok</th>
-                                    <th>Min Stok</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($stok_menipis as $item): ?>
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0"
+                    style="border-left: 4px solid #ff9f43 !important; border-left-width: 4px !important;">
+                    <div class="card-header bg-warning bg-opacity-10 border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= esc($item['sku']) ?></td>
-                                        <td><?= esc($item['nama_produk']) ?></td>
-                                        <td><?= esc($item['nama_supplier']) ?></td>
-                                        <td><span class="badge bg-warning"><?= number_format($item['stok']) ?></span></td>
-                                        <td><?= number_format($item['min_stok']) ?></td>
-                                        <td><a href="<?= base_url('karyawan/stok/opname/' . $item['id']) ?>" class="btn btn-sm btn-primary">Opname</a></td>
+                                        <th class="ps-3 py-3">SKU</th>
+                                        <th class="py-3">Produk</th>
+                                        <th class="py-3 text-center">Stok Saat Ini</th>
+                                        <th class="py-3 text-center">Min. Stok</th>
+                                        <th class="py-3 text-center">Aksi</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_slice($stok_menipis, 0, 10) as $item): ?>
+                                        <tr>
+                                            <td class="ps-3">
+                                                <code class="text-muted small"><?= esc($item['sku']) ?></code>
+                                            </td>
+                                            <td><?= esc($item['nama_produk']) ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger"><?= number_format($item['stok']) ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="text-muted"><?= number_format($item['min_stok']) ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="<?= base_url('admin/produk/edit/' . $item['id']) ?>"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-plus-circle me-1"></i>Tambah Stok
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                            <div class="card-footer text-center py-3 border-top">
+                                <a href="<?= base_url('pemilik/laporan/stok?stok_status=menipis') ?>"
+                                    class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-eye me-1"></i>Lihat Semua
+                                </a>
+                            </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     <?php endif; ?>
 </div>
 
@@ -182,10 +201,22 @@
     .bg-gradient-success {
         background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
     }
-    .border-left-primary { border-left: 4px solid #4e73df !important; }
-    .border-left-success { border-left: 4px solid #1cc88a !important; }
-    .border-left-info { border-left: 4px solid #36b9cc !important; }
-    .border-left-warning { border-left: 4px solid #f6c23e !important; }
+
+    .border-left-primary {
+        border-left: 4px solid #4e73df !important;
+    }
+
+    .border-left-success {
+        border-left: 4px solid #1cc88a !important;
+    }
+
+    .border-left-info {
+        border-left: 4px solid #36b9cc !important;
+    }
+
+    .border-left-warning {
+        border-left: 4px solid #f6c23e !important;
+    }
 </style>
 
 <?= $this->endSection() ?>

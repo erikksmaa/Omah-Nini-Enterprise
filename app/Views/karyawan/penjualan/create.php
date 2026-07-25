@@ -19,7 +19,7 @@
                     <select name="id_pelanggan" id="pelanggan" class="form-select">
                         <option value="">-- Umum --</option>
                         <?php foreach ($pelanggan_list as $pel): ?>
-                            <option value="<?= $pel['id'] ?>" data-nama="<?= esc($pel['nama']) ?>"><?= esc($pel['nama']) ?>
+                            <option value="<?= $pel['id'] ?>" data-nama="<?= esc($pel['nama']) ?>" <?= old('id_pelanggan') == $pel['id'] ? 'selected' : '' ?>><?= esc($pel['nama']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -34,7 +34,7 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Catatan</label>
-                    <textarea name="catatan" class="form-control" rows="2"></textarea>
+                    <textarea name="catatan" class="form-control" rows="2"><?= old('catatan') ?></textarea>
                 </div>
             </div>
 
@@ -331,12 +331,54 @@
         // ---- Event tombol tambah ----
         document.getElementById('btnAddItem').addEventListener('click', addItem);
 
-        // Satu baris awal
-        if (container.children.length === 0) {
-            addItem();
-        } else {
-            updateItemCount();
-        }
+        // ===== RESTORE OLD ITEMS SETELAH VALIDASI GAGAL =====
+        <?php $oldItems = old('items'); ?>
+        <?php if (!empty($oldItems)): ?>
+            const oldItems = <?= json_encode($oldItems) ?>;
+            const itemsArray = Array.isArray(oldItems) ? oldItems : Object.values(oldItems);
+            
+            itemsArray.forEach(function(item) {
+                addItem();
+                const rows = container.querySelectorAll('.item-row');
+                const lastRow = rows[rows.length - 1];
+                const sel = lastRow.querySelector('.produk-select');
+                const jumlahInput = lastRow.querySelector('.jumlah');
+                const hargaInput = lastRow.querySelector('.harga-satuan');
+                
+                // Set jumlah dan harga
+                if (jumlahInput && item.jumlah) jumlahInput.value = item.jumlah;
+                if (hargaInput && item.harga_satuan) hargaInput.value = item.harga_satuan;
+                
+                // Set produk via Select2 (create option + trigger)
+                if (sel && item.id_produk) {
+                    // Fetch product info to populate Select2
+                    fetch('<?= base_url("api/search/produk") ?>?keyword=' + item.id_produk)
+                        .then(r => r.json())
+                        .then(data => {
+                            const found = data.find(p => String(p.id) === String(item.id_produk));
+                            if (found) {
+                                productDataMap.set(parseInt(found.id), {
+                                    stok: found.stok,
+                                    foto: found.foto,
+                                    text: found.text
+                                });
+                                const option = new Option(found.text, found.id, true, true);
+                                $(sel).append(option).trigger('change');
+                            }
+                        });
+                }
+                
+                // Recalculate
+                hitungTotal();
+            });
+        <?php else: ?>
+            // Satu baris awal default
+            if (container.children.length === 0) {
+                addItem();
+            } else {
+                updateItemCount();
+            }
+        <?php endif; ?>
 
         // ---- Sinkronisasi pelanggan -> nama pembeli ----
         const pelangganSelect = document.getElementById('pelanggan');

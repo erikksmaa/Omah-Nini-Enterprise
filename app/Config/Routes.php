@@ -47,6 +47,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
         $routes->get('dashboard', 'Dashboard::index');
         $routes->get('dashboard/getWeeklySales', 'Dashboard::getWeeklySales');
+        $routes->get('dashboard/getWeeklyActivity', 'Dashboard::getWeeklyActivity');
+        $routes->get('dashboard/getMonthlyActivity', 'Dashboard::getMonthlyActivity');
 
         // Manajemen User — khusus admin
         $routes->get('user', 'User::index');
